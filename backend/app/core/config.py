@@ -49,8 +49,9 @@ class Settings(BaseSettings):
 
     # ── CORS ──────────────────────────────────────────────────
     CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",   # React dev server (CRA)
-        "http://localhost:5173",   # React dev server (Vite)
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://tourism-dashboard.pages.dev",  # Website của bạn trên Cloudflare
     ]
 
     # ── Nonce TTL — phải khớp với ai-services nonce_store ─────
