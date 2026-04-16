@@ -19,12 +19,20 @@ import java.util.*
  */
 class CustomerBuyTicketActivity : AppCompatActivity() {
 
+    companion object {
+        private const val RC_FACE_ENROLL = 1002
+    }
+
     private lateinit var btnBack:      TextView
     private lateinit var spinnerType:  Spinner
     private lateinit var tvTotalPrice: TextView
+    private lateinit var switchFace:   android.widget.Switch
     private lateinit var btnBuy:       TextView
     private lateinit var progressBar:  ProgressBar
     private lateinit var tvError:      TextView
+
+    private var lastGeneratedTicketId: String? = null
+    private var lastGeneratedQrB64:   String? = null
 
     private val ticketTypes    = listOf("🧑 Vé người lớn", "🧒 Vé trẻ em", "🎓 Vé học sinh/SV", "👥 Vé nhóm")
     private val ticketTypeKeys = listOf("adult", "child", "student", "group")
@@ -37,6 +45,7 @@ class CustomerBuyTicketActivity : AppCompatActivity() {
         btnBack      = findViewById(R.id.btnBack)
         spinnerType  = findViewById(R.id.spinnerTicketType)
         tvTotalPrice = findViewById(R.id.tvTotalPrice)
+        switchFace   = findViewById(R.id.switchFace)
         btnBuy       = findViewById(R.id.btnBuy)
         progressBar  = findViewById(R.id.progressBar)
         tvError      = findViewById(R.id.tvError)
@@ -85,22 +94,46 @@ class CustomerBuyTicketActivity : AppCompatActivity() {
                 
                 val response = api.buyTicket(req)
                 
-                setLoading(false)
-                Toast.makeText(this@CustomerBuyTicketActivity, "Mua vé thành công!", Toast.LENGTH_SHORT).show()
+                lastGeneratedTicketId = response.ticketId
+                lastGeneratedQrB64    = response.qrImageB64
                 
-                // Mở màn hình hiển thị QR
-                val intent = Intent(this@CustomerBuyTicketActivity, QrDisplayActivity::class.java).apply {
-                    putExtra("ticket_id",    response.ticketId)
-                    putExtra("qr_image_b64", response.qrImageB64)
-                    flags = Intent.FLAG_ACTIVITY_FORWARD_RESULT
+                setLoading(false)
+                
+                if (switchFace.isChecked) {
+                    // Chuyển sang quét mặt
+                    val intent = Intent(this@CustomerBuyTicketActivity, com.tourism.gate.ui.FaceEnrollActivity::class.java).apply {
+                        putExtra("ticket_id", response.ticketId)
+                    }
+                    @Suppress("DEPRECATION")
+                    startActivityForResult(intent, RC_FACE_ENROLL)
+                } else {
+                    Toast.makeText(this@CustomerBuyTicketActivity, "Mua vé thành công!", Toast.LENGTH_SHORT).show()
+                    showQrResult(response.ticketId, response.qrImageB64)
+                    finish()
                 }
-                startActivity(intent)
-                finish()
                 
             } catch (e: Exception) {
                 setLoading(false)
                 showError("Giao dịch thất bại: ${e.message}")
             }
+        }
+    }
+
+    private fun showQrResult(ticketId: String, qrB64: String?) {
+        val intent = Intent(this, QrDisplayActivity::class.java).apply {
+            putExtra("ticket_id",    ticketId)
+            putExtra("qr_image_b64", qrB64)
+        }
+        startActivity(intent)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_FACE_ENROLL) {
+            Toast.makeText(this, "Mua vé và đăng ký mặt thành công!", Toast.LENGTH_SHORT).show()
+            showQrResult(lastGeneratedTicketId ?: "", lastGeneratedQrB64)
+            finish()
         }
     }
 
