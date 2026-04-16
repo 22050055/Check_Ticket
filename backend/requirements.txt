@@ -19,7 +19,7 @@ pymongo[srv]>=4.7.0              # [srv] bắt buộc cho Atlas SRV URI (mongodb
 # ── Auth & Security ───────────────────────────────────────────
 python-jose[cryptography]>=3.3.0 # JWT encode/decode RS256 + HS256
 passlib[bcrypt]>=1.7.4           # password hashing
-bcrypt>=4.1.0                    # bcrypt backend cho passlib
+bcrypt==4.0.1                    # Giảm version bcrypt để không bị lỗi __about__ thiếu sót của passlib
 
 # ── HTTP client (gọi AI Services) ─────────────────────────────
 httpx>=0.27.0                    # async HTTP → /enroll /verify (port 8001)
