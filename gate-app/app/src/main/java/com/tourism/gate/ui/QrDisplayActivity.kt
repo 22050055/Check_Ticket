@@ -23,21 +23,26 @@ class QrDisplayActivity : AppCompatActivity() {
 
         val ticketId  = intent.getStringExtra("ticket_id") ?: ""
         val qrB64     = intent.getStringExtra("qr_image_b64")
+        val qrBytes   = intent.getByteArrayExtra("qr_bytes")  // từ màn hình khách
 
         findViewById<TextView>(R.id.tvTicketId).text = "Mã vé: $ticketId"
 
         // Hiển thị ảnh QR
         val ivQr = findViewById<ImageView>(R.id.ivQrCode)
-        if (!qrB64.isNullOrEmpty()) {
-            try {
-                val raw  = if (qrB64.contains(",")) qrB64.substringAfter(",") else qrB64
+        val bitmap = when {
+            // Ưu tiên bytes trực tiếp (khách hàng tải về)
+            qrBytes != null -> BitmapFactory.decodeByteArray(qrBytes, 0, qrBytes.size)
+            // Fallback: base64 chuỗi từ nhân viên phát hành
+            !qrB64.isNullOrEmpty() -> try {
+                val raw = if (qrB64.contains(",")) qrB64.substringAfter(",") else qrB64
                 val bytes = Base64.decode(raw, Base64.DEFAULT)
-                val bmp   = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                ivQr.setImageBitmap(bmp)
-            } catch (_: Exception) {
-                ivQr.visibility = View.GONE
-                findViewById<TextView>(R.id.tvQrFallback).visibility = View.VISIBLE
-            }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            } catch (_: Exception) { null }
+            else -> null
+        }
+
+        if (bitmap != null) {
+            ivQr.setImageBitmap(bitmap)
         } else {
             ivQr.visibility = View.GONE
             findViewById<TextView>(R.id.tvQrFallback).visibility = View.VISIBLE

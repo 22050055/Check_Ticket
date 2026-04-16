@@ -1,6 +1,7 @@
 package com.tourism.gate.data.api
 
 import com.tourism.gate.data.model.*
+import okhttp3.ResponseBody
 import retrofit2.http.*
 
 /**
@@ -39,12 +40,17 @@ interface ApiService {
     suspend fun loginCustomer(@Body req: CustomerLoginRequest): TokenResponse
 
     @GET("api/customer/tickets")
-    suspend fun getCustomerTickets(): List<TicketIssueResponse>
+    suspend fun getCustomerTickets(): List<CustomerTicket>
 
     @POST("api/customer/tickets/{id}/enroll-face")
     suspend fun enrollCustomerFace(
         @Path("id") ticketId: String,
         @Body req: Map<String, @JvmSuppressWildcards Any>
     ): FaceEnrollResponse
+
+    @GET("api/customer/tickets/{id}/qr.png")
+    suspend fun downloadCustomerQr(
+        @Path("id") ticketId: String
+    ): ResponseBody
 
 }

@@ -16,9 +16,9 @@ android {
         versionName "1.0.0"
 
         // ── Server URL — đổi thành IP server thực khi deploy ──
-        buildConfigField "String", "BASE_URL", '"http://192.168.1.7:8000/"'
+        buildConfigField "String", "BASE_URL", '"https://check-ticket-1hyd.onrender.com/"'
         //   10.0.2.2 = localhost từ Android Emulator
-        //   Máy thật dùng:  "http://192.168.x.x:8000/"
+        //   Máy thật dùng:  "http://192.168.x.x:8000/" Hoặc Link Deploy Cloud
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

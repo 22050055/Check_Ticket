@@ -6,8 +6,8 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api':  { target: 'http://localhost:8000', changeOrigin: true },
-      '/ws':   { target: 'ws://localhost:8000',   ws: true, changeOrigin: true },
+      '/api':  { target: 'https://check-ticket-1hyd.onrender.com', changeOrigin: true },
+      '/ws':   { target: 'wss://check-ticket-1hyd.onrender.com',   ws: true, changeOrigin: true },
     }
   }
 })

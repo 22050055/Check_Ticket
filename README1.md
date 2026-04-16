@@ -343,6 +343,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 cd ai-services
 pip install -r requirements.txt
 uvicorn face_verification.face_service:app --reload --port 8001
+./ngrok http 8001
+
 ```
 
 ---

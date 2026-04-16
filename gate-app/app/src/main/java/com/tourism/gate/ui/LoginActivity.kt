@@ -108,7 +108,8 @@ class LoginActivity : AppCompatActivity() {
                         
                         getSharedPreferences("gate_prefs", MODE_PRIVATE).edit()
                             .putString("token", customerResp.accessToken)
-                            .remove("role") // Đảm bảo role rỗng/null cho khách hàng
+                            .putString("customer_email", username) // lưu email để hiển thị trên dashboard
+                            .remove("role")      // Đảm bảo role rỗng/null cho khách hàng
                             .remove("full_name")
                             .apply()
 
