@@ -10,6 +10,7 @@ import Tickets        from './pages/Tickets'
 import Reports        from './pages/Reports'
 import AgeGroupAnalysis from './pages/AgeGroupAnalysis'
 import UserManagement from './pages/UserManagement'
+import CustomerManagement from './pages/CustomerManagement'
 import AppLayout      from './components/AppLayout'
 import useAuthStore   from './store/authStore'
 
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="reports"        element={<Reports />} />
           <Route path="age-groups"     element={<AgeGroupAnalysis />} />
           <Route path="users"          element={<UserManagement />} />
+          <Route path="customers"      element={<CustomerManagement />} />
         </Route>
       </Routes>
     </ConfigProvider>

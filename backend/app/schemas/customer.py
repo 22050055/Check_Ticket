@@ -24,3 +24,8 @@ class CustomerBuyTicketRequest(BaseModel):
     ticket_type: str               # adult | child | student | group
     payment_method: str = "demo"   # demo = giả lập thanh toán cho đồ án
     venue_id: str = "tourism_default"
+
+class CustomerUpdateByAdminRequest(BaseModel):
+    """Admin cập nhật thông tin khách hàng."""
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None

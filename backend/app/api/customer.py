@@ -8,8 +8,8 @@ import httpx
 
 from ..core.config import settings
 from ..core.database import get_db
-from ..core.security import hash_password, verify_password, create_access_token, get_current_customer, Role
-from ..schemas.customer import CustomerRegisterRequest, CustomerLoginRequest, CustomerResponse, TokenResponse, CustomerBuyTicketRequest
+from ..core.security import hash_password, verify_password, create_access_token, get_current_customer, Role, require_min_role
+from ..schemas.customer import CustomerRegisterRequest, CustomerLoginRequest, CustomerResponse, TokenResponse, CustomerBuyTicketRequest, CustomerUpdateByAdminRequest
 from ..schemas.ticket import TicketResponse, TicketEnrollFaceRequest
 from .tickets import _make_qr_token
 from ..services.qr_image_service import generate_qr_b64, generate_qr_png_bytes
@@ -228,3 +228,64 @@ async def buy_ticket(
         qr_image_b64=qr_b64,
         created_at=now
     )
+
+# ── Quản lý khách hàng (Admin/Manager) ────────────────────────
+
+@router.get("/all", response_model=list[CustomerResponse])
+async def list_all_customers(
+    current_user: dict = Depends(require_min_role(Role.MANAGER)),
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    """Lấy danh sách toàn bộ khách hàng (Admin/Manager)."""
+    cursor = db["customers"].find({}).sort("created_at", -1)
+    customers = await cursor.to_list(length=1000)
+    return [
+        CustomerResponse(
+            id=str(c["_id"]),
+            name=c.get("name", ""),
+            email=c.get("email", "")
+        ) for c in customers
+    ]
+
+@router.patch("/{customer_id}", response_model=CustomerResponse)
+async def update_customer_by_admin(
+    customer_id: str,
+    req: CustomerUpdateByAdminRequest,
+    current_user: dict = Depends(require_min_role(Role.ADMIN)),
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    """Admin chỉnh sửa thông tin khách hàng."""
+    update_data = {k: v for k, v in req.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(400, "Không có dữ liệu cập nhật.")
+        
+    result = await db["customers"].update_one(
+        {"_id": customer_id},
+        {"$set": update_data}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(404, "Không tìm thấy khách hàng.")
+        
+    customer = await db["customers"].find_one({"_id": customer_id})
+    return CustomerResponse(
+        id=str(customer["_id"]),
+        name=customer.get("name", ""),
+        email=customer.get("email", "")
+    )
+
+@router.delete("/{customer_id}")
+async def delete_customer_by_admin(
+    customer_id: str,
+    current_user: dict = Depends(require_min_role(Role.ADMIN)),
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    """Admin xóa tài khoản khách hàng."""
+    # Xóa customer
+    result = await db["customers"].delete_one({"_id": customer_id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Không tìm thấy khách hàng.")
+        
+    # Tùy chọn: Xóa các vé liên quan (hoặc để lại làm lịch sử)
+    # await db["tickets"].delete_many({"customer_id": customer_id})
+    
+    return {"message": "Đã xóa tài khoản khách hàng thành công."}

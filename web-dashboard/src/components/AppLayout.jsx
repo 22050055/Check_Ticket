@@ -14,6 +14,7 @@ const MENU = [
   { path: '/tickets',  icon: '◇', label: 'Quản lý vé',       roles: ['admin','manager'] },
   { path: '/reports',  icon: '◫', label: 'Báo cáo / Export', roles: ['admin','manager'] },
   { path: '/users',    icon: '◎', label: 'Nhân viên',        roles: ['admin','manager'] },
+  { path: '/customers', icon: '👥', label: 'Khách hàng',      roles: ['admin','manager'] },
 ]
 
 const ROLE_LABEL = { admin:'Admin', manager:'Manager', operator:'Operator', cashier:'Cashier' }
