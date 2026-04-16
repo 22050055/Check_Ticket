@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # ── Database ────────────────────────────────────────────────
+  db:
+    image: mongo:latest
+    container_name: tourism_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongodb_data:/data/db
+    restart: always
+
+  # ── AI Services ─────────────────────────────────────────────
+  ai-services:
+    build: 
+      context: ./ai-services
+    container_name: tourism_ai
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URI=mongodb://db:27017/tourism_db
+    volumes:
+      - ./ai-services/face_verification/models:/app/face_verification/models
+      - ./ai-services/qr_generator/keys:/app/qr_generator/keys
+    depends_on:
+      - db
+    restart: always
+
+  # ── Backend ─────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+    container_name: tourism_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://db:27017/tourism_db
+      - MONGO_PASSWORD=dummy
+      - MONGO_DB=tourism_db
+      - AI_SERVICE_URL=http://ai-services:8001
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+      - JWT_SECRET=CHANGE_ME_IN_PROD
+    depends_on:
+      - db
+      - ai-services
+    restart: always
+
+  # ── Web Dashboard ───────────────────────────────────────────
+  dashboard:
+    build:
+      context: ./web-dashboard
+    container_name: tourism_dashboard
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: always
+
+networks:
+  default:
+    name: tourism_network
