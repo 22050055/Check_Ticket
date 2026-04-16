@@ -1,10 +1,13 @@
 /**
  * api.js — Axios instance với JWT header tự động
- * Base URL: /api (proxy qua Vite → localhost:8000)
+ * Base URL: Linh hoạt giữa local proxy và production URL
  */
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api', timeout: 15000 })
+const api = axios.create({ 
+  baseURL: import.meta.env.VITE_API_URL || '/api', 
+  timeout: 15000 
+})
 
 // Tự động gắn Authorization header
 api.interceptors.request.use(cfg => {
