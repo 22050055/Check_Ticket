@@ -395,13 +395,25 @@ Body mẫu:
 
 ---
 
+---
+
 ## Tài khoản demo
 
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | `admin` | `admin123` |
-| Nhân viên cổng | `staff_gate1` | `staff123` |
-| Kế toán | `accountant` | `acc123` |
+### 🌐 Web Dashboard & App (Nhân viên)
+**Link truy cập:** [https://fc439656.tourism-dashboard.pages.dev/login](https://fc439656.tourism-dashboard.pages.dev/login)
+
+| Quyền | Tài khoản | Mật khẩu |
+|-------|-----------|----------|
+| **Admin** | `admin` | `admin123` |
+| **Quản lý (Manager)** | `manager1` | `manager123` |
+| **Vận hành (Operator)** | `operator1` | `operator123` |
+| **Vận hành (Operator)** | `operator2` | `operator123` |
+| **Bán vé (Cashier)** | `cashier1` | `cashier123` |
+
+### 📱 App (Khách hàng tự mua vé)
+| Loại | Email | Mật khẩu |
+|------|-------|----------|
+| **Khách hàng** | `22050055@student.bdu.edu.vn` | `123456` |
 
 ---
 
