@@ -33,6 +33,7 @@ class CustomerDashboardActivity : AppCompatActivity() {
     private lateinit var progressBar:     ProgressBar
     private lateinit var layoutEmpty:     View
     private lateinit var recyclerTickets: RecyclerView
+    private lateinit var fabBuyTicket:   View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +47,7 @@ class CustomerDashboardActivity : AppCompatActivity() {
         progressBar     = findViewById(R.id.progressBar)
         layoutEmpty     = findViewById(R.id.layout_empty)
         recyclerTickets = findViewById(R.id.recycler_tickets)
+        fabBuyTicket    = findViewById(R.id.fab_buy_ticket)
 
         recyclerTickets.layoutManager = LinearLayoutManager(this)
 
@@ -56,6 +58,11 @@ class CustomerDashboardActivity : AppCompatActivity() {
 
         // Xử lý nút đăng xuất
         btnLogout.setOnClickListener { confirmLogout() }
+
+        // Xử lý nút mua vé
+        fabBuyTicket.setOnClickListener {
+            startActivity(Intent(this, CustomerBuyTicketActivity::class.java))
+        }
 
         loadTickets()
     }

@@ -9,7 +9,7 @@ import httpx
 from ..core.config import settings
 from ..core.database import get_db
 from ..core.security import hash_password, verify_password, create_access_token, get_current_customer, Role
-from ..schemas.customer import CustomerRegisterRequest, CustomerLoginRequest, CustomerResponse, TokenResponse
+from ..schemas.customer import CustomerRegisterRequest, CustomerLoginRequest, CustomerResponse, TokenResponse, CustomerBuyTicketRequest
 from ..schemas.ticket import TicketResponse, TicketEnrollFaceRequest
 from .tickets import _make_qr_token
 from ..services.qr_image_service import generate_qr_b64, generate_qr_png_bytes
@@ -147,3 +147,84 @@ async def enroll_my_face(
         "message": "Đăng ký khuôn mặt thành công.",
         "ticket_id": ticket_id
     }
+
+@router.post("/buy-ticket", response_model=TicketResponse, status_code=201)
+async def buy_ticket(
+    req: CustomerBuyTicketRequest,
+    customer: dict = Depends(get_current_customer),
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    """Khách hàng tự mua vé online."""
+    ticket_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    # Định nghĩa giá vé cơ bản (có thể lấy từ DB nếu có bảng cấu hình)
+    prices = {
+        "adult": 150000.0,
+        "child": 80000.0,
+        "student": 100000.0,
+        "group": 500000.0
+    }
+    price = prices.get(req.ticket_type, 150000.0)
+    
+    # Hiệu lực trong ngày
+    from datetime import time
+    valid_until = datetime.combine(now.date(), time(23, 59, 59)).replace(tzinfo=timezone.utc)
+    
+    customer_id = str(customer["_id"])
+    booking_id = f"OL-{uuid.uuid4().hex[:8].upper()}"
+
+    # 1. Tạo Ticket
+    await db["tickets"].insert_one({
+        "_id": ticket_id,
+        "booking_id": booking_id,
+        "customer_id": customer_id,
+        "ticket_type": req.ticket_type,
+        "price": price,
+        "valid_from": now,
+        "valid_until": valid_until,
+        "status": "active",
+        "venue_id": req.venue_id,
+        "created_at": now,
+        "updated_at": now
+    })
+    
+    # 2. Tạo Identity
+    await db["identities"].insert_one({
+        "_id": str(uuid.uuid4()),
+        "ticket_id": ticket_id,
+        "booking_id": booking_id,
+        "face_embedding": None,
+        "face_image_hash": None,
+        "has_face": False,
+        "created_at": now
+    })
+    
+    # 3. Tạo Transaction
+    await db["transactions"].insert_one({
+        "_id": str(uuid.uuid4()),
+        "ticket_id": ticket_id,
+        "action": "ISSUE",
+        "actor_id": customer_id,
+        "actor_role": "customer",
+        "amount": price,
+        "payment_method": req.payment_method,
+        "timestamp": now
+    })
+    
+    # 4. Tạo QR
+    token = _make_qr_token(ticket_id, req.ticket_type, valid_until, req.venue_id)
+    qr_b64 = generate_qr_b64(token) if token else None
+
+    return TicketResponse(
+        ticket_id=ticket_id,
+        booking_id=booking_id,
+        ticket_type=req.ticket_type,
+        price=price,
+        valid_from=now,
+        valid_until=valid_until,
+        status="active",
+        has_face=False,
+        qr_image_b64=qr_b64,
+        created_at=now
+    )

@@ -53,4 +53,7 @@ interface ApiService {
         @Path("id") ticketId: String
     ): ResponseBody
 
+    @POST("api/customer/buy-ticket")
+    suspend fun buyTicket(@Body req: CustomerBuyTicketRequest): TicketIssueResponse
+
 }

@@ -45,6 +45,10 @@
             android:name=".ui.customer.CustomerDashboardActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.customer.CustomerBuyTicketActivity"
+            android:exported="false" />
+
         <!-- ② Chọn vai trò ca trực -->
         <activity
             android:name=".ui.RoleSelectActivity"
