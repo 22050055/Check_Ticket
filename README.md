@@ -113,6 +113,7 @@ tourism-access-control/
 │   │   │   ├── Visitors.jsx                # Thống kê lượt khách
 │   │   │   ├── AgeGroupAnalysis.jsx        # Phân tích cơ cấu nhóm tuổi
 │   │   │   ├── Tickets.jsx                 # Quản lý vé (phát hành / huỷ)
+│   │   │   ├── CustomerManagement.jsx      # Quản lý khách hàng
 │   │   │   └── Reports.jsx                 # Xuất báo cáo CSV / PDF
 │   │   ├── components/
 │   │   │   ├── charts/
@@ -150,6 +151,7 @@ tourism-access-control/
 │   │   │   ├── checkin.py                  # Check-in/out endpoint thống nhất (đa kênh)
 │   │   │   ├── gates.py                    # Quản lý cổng
 │   │   │   ├── reports.py                  # Doanh thu, lượt khách, channel usage, export
+│   │   │   ├── customer.py                 # API Khách hàng & Mua vé online [NEW]
 │   │   │   └── websocket.py                # WebSocket endpoint cho dashboard realtime
 │   │   ├── models/                         # MongoDB Document Schema (Beanie ODM)
 │   │   │   ├── customer.py                 # Collection: customers
@@ -164,6 +166,7 @@ tourism-access-control/
 │   │   │   ├── ticket.py                   # TicketCreate, TicketResponse
 │   │   │   ├── checkin.py                  # CheckinRequest, CheckinResult
 │   │   │   ├── gate.py                     # GateCreate, GateResponse
+│   │   │   ├── customer.py                 # Customer schemas [NEW]
 │   │   │   └── report.py                   # RevenueQuery, VisitorStats
 │   │   ├── services/
 │   │   │   ├── qr_service.py               # Gọi qr_generator: tạo & verify QR
@@ -367,6 +370,15 @@ npm run dev
 | POST | `/api/tickets/issue` | Phát hành vé điện tử QR |
 | POST | `/api/tickets/validate` | Xác thực vé |
 | PUT | `/api/tickets/{id}/revoke` | Huỷ vé |
+| POST | `/api/customer/buy-ticket` | Khách tự mua vé online |
+
+### Customers (Admin)
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| GET | `/api/customer/all` | Danh sách toàn bộ khách hàng |
+| PATCH | `/api/customer/{id}` | Cập nhật thông tin khách |
+| DELETE | `/api/customer/{id}` | Xóa tài khoản khách |
 
 ### Check-in / Out
 
@@ -392,8 +404,6 @@ Body mẫu:
 | GET | `/api/reports/revenue` | Doanh thu theo ngày / loại vé |
 | GET | `/api/reports/visitors` | Lượt vào/ra theo cổng / kênh |
 | GET | `/api/reports/export` | Xuất CSV |
-
----
 
 ---
 
