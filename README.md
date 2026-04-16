@@ -136,7 +136,9 @@ tourism-access-control/
 │   │       ├── authStore.js
 │   │       ├── gateStore.js
 │   │       └── reportStore.js
-│   └── package.json
+│   ├── package.json
+│   ├── Dockerfile                  # Build image cho Dashboard (Nginx) [NEW]
+│   └── nginx.conf                  # Cấu hình proxy API cho Dashboard [NEW]
 │
 ├── ⚙️ backend/                              # FastAPI Backend
 │   ├── app/
@@ -305,11 +307,14 @@ Các service sẽ chạy tại:
 
 | Service | URL |
 |---------|-----|
-| Backend API | http://localhost:8000 |
-| API Docs (Swagger) | http://localhost:8000/docs |
-| AI Services | http://localhost:8001 |
-| Web Dashboard | http://localhost:3000 |
-| MongoDB | localhost:27017 |
+| **Web Dashboard** | [http://localhost:3000](http://localhost:3000) |
+| **Backend API** | [http://localhost:8000](http://localhost:8000) |
+| **API Docs (Swagger)** | [http://localhost:8000/docs](http://localhost:8000/docs) |
+| **AI Services** | [http://localhost:8001](http://localhost:8001) |
+| **MongoDB (Local)** | `localhost:27017` |
+
+> [!NOTE]
+> Khi chạy bằng Docker Compose, dữ liệu được lưu tại thư mục `./mongodb_data`.
 
 ---
 
@@ -424,6 +429,20 @@ Body mẫu:
 | Loại | Email | Mật khẩu |
 |------|-------|----------|
 | **Khách hàng** | `22050055@student.bdu.edu.vn` | `123456` |
+
+---
+
+## Triển khai (Deployment)
+
+### ⚙️ Backend (Render)
+Dự án được cấu hình để deploy tự động lên **Render** thông qua Dockerfile.
+- Cần cấu hình biến môi trường: `MONGO_URI`, `AI_SERVICE_URL`, `CORS_ORIGINS`.
+
+### 🌐 Web Dashboard (Cloudflare Pages)
+- **Root Directory**: `web-dashboard`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Environment Variables**: Thêm `VITE_API_URL` trỏ về Backend Render.
 
 ---
 
