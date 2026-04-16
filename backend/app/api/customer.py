@@ -242,8 +242,8 @@ async def list_all_customers(
     return [
         CustomerResponse(
             id=str(c["_id"]),
-            name=c.get("name", ""),
-            email=c.get("email", "")
+            name=c.get("name") or "",
+            email=c.get("email") or ""
         ) for c in customers
     ]
 
@@ -269,8 +269,8 @@ async def update_customer_by_admin(
     customer = await db["customers"].find_one({"_id": customer_id})
     return CustomerResponse(
         id=str(customer["_id"]),
-        name=customer.get("name", ""),
-        email=customer.get("email", "")
+        name=customer.get("name") or "",
+        email=customer.get("email") or ""
     )
 
 @router.delete("/{customer_id}")
