@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:id="@+id/tvGateInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cổng: ---"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"
+        android:gravity="center" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chọn chiều kiểm soát:"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center" />
+
+    <Button
+        android:id="@+id/btnIn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CHIỀU VÀO (IN)"
+        android:layout_marginBottom="12dp"
+        android:minHeight="60dp" />
+
+    <Button
+        android:id="@+id/btnOut"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CHIỀU RA (OUT)"
+        android:layout_marginBottom="32dp"
+        android:minHeight="60dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnChangeGate"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Đổi cổng làm việc" />
+
+</LinearLayout>

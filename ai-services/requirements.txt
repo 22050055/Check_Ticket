@@ -1,0 +1,18 @@
+# ── Face Verification ────────────────────────────────────────
+opencv-python-headless>=4.9.0
+onnxruntime>=1.18.0          # Thay bằng onnxruntime-gpu nếu có CUDA
+numpy>=1.26.0
+Pillow>=10.3.0
+
+# ── QR Generator ─────────────────────────────────────────────
+python-jose[cryptography]>=3.3.0
+qrcode[pil]>=7.4.2
+
+# ── ID Service ───────────────────────────────────────────────
+pymongo>=4.7.0
+
+# ── API Server ───────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+python-multipart>=0.0.9

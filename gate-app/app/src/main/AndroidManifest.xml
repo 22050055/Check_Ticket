@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.tourism.gate">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-feature android:name="android.hardware.camera"       android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+
+    <application
+        android:name=".GateApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.TourismGate"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".ui.customer.CustomerWelcomeActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".ui.customer.CustomerRegisterActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Màn hình Đăng nhập hợp nhất — LAUNCHER -->
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.customer.CustomerDashboardActivity"
+            android:exported="false" />
+
+        <!-- ② Chọn vai trò ca trực -->
+        <activity
+            android:name=".ui.RoleSelectActivity"
+            android:exported="false" />
+
+        <!-- ③ Bán vé (cashier) -->
+        <activity
+            android:name=".ui.SellTicketActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- ④ Đăng ký khuôn mặt khi bán vé -->
+        <activity
+            android:name=".ui.FaceEnrollActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:keepScreenOn="true" />
+
+        <!-- ⑤ Hiển thị QR sau khi phát hành vé -->
+        <activity
+            android:name=".ui.QrDisplayActivity"
+            android:exported="false" />
+
+        <!-- ⑥ Chọn cổng (operator) -->
+        <activity
+            android:name=".ui.GateSelectActivity"
+            android:exported="false" />
+
+        <!-- ⑦ Chọn hướng IN / OUT -->
+        <activity
+            android:name=".ui.SelectDirectionActivity"
+            android:exported="false" />
+
+        <!-- ⑧ Quét QR -->
+        <activity
+            android:name=".ui.ScanActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:keepScreenOn="true" />
+
+        <!-- ⑨ Xác thực khuôn mặt tại cổng -->
+        <activity
+            android:name=".ui.FaceVerifyActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:keepScreenOn="true" />
+
+        <!-- ⑩ Kết quả check-in/out -->
+        <activity
+            android:name=".ui.ResultActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- ⑪ Tra cứu thủ công -->
+        <activity
+            android:name=".ui.ManualSearchActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- FileProvider để chia sẻ file ảnh QR -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
+
+    </application>
+
+</manifest>

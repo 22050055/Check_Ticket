@@ -1,0 +1,39 @@
+# ── Python (Backend & AI) ────────────
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# ── Mô hình AI nặng quá 100MB ────────
+*.onnx
+*.pt
+*.pth
+*.h5
+
+# ── Node.js (Web Dashboard) ──────────
+node_modules/
+dist/
+dist-ssr/
+.npm/
+npm-debug.log*
+
+# ── Android (Gate App) ───────────────
+.gradle/
+.idea/
+build/
+app/build/
+local.properties
+*.iml
+.cxx/
+captures/
+
+# ── OS & IDE ─────────
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ── RSA Keys (Bảo mật) ─────────
+ai-services/qr_generator/keys/*.pem

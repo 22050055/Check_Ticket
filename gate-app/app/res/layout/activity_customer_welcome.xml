@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chào mừng đến Khu Du Lịch"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="40dp" />
+
+    <Button
+        android:id="@+id/btn_customer_portal"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="TÔI LÀ KHÁCH HÀNG (Mua vé)"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btn_staff_portal"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="TÔI LÀ NHÂN VIÊN"
+        style="?android:attr/buttonStyleSmall" />
+
+</LinearLayout>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/navy_deep"
+    android:paddingHorizontal="24dp"
+    android:gravity="center_vertical">
+
+    <!-- Top: greeting -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="XIN CHÀO,"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:letterSpacing="0.15"/>
+
+            <TextView
+                android:id="@+id/tvFullName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nhân viên"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tvRole"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="operator"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Đăng xuất"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/bg_btn_ghost"/>
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/navy_border"
+        android:layout_marginBottom="40dp"/>
+
+    <!-- Choose role label -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CHỌN VAI TRÒ CA TRỰC"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp"
+        android:letterSpacing="0.15"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Role card: BÁN VÉ -->
+    <LinearLayout
+        android:id="@+id/cardCashier"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_role_cashier"
+        android:padding="24dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎫"
+            android:textSize="28sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nhân viên bán vé"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Phát hành vé · Đăng ký khuôn mặt"
+            android:textColor="#CCFFFFFF"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+    <!-- Role card: CHECK-IN/OUT -->
+    <LinearLayout
+        android:id="@+id/cardOperator"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_role_operator"
+        android:padding="24dp"
+        android:layout_marginBottom="40dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔍"
+            android:textSize="28sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nhân viên cổng"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Check-in · Check-out · Xác thực vé"
+            android:textColor="#CCFFFFFF"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+    <!-- Shift info -->
+    <TextView
+        android:id="@+id/tvShiftInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ca trực chưa bắt đầu"
+        android:textColor="@color/text_hint"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:layout_gravity="center"/>
+
+</LinearLayout>

@@ -1,0 +1,43 @@
+{
+  "total_tests": 5,
+  "passed": 5,
+  "skipped": 0,
+  "detection_rate_percent": 100.0,
+  "results": [
+    {
+      "test": "TC01_valid_first_use",
+      "expected": "PASS",
+      "got": "PASS",
+      "pass": true,
+      "detail": "ticket=TICKET_c448b91e"
+    },
+    {
+      "test": "TC02_reuse_blocked",
+      "expected": "FAIL",
+      "got": "FAIL",
+      "pass": true,
+      "detail": "Reuse đã bị block ✓"
+    },
+    {
+      "test": "TC03_fake_signature",
+      "expected": "FAIL",
+      "got": "FAIL",
+      "pass": true,
+      "detail": "Chữ ký giả đã bị từ chối ✓"
+    },
+    {
+      "test": "TC04_expired_qr",
+      "expected": "FAIL",
+      "got": "FAIL",
+      "pass": true,
+      "detail": "QR hết hạn đã bị từ chối ✓"
+    },
+    {
+      "test": "TC05_tampered_payload",
+      "expected": "FAIL",
+      "got": "FAIL",
+      "pass": true,
+      "detail": "Payload giả đã bị từ chối ✓"
+    }
+  ]
+}

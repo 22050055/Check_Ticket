@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/navy_deep">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:background="@color/navy_card">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Vé đã phát hành"
+            android:textColor="@color/text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✅"
+            android:textSize="22sp"/>
+    </LinearLayout>
+
+    <!-- Body -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="28dp">
+
+        <!-- Success badge -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PHÁT HÀNH THÀNH CÔNG"
+            android:textColor="@color/status_success"
+            android:textSize="11sp"
+            android:letterSpacing="0.15"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- QR Code image -->
+        <LinearLayout
+            android:layout_width="240dp"
+            android:layout_height="240dp"
+            android:gravity="center"
+            android:background="@color/text_primary"
+            android:padding="12dp"
+            android:layout_marginBottom="20dp">
+
+            <ImageView
+                android:id="@+id/ivQrCode"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:contentDescription="QR Code"/>
+        </LinearLayout>
+
+        <!-- QR fallback text -->
+        <TextView
+            android:id="@+id/tvQrFallback"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️ Không thể tải QR.\nLiên hệ quản lý."
+            android:textColor="@color/status_warn"
+            android:textSize="13sp"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Ticket ID -->
+        <TextView
+            android:id="@+id/tvTicketId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mã vé: ..."
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:fontFamily="monospace"
+            android:gravity="center"/>
+
+        <!-- Hint -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chụp màn hình hoặc in QR để đưa cho khách"
+            android:textColor="@color/text_hint"
+            android:textSize="11sp"
+            android:gravity="center"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
+    <!-- Bottom buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="32dp"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:text="Trang chủ"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_ghost"
+            android:layout_marginEnd="12dp"/>
+
+        <TextView
+            android:id="@+id/btnNewTicket"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="2"
+            android:text="🎫  Phát hành vé mới"
+            android:textColor="@color/navy_deep"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_primary"/>
+    </LinearLayout>
+
+</LinearLayout>

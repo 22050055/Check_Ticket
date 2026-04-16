@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/navy_deep">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:background="@color/navy_card">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:text="←"
+            android:textColor="@color/accent_blue"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_marginEnd="12dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Phát hành vé"
+            android:textColor="@color/text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎫"
+            android:textSize="20sp"/>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Thông tin khách -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="THÔNG TIN KHÁCH"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="12dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginBottom="20dp">
+
+                <EditText
+                    android:id="@+id/etCustomerName"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:hint="Tên khách *"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:inputType="textPersonName"
+                    android:paddingHorizontal="14dp"
+                    android:background="@drawable/bg_input"
+                    android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:hint="Số điện thoại"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:inputType="phone"
+                    android:paddingHorizontal="14dp"
+                    android:background="@drawable/bg_input"/>
+            </LinearLayout>
+
+            <!-- Loại vé & Giá -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="THÔNG TIN VÉ"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="12dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginBottom="20dp">
+
+                <Spinner
+                    android:id="@+id/spinnerTicketType"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@drawable/bg_input"
+                    android:paddingHorizontal="14dp"
+                    android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:hint="Giá vé (VND) *"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:inputType="numberDecimal"
+                    android:paddingHorizontal="14dp"
+                    android:background="@drawable/bg_input"
+                    android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etBookingId"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:hint="Booking ID (tùy chọn)"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:inputType="text"
+                    android:paddingHorizontal="14dp"
+                    android:background="@drawable/bg_input"/>
+            </LinearLayout>
+
+            <!-- Face opt-in toggle -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Đăng ký khuôn mặt"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Xác thực face 1:1 tại cổng (opt-in)"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp"/>
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/switchFace"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:thumbTint="@color/accent_blue"
+                    android:trackTint="@color/navy_border"/>
+            </LinearLayout>
+
+            <!-- Error -->
+            <TextView
+                android:id="@+id/tvError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FF5252"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Submit button -->
+            <TextView
+                android:id="@+id/btnIssue"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="PHÁT HÀNH VÉ + TẠO QR"
+                android:textColor="@color/navy_deep"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:gravity="center"
+                android:background="@drawable/bg_btn_primary"/>
+
+            <!-- Progress -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/accent_blue"
+                android:visibility="gone"
+                android:layout_marginTop="12dp"/>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

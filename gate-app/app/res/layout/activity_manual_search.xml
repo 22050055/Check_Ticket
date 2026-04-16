@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/navy_deep">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:background="@color/navy_card">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:text="←"
+            android:textColor="@color/accent_blue"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_marginEnd="12dp"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tra cứu thủ công"
+                android:textColor="@color/text_primary"
+                android:textSize="17sp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/tvDirection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/accent_blue"
+                android:textSize="11sp"
+                android:letterSpacing="0.1"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp">
+
+            <!-- Search type tabs -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TÌM THEO"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="12dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_card"
+                android:padding="4dp"
+                android:layout_marginBottom="20dp">
+
+                <RadioGroup
+                    android:id="@+id/rgSearchType"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/rbPhone"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="📱 SĐT"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:button="@null"/>
+
+                    <RadioButton
+                        android:id="@+id/rbBooking"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="🏷 Booking"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:button="@null"/>
+
+                    <RadioButton
+                        android:id="@+id/rbTicketId"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="🎫 Ticket"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:button="@null"/>
+                </RadioGroup>
+            </LinearLayout>
+
+            <!-- Search input -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:hint="Nhập số điện thoại..."
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="16dp"
+                    android:background="@drawable/bg_input"/>
+            </LinearLayout>
+
+            <!-- Error -->
+            <TextView
+                android:id="@+id/tvError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FF5252"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Progress -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/accent_blue"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Search button -->
+            <TextView
+                android:id="@+id/btnSearch"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="TÌM KIẾM &amp; CHECK-IN"
+                android:textColor="@color/navy_deep"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:gravity="center"
+                android:background="@drawable/bg_btn_primary"/>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/navy_deep"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingHorizontal="28dp"
+        android:paddingTop="72dp"
+        android:paddingBottom="40dp">
+
+        <!-- Logo mark -->
+        <LinearLayout
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_accent_circle"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏖"
+                android:textSize="32sp"/>
+        </LinearLayout>
+
+        <!-- Headline -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tourism Gate"
+            android:textColor="@color/text_primary"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.02"
+            android:gravity="center"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Access Control System"
+            android:textColor="@color/accent_blue"
+            android:textSize="13sp"
+            android:letterSpacing="0.15"
+            android:gravity="center"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="48dp"/>
+
+        <!-- Form card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="24dp">
+
+            <!-- Username -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="USERNAME"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etUsername"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Nhập username"
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:inputType="text"
+                android:paddingHorizontal="16dp"
+                android:background="@drawable/bg_input"
+                android:layout_marginBottom="20dp"/>
+
+            <!-- Password -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PASSWORD"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Nhập mật khẩu"
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:inputType="textPassword"
+                android:paddingHorizontal="16dp"
+                android:background="@drawable/bg_input"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Error -->
+            <TextView
+                android:id="@+id/tvError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FF5252"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Progress -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/accent_blue"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Login button -->
+            <TextView
+                android:id="@+id/btnLogin"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:text="ĐĂNG NHẬP"
+                android:textColor="@color/navy_deep"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:gravity="center"
+                android:background="@drawable/bg_btn_primary"
+                android:layout_marginTop="8dp"/>
+                
+            <!-- Register Link cho Khách -->
+            <TextView
+                android:id="@+id/tv_goto_register"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Khách hàng chưa có tài khoản? ĐĂNG KÝ"
+                android:textColor="@color/accent_blue"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:layout_marginTop="20dp"
+                android:padding="8dp"/>
+        </LinearLayout>
+
+        <!-- Version -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="v1.0.0 · Tourism Access Control"
+            android:textColor="@color/text_hint"
+            android:textSize="11sp"
+            android:layout_marginTop="32dp"/>
+
+    </LinearLayout>
+</ScrollView>

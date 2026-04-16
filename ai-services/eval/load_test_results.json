@@ -1,0 +1,78 @@
+{
+  "test_time": "2026-03-11T12:29:37.833420+00:00",
+  "scenarios": [
+    {
+      "label": "QR_only_light",
+      "n_requests": 200,
+      "concurrency": 5,
+      "total_time_s": 2.069,
+      "throughput_rps": 96.66,
+      "error_count": 7,
+      "error_rate_percent": 3.5,
+      "latency_ms": {
+        "min": 20.56,
+        "max": 79.72,
+        "mean": 50.58,
+        "median": 52.89,
+        "p95": 77.23,
+        "p99": 79.01
+      }
+    },
+    {
+      "label": "QR_only_peak",
+      "n_requests": 500,
+      "concurrency": 20,
+      "total_time_s": 1.332,
+      "throughput_rps": 375.26,
+      "error_count": 15,
+      "error_rate_percent": 3.0,
+      "latency_ms": {
+        "min": 20.38,
+        "max": 80.43,
+        "mean": 51.3,
+        "median": 51.28,
+        "p95": 77.96,
+        "p99": 80.02
+      }
+    },
+    {
+      "label": "QR_face_light",
+      "n_requests": 100,
+      "concurrency": 5,
+      "total_time_s": 4.083,
+      "throughput_rps": 24.49,
+      "error_count": 4,
+      "error_rate_percent": 4.0,
+      "latency_ms": {
+        "min": 101.33,
+        "max": 299.62,
+        "mean": 199.31,
+        "median": 197.74,
+        "p95": 294.82,
+        "p99": 299.62
+      }
+    },
+    {
+      "label": "QR_face_peak",
+      "n_requests": 200,
+      "concurrency": 10,
+      "total_time_s": 4.056,
+      "throughput_rps": 49.3,
+      "error_count": 3,
+      "error_rate_percent": 1.5,
+      "latency_ms": {
+        "min": 102.63,
+        "max": 298.68,
+        "mean": 195.86,
+        "median": 197.41,
+        "p95": 288.43,
+        "p99": 297.57
+      }
+    }
+  ],
+  "summary": {
+    "best_throughput_rps": 375.26,
+    "worst_p95_ms": 294.82,
+    "max_error_rate": 4.0
+  }
+}

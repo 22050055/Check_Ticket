@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ── Brand palette ─────────────────────────── -->
+    <color name="navy_deep">#070B18</color>
+    <color name="navy_card">#0F1629</color>
+    <color name="navy_surface">#161D35</color>
+    <color name="navy_border">#1E2A47</color>
+
+    <!-- Electric blue accent -->
+    <color name="accent_blue">#00C6FF</color>
+    <color name="accent_blue_dim">#0066AA</color>
+    <color name="accent_glow">#1A3A5C</color>
+
+    <!-- Status colors -->
+    <color name="status_success">#00E676</color>
+    <color name="status_fail">#FF1744</color>
+    <color name="status_warn">#FFD600</color>
+
+    <!-- Text -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#8899BB</color>
+    <color name="text_hint">#445577</color>
+
+    <!-- Role cards -->
+    <color name="role_cashier_start">#0052D4</color>
+    <color name="role_cashier_end">#00C6FF</color>
+    <color name="role_operator_start">#11998E</color>
+    <color name="role_operator_end">#38EF7D</color>
+
+    <!-- Launcher -->
+    <color name="ic_launcher_background">#070B18</color>
+</resources>

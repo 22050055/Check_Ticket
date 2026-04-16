@@ -1,0 +1,25 @@
+{
+  "name": "tourism-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port 3000",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0",
+    "axios": "^1.7.2",
+    "recharts": "^2.12.7",
+    "zustand": "^4.5.4",
+    "dayjs": "^1.11.11",
+    "antd": "^5.19.0",
+    "@ant-design/icons": "^5.3.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.3.4"
+  }
+}

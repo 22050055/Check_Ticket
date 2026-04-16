@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutResult"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:paddingHorizontal="32dp">
+
+    <!-- Big icon circle -->
+    <LinearLayout
+        android:id="@+id/layoutIcon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:gravity="center"
+        android:layout_marginBottom="28dp">
+
+        <ImageView
+            android:id="@+id/ivIcon"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="centerInside"
+            android:tint="#FFFFFF"/>
+    </LinearLayout>
+
+    <!-- Result text -->
+    <TextView
+        android:id="@+id/tvResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:letterSpacing="0.02"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Direction badge -->
+    <TextView
+        android:id="@+id/tvDirection"
+        android:layout_width="wrap_content"
+        android:layout_height="28dp"
+        android:paddingHorizontal="16dp"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.1"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"/>
+
+    <!-- Message -->
+    <TextView
+        android:id="@+id/tvMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:textColor="#CCFFFFFF"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Ticket info card -->
+    <LinearLayout
+        android:id="@+id/layoutTicketInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#22FFFFFF"
+        android:padding="12dp"
+        android:layout_marginBottom="40dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvTicketType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#AAFFFFFF"
+            android:textSize="13sp"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:id="@+id/tvFaceScore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#AAFFFFFF"
+            android:textSize="13sp"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <!-- Buttons -->
+    <TextView
+        android:id="@+id/btnNext"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:text="▶  Quét vé tiếp theo"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="@drawable/bg_btn_ghost_white"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/btnManual"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:text="🔍  Tìm thủ công"
+        android:textColor="#88FFFFFF"
+        android:textSize="13sp"
+        android:gravity="center"
+        android:background="@color/navy_deep"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Countdown -->
+    <TextView
+        android:id="@+id/tvCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tự động quay lại sau 4 giây..."
+        android:textColor="#44FFFFFF"
+        android:textSize="11sp"/>
+
+</LinearLayout>
