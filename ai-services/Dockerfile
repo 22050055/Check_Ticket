@@ -31,3 +31,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Chạy face service (service chính)
 CMD ["uvicorn", "face_verification.face_service:app", \
      "--host", "0.0.0.0", "--port", "8001", "--workers", "2"]
+ 

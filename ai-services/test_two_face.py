@@ -99,3 +99,4 @@ if __name__ == "__main__":
     else:
         print("  ⚠️  Cả 2 đều fail — vấn đề chất lượng ảnh hoặc threshold")
     print("="*50 + "\n")
+ 

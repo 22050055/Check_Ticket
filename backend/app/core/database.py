@@ -220,3 +220,4 @@ async def _create_indexes() -> None:
     )
 
     logger.info("✅ MongoDB indexes ready.")
+ 

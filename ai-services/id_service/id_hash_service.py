@@ -70,3 +70,4 @@ def hash_phone(phone: str) -> str:
         cleaned.encode(),
         hashlib.sha256,
     ).hexdigest()
+ 

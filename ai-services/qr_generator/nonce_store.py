@@ -92,3 +92,4 @@ class NonceStore:
         if self._use_mongo and self._collection is not None:
             return self._collection.count_documents({})
         return len(self._memory)
+ 

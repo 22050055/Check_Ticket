@@ -353,3 +353,4 @@ class ReportService:
             "recent_events":   recent_events,
             "gates_status":    gates_status,
         }
+ 

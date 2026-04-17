@@ -94,3 +94,4 @@ class TicketListResponse(BaseModel):
     """Danh sách vé (dùng cho trang quản lý)."""
     total:   int
     tickets: list[TicketResponse]
+ 

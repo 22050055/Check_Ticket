@@ -91,3 +91,4 @@ class TestRBACHierarchy:
         assert Role.MANAGER  == "manager"
         assert Role.OPERATOR == "operator"
         assert Role.CASHIER  == "cashier"
+ 

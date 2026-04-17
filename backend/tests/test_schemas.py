@@ -192,3 +192,4 @@ class TestUserCreate:
         for role in ["admin", "manager", "operator", "cashier"]:
             user = UserCreate(**self._base(role=role))
             assert user.role == role
+ 

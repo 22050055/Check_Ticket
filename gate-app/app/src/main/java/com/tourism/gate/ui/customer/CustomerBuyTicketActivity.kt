@@ -152,3 +152,4 @@ class CustomerBuyTicketActivity : AppCompatActivity() {
         progressBar.visibility = if (loading) View.VISIBLE else View.GONE
     }
 }
+ 

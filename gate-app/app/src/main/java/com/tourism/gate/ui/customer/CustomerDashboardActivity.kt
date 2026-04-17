@@ -171,3 +171,4 @@ class CustomerDashboardActivity : AppCompatActivity() {
         recyclerTickets.visibility = if (empty) View.GONE    else View.VISIBLE
     }
 }
+ 

@@ -104,3 +104,4 @@ class GateSelectActivity : AppCompatActivity() {
         btnSelect.isEnabled    = !loading
     }
 }
+ 

@@ -160,3 +160,4 @@ class TestConstants:
         assert Action.CHECKIN       == "CHECKIN"
         assert Action.CHECKOUT      == "CHECKOUT"
         assert Action.FACE_ENROLL   == "FACE_ENROLL"
+ 

@@ -28,3 +28,4 @@ def generate_qr_b64(token: str) -> str:
     """Tạo ảnh QR b64 (để chèn HTML) từ JWT token."""
     png_bytes = generate_qr_png_bytes(token)
     return "data:image/png;base64," + base64.b64encode(png_bytes).decode()
+ 

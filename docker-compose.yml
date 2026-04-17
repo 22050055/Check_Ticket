@@ -60,3 +60,4 @@ services:
 networks:
   default:
     name: tourism_network
+ 

@@ -33,3 +33,4 @@ typing-extensions>=4.11.0        # TypedDict, NotRequired trong models/__init__.
 
 # ── Utils ─────────────────────────────────────────────────────
 python-dotenv>=1.0.0             # load .env khi chạy local (không cần trong Docker)
+ 

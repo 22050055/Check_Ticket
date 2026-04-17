@@ -470,3 +470,4 @@ Dự án được cấu hình để deploy tự động lên **Render** thông q
 ---
 
 *Đồ án tốt nghiệp — Hệ thống kiểm soát ra/vào khu du lịch đa kênh*
+ 

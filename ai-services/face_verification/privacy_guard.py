@@ -85,3 +85,4 @@ def assert_no_raw_image(payload: dict) -> None:
 class PrivacyViolationError(Exception):
     """Raise khi cố lưu dữ liệu vi phạm chính sách tối thiểu."""
     pass
+ 

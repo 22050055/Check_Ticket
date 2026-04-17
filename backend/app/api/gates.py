@@ -156,3 +156,4 @@ async def get_gate_events(
             e["created_at"] = e["created_at"].isoformat()
 
     return {"gate_id": gate_id, "count": len(events), "events": events}
+ 

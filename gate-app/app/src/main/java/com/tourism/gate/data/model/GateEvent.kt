@@ -65,3 +65,4 @@ data class Gate(
     @SerializedName("location")  val location: String? = null,
     @SerializedName("is_active") val isActive: Boolean = true
 )
+ 

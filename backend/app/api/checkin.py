@@ -92,3 +92,4 @@ async def checkin(
         message     = result.message,
         face_score  = result.face_score,
     )
+ 

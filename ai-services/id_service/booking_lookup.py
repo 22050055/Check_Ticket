@@ -125,3 +125,4 @@ class BookingLookupService:
             "customer_name": ticket.get("customer_name", ""),
             # Không trả về: id_number, face_embedding, CCCD
         }
+ 

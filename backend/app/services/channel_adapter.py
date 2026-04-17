@@ -540,3 +540,4 @@ class ChannelAdapter:
         """Đóng HTTP client khi không dùng nữa."""
         if self._http and not self._http.is_closed:
             await self._http.aclose()
+ 

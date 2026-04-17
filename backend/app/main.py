@@ -135,3 +135,4 @@ async def health():
         "service": "tourism-backend",
         "version": settings.APP_VERSION,
     }
+ 

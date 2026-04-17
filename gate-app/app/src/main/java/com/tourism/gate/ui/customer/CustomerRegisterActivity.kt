@@ -62,3 +62,4 @@ class CustomerRegisterActivity : AppCompatActivity() {
         }
     }
 }
+ 

@@ -160,3 +160,4 @@ def embedding_to_list(embedding: np.ndarray) -> list:
 def list_to_embedding(lst: list) -> np.ndarray:
     """Chuyển Python list từ MongoDB → numpy array."""
     return np.array(lst, dtype=np.float32)
+ 

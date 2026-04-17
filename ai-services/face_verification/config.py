@@ -47,3 +47,4 @@ DET_NMS_THRESHOLD: float   = 0.4
 # ── Privacy ───────────────────────────────────────────────────
 STORE_ORIGINAL_IMAGE: bool = False
 EMBEDDING_DIMENSION: int   = 512
+ 

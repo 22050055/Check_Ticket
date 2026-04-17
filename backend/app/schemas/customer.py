@@ -29,3 +29,4 @@ class CustomerUpdateByAdminRequest(BaseModel):
     """Admin cập nhật thông tin khách hàng."""
     name: Optional[str] = None
     email: Optional[EmailStr] = None
+ 

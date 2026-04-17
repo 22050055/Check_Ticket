@@ -188,3 +188,4 @@ class ShiftManager(private val context: Context) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getLong(KEY_SHIFT_START, 0L)
 }
+ 

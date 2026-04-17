@@ -13,4 +13,4 @@ model = insightface.model_zoo.get_model(
 )
 
 print(f"Đã tải mô hình thành công!")
-print(f"Bạn có thể kiểm tra tại: {thu_muc_luu}")
+print(f"Bạn có thể kiểm tra tại: {thu_muc_luu}") 

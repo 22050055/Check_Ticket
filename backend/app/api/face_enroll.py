@@ -161,3 +161,4 @@ async def enroll_face(
         face_image_hash=face_image_hash,
         message=f"Đăng ký {n_saved} mẫu khuôn mặt thành công. Ảnh gốc không được lưu.",
     )
+ 

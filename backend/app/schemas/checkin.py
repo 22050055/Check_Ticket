@@ -98,3 +98,4 @@ class CheckinResponse(BaseModel):
     face_score:   Optional[float] = None   # Cosine similarity — chỉ có khi QR_FACE
     message:      str
     event_id:     Optional[str]   = None   # GateEvent._id để audit
+ 

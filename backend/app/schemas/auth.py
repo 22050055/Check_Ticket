@@ -60,3 +60,4 @@ class UserListResponse(BaseModel):
     """Danh sách tài khoản (dùng cho trang quản lý nhân sự)."""
     total: int
     users: list[UserResponse]
+ 

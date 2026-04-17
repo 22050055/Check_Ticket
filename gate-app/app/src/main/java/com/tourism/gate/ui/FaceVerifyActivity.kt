@@ -279,3 +279,4 @@ class FaceVerifyActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 }
+ 

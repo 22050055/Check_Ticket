@@ -76,3 +76,4 @@ data class LoginResponse(
     @SerializedName("full_name")     val fullName: String,
     @SerializedName("gate_id")       val gateId: String? = null
 )
+ 

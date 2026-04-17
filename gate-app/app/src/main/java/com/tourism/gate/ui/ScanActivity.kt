@@ -406,3 +406,4 @@ class ScanActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 }
+ 

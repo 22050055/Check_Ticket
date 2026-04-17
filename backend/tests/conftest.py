@@ -145,3 +145,4 @@ def sample_gate():
         "is_active":  True,
         "created_at": datetime.now(timezone.utc),
     }
+ 

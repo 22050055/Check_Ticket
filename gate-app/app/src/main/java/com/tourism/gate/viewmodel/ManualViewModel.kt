@@ -166,3 +166,4 @@ class ManualViewModel(app: Application) : AndroidViewModel(app) {
         _searchHistory.value = emptyList()
     }
 }
+ 

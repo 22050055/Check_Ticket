@@ -289,3 +289,4 @@ async def delete_customer_by_admin(
     # await db["tickets"].delete_many({"customer_id": customer_id})
     
     return {"message": "Đã xóa tài khoản khách hàng thành công."}
+ 

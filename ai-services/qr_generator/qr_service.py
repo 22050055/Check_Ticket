@@ -170,3 +170,4 @@ def get_qr_service() -> QRService:
     if _qr_service is None:
         _qr_service = QRService()
     return _qr_service
+ 

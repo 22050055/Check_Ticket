@@ -80,3 +80,4 @@ class ResultActivity : AppCompatActivity() {
         goToScan()
     }
 }
+ 

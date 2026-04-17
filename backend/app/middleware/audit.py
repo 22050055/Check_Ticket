@@ -200,3 +200,4 @@ async def get_audit_logs(
             r["created_at"] = r["created_at"].isoformat()
 
     return rows
+ 

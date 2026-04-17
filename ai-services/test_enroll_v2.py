@@ -25,3 +25,4 @@ print("Status:", r2.status_code, "→", r2.text[:300])
 print("\n=== Test 4: Kiểm tra model đã load chưa ===")
 r3 = requests.get("http://localhost:8001/docs")
 print("Docs status:", r3.status_code)
+ 

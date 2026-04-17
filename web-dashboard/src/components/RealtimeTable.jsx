@@ -61,3 +61,4 @@ export default function RealtimeTable({ events = [] }) {
     </div>
   )
 }
+ 

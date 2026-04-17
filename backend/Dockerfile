@@ -54,3 +54,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 # Số workers lấy từ env WEB_CONCURRENCY (default=2)
 # Production: set WEB_CONCURRENCY=4 hoặc dùng gunicorn
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-2}"]
+ 

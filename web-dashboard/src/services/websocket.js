@@ -53,3 +53,4 @@ export function disconnectWS() {
 
 export function onStats(fn)     { _handlers.stats.push(fn);      return () => { _handlers.stats      = _handlers.stats.filter(h => h !== fn) } }
 export function onGateEvent(fn) { _handlers.gate_event.push(fn); return () => { _handlers.gate_event = _handlers.gate_event.filter(h => h !== fn) } }
+ 

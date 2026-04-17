@@ -163,3 +163,4 @@ class GateViewModel(app: Application) : AndroidViewModel(app) {
         // Không endShift ở đây vì ViewModel có thể bị recreate khi xoay màn hình
     }
 }
+ 

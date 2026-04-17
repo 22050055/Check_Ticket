@@ -248,3 +248,4 @@ class FaceEnrollActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 }
+ 

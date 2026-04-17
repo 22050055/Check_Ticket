@@ -37,3 +37,4 @@ Thumbs.db
 
 # ── RSA Keys (Bảo mật) ─────────
 ai-services/qr_generator/keys/*.pem
+ 

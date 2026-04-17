@@ -284,3 +284,4 @@ class TestHashFunctions:
     def test_hash_phone_invalid(self):
         with pytest.raises(ValueError):
             _hash_phone("abc")
+ 

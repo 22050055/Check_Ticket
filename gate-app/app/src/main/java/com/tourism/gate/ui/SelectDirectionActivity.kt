@@ -49,3 +49,4 @@ class SelectDirectionActivity : AppCompatActivity() {
         startActivity(Intent(this, ScanActivity::class.java))
     }
 }
+ 

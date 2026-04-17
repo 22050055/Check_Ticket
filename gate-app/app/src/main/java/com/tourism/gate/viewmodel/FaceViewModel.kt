@@ -156,3 +156,4 @@ class FaceViewModel(app: Application) : AndroidViewModel(app) {
         return Bitmap.createScaledBitmap(src, (w * scale).toInt(), (h * scale).toInt(), true)
     }
 }
+ 

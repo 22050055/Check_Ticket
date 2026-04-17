@@ -145,3 +145,4 @@ object QrParser {
         return decodePayload(parts[1]) != null
     }
 }
+ 

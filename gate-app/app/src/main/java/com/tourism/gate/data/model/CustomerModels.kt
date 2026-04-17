@@ -44,3 +44,4 @@ data class CustomerTicket(
     @SerializedName("has_face")    val hasFace:    Boolean,
     @SerializedName("created_at")  val createdAt:  String?
 )
+ 

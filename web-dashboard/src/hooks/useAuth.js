@@ -23,3 +23,4 @@ export default function useAuth() {
 
   return { token, role, fullName, isAdmin, isManager, doLogin, doLogout }
 }
+ 

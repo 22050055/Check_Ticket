@@ -306,3 +306,4 @@ async def revoke_ticket(
                      resource=ticket_id, detail={"reason": req.reason})
 
     return {"message": "Vé đã bị thu hồi.", "ticket_id": ticket_id}
+ 

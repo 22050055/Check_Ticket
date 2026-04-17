@@ -36,3 +36,4 @@ export default function PeakHourChart({ data = [] }) {
     </ResponsiveContainer>
   )
 }
+ 

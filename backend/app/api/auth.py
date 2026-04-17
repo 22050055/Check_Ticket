@@ -232,3 +232,4 @@ async def delete_user(
                      detail={"username": user.get("username")})
 
     return {"message": f"Đã xóa tài khoản '{user.get('username')}'.", "user_id": user_id}
+ 

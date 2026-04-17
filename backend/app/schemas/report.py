@@ -154,3 +154,4 @@ class GateEventBroadcast(BaseModel):
     ticket_id:   Optional[str] = None
     ticket_type: Optional[str] = None
     message:     str
+ 

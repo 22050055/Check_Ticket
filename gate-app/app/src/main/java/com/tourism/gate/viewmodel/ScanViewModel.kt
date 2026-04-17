@@ -149,3 +149,4 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         _isOffline.value = false
     }
 }
+ 

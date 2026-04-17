@@ -64,3 +64,4 @@ def get_remaining_seconds(payload: dict) -> int:
         return 0
     remaining = exp - datetime.now(timezone.utc).timestamp()
     return max(0, int(remaining))
+ 

@@ -365,3 +365,4 @@ def decode_base64_image(b64_str: str) -> Optional[np.ndarray]:
     except Exception as e:
         logger.error("Decode base64 thất bại: %s", e)
         return None
+ 
