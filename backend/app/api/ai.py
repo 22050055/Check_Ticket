@@ -12,14 +12,14 @@ router = APIRouter(prefix="/api/ai", tags=["AI Assistant"])
 async def ai_chat(
     message: str = Body(..., embed=True),
     history: Optional[List[Dict[str, str]]] = Body(None),
-    current_user: dict = Depends(require_min_role(Role.OPERATOR)),
+    current_user: dict = Depends(require_min_role(Role.CUSTOMER)),
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     """
     Endpoint chat với trợ lý ảo AI. 
-    Yêu cầu quyền Operator trở lên (để bảo mật dữ liệu dashboard).
+    Hỗ trợ cả Nhân viên (Dashboard) và Khách hàng (Mobile App).
     """
-    service = AiService(db)
+    service = AiService(db, user_email=current_user.get("user_id"), user_role=current_user.get("role"))
     response_text = await service.chat(message, history)
     
     return {

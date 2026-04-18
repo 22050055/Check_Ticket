@@ -1,12 +1,9 @@
 package com.tourism.gate.ui.customer
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.tourism.gate.R
-import com.tourism.gate.ui.LoginActivity
+import android.view.MotionEvent
+import android.view.View
+import android.widget.FrameLayout
+import com.tourism.gate.ui.AiChatActivity
 
 /**
  * CustomerDashboardActivity — Màn hình chính cho Khách hàng.
@@ -16,6 +13,7 @@ import com.tourism.gate.ui.LoginActivity
 class CustomerDashboardActivity : AppCompatActivity() {
 
     private lateinit var bottomNav: BottomNavigationView
+    private lateinit var aiBallContainer: FrameLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Áp dụng theme (Sáng/Tối) trước khi setContentView
@@ -27,6 +25,7 @@ class CustomerDashboardActivity : AppCompatActivity() {
         setContentView(R.layout.activity_customer_dashboard)
 
         bottomNav = findViewById(R.id.bottom_navigation)
+        aiBallContainer = findViewById(R.id.ai_ball_container)
 
         // Xử lý sự kiện click trên thanh điều hướng
         bottomNav.setOnItemSelectedListener { item ->
@@ -47,6 +46,50 @@ class CustomerDashboardActivity : AppCompatActivity() {
                 bottomNav.selectedItemId = openTab
             } else {
                 replaceFragment(HomeFragment())
+            }
+        }
+
+        setupAiBall()
+    }
+
+    private fun setupAiBall() {
+        var dX = 0f
+        var dY = 0f
+        var startX = 0f
+        var startY = 0f
+
+        aiBallContainer.setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    dX = view.x - event.rawX
+                    dY = view.y - event.rawY
+                    startX = event.rawX
+                    startY = event.rawY
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    view.animate()
+                        .x(event.rawX + dX)
+                        .y(event.rawY + dY)
+                        .setDuration(0)
+                        .start()
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    // Nếu quãng đường di chuyển rất nhỏ, coi là Click
+                    val diffX = Math.abs(event.rawX - startX)
+                    val diffY = Math.abs(event.rawY - startY)
+                    if (diffX < 10 && diffY < 10) {
+                        startActivity(Intent(this, AiChatActivity::class.java))
+                    } else {
+                        // Tự động hít vào cạnh trái hoặc phải
+                        val screenWidth = resources.displayMetrics.widthPixels
+                        val finalX = if (view.x + view.width / 2 < screenWidth / 2) 0f else (screenWidth - view.width).toFloat()
+                        view.animate().x(finalX).setDuration(300).start()
+                    }
+                    true
+                }
+                else -> false
             }
         }
     }

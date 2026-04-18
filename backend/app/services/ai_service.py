@@ -14,36 +14,45 @@ logger = logging.getLogger(__name__)
 class AiService:
     """
     Dịch vụ Trợ lý ảo AI (Gemini) tích hợp RAG và Function Calling.
-    Có khả năng truy vấn Database thông qua ReportService.
+    Hỗ trợ đa vai trò: Admin/Staff tra cứu dashboard, Khách hàng tra cứu vé cá nhân.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase, user_email: str = None, user_role: str = None):
         self.db = db
         self.report_service = ReportService(db)
+        self.user_email = user_email
+        self.user_role = user_role
         
         # Cấu hình Gemini
         genai.configure(api_key=settings.GOOGLE_API_KEY)
         
-        # Định nghĩa các Tools (Function Declarations)
+        # Định nghĩa các Tools
         self.tools = [
             self.get_dashboard_summary,
             self.get_revenue_report,
             self.get_visitor_stats,
             self.check_ticket_status,
-            self.list_gates_health
+            self.list_gates_health,
+            self.get_my_tickets,
+            self.get_park_info
         ]
         
+        # System Instruction thay đổi tùy theo vai trò
+        role_desc = f"Bạn đang hỗ trợ người dùng có Email: {user_email} và Vai trò: {user_role}."
+        instruction = (
+            "Bạn là trợ lý ảo AI của Hệ thống Tourism Gate. "
+            f"{role_desc} "
+            "QUY TẮC BẢO MẬT: "
+            "1. Nếu người dùng là 'customer', bạn CHỈ được gọi hàm get_my_tickets, get_park_info và check_ticket_status (nếu là vé của họ). "
+            "KHÔNG ĐƯỢC trả lời về doanh thu, tổng số khách hoặc sức khỏe hệ thống cho khách hàng. "
+            "2. Nếu người dùng là nhân viên (admin/manager/operator), bạn có quyền truy cập đầy đủ. "
+            "3. Luôn trả lời bằng Tiếng Việt, thân thiện và chuyên nghiệp. Dùng bảng biểu khi cần."
+        )
+
         self.model = genai.GenerativeModel(
             model_name='gemini-1.5-flash',
             tools=self.tools,
-            system_instruction=(
-                "Bạn là trợ lý ảo AI của Hệ thống quản lý vé du lịch Tourism Gate. "
-                "Hệ thống bao gồm Dashboard web, App cổng soát vé (Android) và App khách hàng. "
-                "Bạn có quyền truy cập vào dữ liệu hệ thống để trả lời các câu hỏi về doanh thu, lượt khách, trạng thái vé và thiết bị cổng. "
-                "Hãy trả lời chuyên nghiệp, ngắn gọn và hữu ích. "
-                "Nếu bạn không chắc chắn hoặc không có tool cung cấp thông tin, hãy nói rõ. "
-                "Luôn ưu tiên dùng bảng biểu (Markdown table) khi trả lời về số liệu."
-            )
+            system_instruction=instruction
         )
 
     # ── Tools for Gemini ────────────────────────────────────────
@@ -85,6 +94,38 @@ class AiService:
         stats = await self.report_service.get_realtime_stats()
         return stats.get("gates_status", [])
 
+    async def get_my_tickets(self) -> List[Dict[str, Any]]:
+        """Lấy danh sách các vé mà khách hàng hiện tại đang sở hữu (dựa trên email)."""
+        if not self.user_email:
+            return {"error": "Không xác định được danh tính người dùng."}
+            
+        cursor = self.db["tickets"].find({"customer_email": self.user_email}).sort("created_at", -1)
+        tickets = await cursor.to_list(length=50)
+        
+        return [
+            {
+                "ticket_id": str(t["_id"]),
+                "type": t.get("ticket_type"),
+                "status": t.get("status"),
+                "valid_until": t.get("valid_until").isoformat() if t.get("valid_until") else None,
+                "has_face": t.get("has_face", False)
+            } for t in tickets
+        ]
+
+    async def get_park_info(self) -> Dict[str, Any]:
+        """Lấy thông tin chung về khu du lịch: giờ mở cửa, các khu vực, và hướng dẫn sử dụng app."""
+        return {
+            "name": "Khu du lịch Tourism Gate",
+            "opening_hours": "07:30 - 17:30 hàng ngày",
+            "zones": ["Khu vui chơi cảm giác mạnh", "Vườn thú Safari", "Công viên nước", "Khu ẩm thực"],
+            "features": "Hệ thống sử dụng vé điện tử (QR Code) và xác thực khuôn mặt (FaceID) tại cổng soát vé.",
+            "instructions": [
+                "1. Bạn có thể mua vé trực tiếp trên ứng dụng.",
+                "2. Sau khi mua, hãy vào 'Vé của tôi' để lấy mã QR.",
+                "3. Bạn nên đăng ký khuôn mặt để qua cổng nhanh hơn mà không cần đưa điện thoại."
+            ]
+        }
+
     # ── Logic xử lý Chat ────────────────────────────────────────
 
     async def chat(self, user_message: str, history: List[Dict[str, str]] = None) -> str:
@@ -119,6 +160,8 @@ class AiService:
                     "get_visitor_stats":     self.get_visitor_stats,
                     "check_ticket_status":   self.check_ticket_status,
                     "list_gates_health":     self.list_gates_health,
+                    "get_my_tickets":        self.get_my_tickets,
+                    "get_park_info":         self.get_park_info
                 }
                 
                 if fn_name in fn_map:

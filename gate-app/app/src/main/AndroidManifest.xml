@@ -119,6 +119,11 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
+        <activity
+            android:name=".ui.AiChatActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>

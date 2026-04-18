@@ -67,5 +67,9 @@ interface ApiService {
         @Path("id") ticketId: String
     ): Map<String, String>
 
+    // ── AI Assistant ──────────────────────────────────────
+    @POST("api/ai/chat")
+    suspend fun aiChat(@Body req: Map<String, @JvmSuppressWildcards Any>): Map<String, String>
+
 }
  
