@@ -202,8 +202,8 @@ Check_ticket/
 
 | Biến | Giá trị |
 |------|---------|
-| `MONGO_URI` | `mongodb+srv://22050055_db_user:<password>@khang1402.e2kn7mt.mongodb.net/...` |
-| `MONGO_PASSWORD` | `khang123` |
+| `MONGO_URI` | `mongodb+srv://22050055_db_user:{password}@khang1402.e2kn7mt.mongodb.net/?appName=khang1402` |
+| `MONGO_PASSWORD` | *(password MongoDB — xem riêng)* |
 | `JWT_SECRET` | *(chuỗi ngẫu nhiên 32+ ký tự)* |
 | `AI_SERVICE_URL` | URL Ngrok đang chạy, VD: `https://xxxx.ngrok-free.app` |
 | `QR_PRIVATE_KEY` | Nội dung file `private.pem` (paste trực tiếp) |
@@ -247,7 +247,8 @@ cd backend
 pip install -r requirements.txt
 
 # Tạo file .env
-MONGO_URI=mongodb+srv://22050055_db_user:khang123@khang1402.e2kn7mt.mongodb.net/?appName=khang1402&retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://22050055_db_user:{your_password}@khang1402.e2kn7mt.mongodb.net/?appName=khang1402&retryWrites=true&w=majority
+MONGO_PASSWORD=your_mongo_password_here
 JWT_SECRET=dev-secret-key-change-in-prod
 AI_SERVICE_URL=http://localhost:8001
 QR_PRIVATE_KEY_PATH=../ai_services/qr_generator/keys/private.pem
