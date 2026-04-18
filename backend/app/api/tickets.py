@@ -36,27 +36,26 @@ def _load_qr_keys() -> tuple[Optional[str], Optional[str]]:
             return None
             
         import re
-        # 1. Xóa sạch khoảng trắng dư thừa
+        # Làm sạch tuyệt đối: lấy phần Base64 bên trong
         s = key_str.strip()
         
-        # 2. Tìm phần nội dung Base64 ở giữa (bất kể định dạng ban đầu ra sao)
-        # Regex tìm mọi thứ nằm giữa BEGIN và END
+        # Nếu đã có header/footer chuẩn thì bóc tách
         pattern = rf"-----BEGIN {key_type} KEY-----([\s\S]*?)-----END {key_type} KEY-----"
         match = re.search(pattern, s)
         
-        if not match:
-            # Nếu không tìm thấy header, có lẽ user chỉ dán mỗi đoạn Base64?
-            # Thử làm sạch và bọc lại.
-            clean_content = re.sub(r"[\s\r\n]", "", s)
+        if match:
+            blob = match.group(1)
         else:
-            # Lấy nội dung ở giữa và xóa sạch xuống dòng/khoảng trắng
-            clean_content = re.sub(r"[\s\r\n]", "", match.group(1))
-
-        # 3. Build lại chuẩn PEM: xuống dòng mỗi 64 ký tự
-        lines = [clean_content[i:i+64] for i in range(0, len(clean_content), 64)]
-        formatted_content = "\n".join(lines)
+            # Nếu không thấy header, coi như cả chuỗi là blob (đã xóa dấu -)
+            blob = s.replace("-", "")
+            
+        # Xóa mọi khoảng trắng/xuống dòng/tab
+        clean_blob = re.sub(r"[\s\r\n\t]", "", blob)
         
-        return f"-----BEGIN {key_type} KEY-----\n{formatted_content}\n-----END {key_type} KEY-----"
+        # Xây dựng lại PEM chuẩn 64 chars mỗi dòng
+        lines = [clean_blob[i:i+64] for i in range(0, len(clean_blob), 64)]
+        reconstructed = f"-----BEGIN {key_type} KEY-----\n" + "\n".join(lines) + f"\n-----END {key_type} KEY-----"
+        return reconstructed
 
     private = _sanitize(private, "PRIVATE")
     public  = _sanitize(public, "PUBLIC")
@@ -82,9 +81,11 @@ _PRIVATE_KEY, _PUBLIC_KEY = _load_qr_keys()
 
 
 def _make_qr_token(ticket_id: str, ticket_type: str, valid_until: datetime, venue_id: str) -> Optional[str]:
-    """Tạo JWT RS256 cho QR. Trả None nếu chưa có key."""
+    """Tạo JWT RS256 cho QR. Trả None nếu chưa có key hoặc key lỗi."""
     if not _PRIVATE_KEY:
+        logger.warning("Không thể tạo QR token vì thiếu _PRIVATE_KEY.")
         return None
+        
     try:
         from jose import jwt as jose_jwt
         now = datetime.now(timezone.utc)
@@ -96,9 +97,13 @@ def _make_qr_token(ticket_id: str, ticket_type: str, valid_until: datetime, venu
             "iat": int(now.timestamp()),
             "exp": int(valid_until.timestamp()),
         }
+        # Thống kê độ dài key để debug (không log nội dung key)
+        key_len = len(_PRIVATE_KEY)
+        logger.info("Đang ký QR JWT với key dài %s ký tự", key_len)
+        
         return jose_jwt.encode(payload, _PRIVATE_KEY, algorithm="RS256")
     except Exception as e:
-        logger.error("Tạo QR JWT thất bại: %s", e)
+        logger.exception("Tạo QR JWT thất bại")
         return None
 
 
