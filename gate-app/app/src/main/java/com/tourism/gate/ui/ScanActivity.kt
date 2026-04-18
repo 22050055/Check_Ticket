@@ -47,6 +47,7 @@ class ScanActivity : AppCompatActivity() {
     private lateinit var btnCaptureFace: TextView
     private lateinit var btnFlipCamera:  TextView
     private lateinit var btnBack:        TextView
+    private lateinit var btnHome:        TextView
     private lateinit var tvTitle:        TextView
     private lateinit var tvStatus:       TextView
     private lateinit var tvHint:         TextView
@@ -85,6 +86,7 @@ class ScanActivity : AppCompatActivity() {
         btnCaptureFace = findViewById(R.id.btnCaptureFace)
         btnFlipCamera  = findViewById(R.id.btnFlipCamera)
         btnBack        = findViewById(R.id.btnBack)
+        btnHome        = findViewById(R.id.btnHome)
         tvTitle        = findViewById(R.id.tvTitle)
         tvStatus       = findViewById(R.id.tvStatus)
         tvHint         = findViewById(R.id.tvHint)
@@ -115,6 +117,11 @@ class ScanActivity : AppCompatActivity() {
         }
         btnFlipCamera.setOnClickListener { flipCamera() }
         btnCaptureFace.setOnClickListener { captureAndVerify() }
+        btnHome.setOnClickListener {
+            val intent = Intent(this, RoleSelectActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+        }
 
         applyMode(Mode.SCAN)
 

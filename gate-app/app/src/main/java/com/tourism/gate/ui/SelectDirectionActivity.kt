@@ -8,7 +8,8 @@ import com.tourism.gate.R
 
 class SelectDirectionActivity : AppCompatActivity() {
 
-    private lateinit var tvGateInfo: TextView
+    private lateinit var btnBack: TextView
+    private lateinit var btnHome: TextView
     private lateinit var btnIn: TextView
     private lateinit var btnOut: TextView
     private lateinit var btnChangeGate: TextView
@@ -17,15 +18,20 @@ class SelectDirectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_select_direction)
 
-        tvGateInfo    = findViewById(R.id.tvGateInfo)
+        btnBack       = findViewById(R.id.btnBack)
+        btnHome       = findViewById(R.id.btnHome)
         btnIn         = findViewById(R.id.btnIn)
         btnOut        = findViewById(R.id.btnOut)
         btnChangeGate = findViewById(R.id.btnChangeGate)
 
         val prefs    = getSharedPreferences("gate_prefs", MODE_PRIVATE)
-        val gateCode = prefs.getString("selected_gate_code", "") ?: ""
-        val gateName = prefs.getString("selected_gate_name", "") ?: ""
-        tvGateInfo.text = "Cổng: $gateCode — $gateName"
+
+        btnBack.setOnClickListener { finish() }
+        btnHome.setOnClickListener {
+            val intent = Intent(this, RoleSelectActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+        }
 
         btnIn.setOnClickListener {
             saveDirectionAndGo("IN")

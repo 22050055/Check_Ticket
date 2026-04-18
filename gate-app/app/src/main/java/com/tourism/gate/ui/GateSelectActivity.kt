@@ -15,9 +15,10 @@ class GateSelectActivity : AppCompatActivity() {
 
     private lateinit var spinnerGate: Spinner
     private lateinit var btnSelect: TextView
+    private lateinit var btnBack: TextView
+    private lateinit var btnHome: TextView
     private lateinit var btnLogout: TextView
     private lateinit var progressBar: ProgressBar
-    private lateinit var tvWelcome: TextView
     private lateinit var tvError: TextView
 
     private var gates: List<Gate> = emptyList()
@@ -28,21 +29,27 @@ class GateSelectActivity : AppCompatActivity() {
 
         spinnerGate = findViewById(R.id.spinnerGate)
         btnSelect   = findViewById(R.id.btnSelect)
+        btnBack     = findViewById(R.id.btnBack)
+        btnHome     = findViewById(R.id.btnHome)
         btnLogout   = findViewById(R.id.btnLogout)
         progressBar = findViewById(R.id.progressBar)
-        tvWelcome   = findViewById(R.id.tvWelcome)
         tvError     = findViewById(R.id.tvError)
 
         // Hiển thị tên nhân viên
         val prefs    = getSharedPreferences("gate_prefs", MODE_PRIVATE)
         val fullName = prefs.getString("full_name", "Nhân viên") ?: "Nhân viên"
         val role     = prefs.getString("role", "") ?: ""
-        tvWelcome.text = "Xin chào, $fullName ($role)"
 
         // Nếu operator đã được gán cổng cố định → tự động chọn
         val assignedGateId = prefs.getString("gate_id", "") ?: ""
 
         btnLogout.setOnClickListener { doLogout() }
+        btnBack.setOnClickListener { finish() }
+        btnHome.setOnClickListener {
+            val intent = Intent(this, RoleSelectActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+        }
 
         btnSelect.setOnClickListener {
             val selected = gates.getOrNull(spinnerGate.selectedItemPosition)

@@ -23,6 +23,7 @@ class ManualSearchActivity : AppCompatActivity() {
     private lateinit var tvError: TextView
     private lateinit var tvDirection: TextView
     private lateinit var btnBack: TextView
+    private lateinit var btnHome: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +39,7 @@ class ManualSearchActivity : AppCompatActivity() {
         tvError      = findViewById(R.id.tvError)
         tvDirection  = findViewById(R.id.tvDirection)
         btnBack      = findViewById(R.id.btnBack)
+        btnHome      = findViewById(R.id.btnHome)
 
         val prefs     = getSharedPreferences("gate_prefs", MODE_PRIVATE)
         val direction = prefs.getString("direction", "IN") ?: "IN"
@@ -56,6 +58,11 @@ class ManualSearchActivity : AppCompatActivity() {
 
         btnSearch.setOnClickListener { doSearch() }
         btnBack.setOnClickListener   { finish() }
+        btnHome.setOnClickListener {
+            val intent = Intent(this, RoleSelectActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+        }
     }
 
     private fun doSearch() {

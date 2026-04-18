@@ -3,18 +3,53 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center_horizontal">
+    android:background="@color/navy_deep">
 
-    <TextView
-        android:id="@+id/tvGateInfo"
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:background="@color/navy_card">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="←"
+            android:textColor="@color/accent_blue"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:id="@+id/tvToolbarTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Kiểm soát cổng"
+            android:textColor="@color/text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/btnHome"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="🏠"
+            android:textColor="@color/text_secondary"
+            android:textSize="18sp"
+            android:gravity="center"/>
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Cổng: ---"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="32dp"
-        android:gravity="center" />
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
     <TextView
         android:layout_width="match_parent"
@@ -50,7 +85,9 @@
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Đổi cổng làm việc" />
+        android:text="Đổi cổng làm việc"
+        android:layout_gravity="center"/>
 
+    </LinearLayout>
 </LinearLayout>
  

@@ -28,6 +28,7 @@ class SellTicketActivity : AppCompatActivity() {
     }
 
     private lateinit var btnBack:          TextView
+    private lateinit var btnHome:          TextView
     private lateinit var etCustomerName:   EditText
     private lateinit var etPhone:          EditText
     private lateinit var spinnerType:      Spinner
@@ -51,6 +52,7 @@ class SellTicketActivity : AppCompatActivity() {
         setContentView(R.layout.activity_sell_ticket)
 
         btnBack        = findViewById(R.id.btnBack)
+        btnHome        = findViewById(R.id.btnHome)
         etCustomerName = findViewById(R.id.etCustomerName)
         etPhone        = findViewById(R.id.etPhone)
         spinnerType    = findViewById(R.id.spinnerTicketType)
@@ -63,6 +65,11 @@ class SellTicketActivity : AppCompatActivity() {
         setupSpinner()
 
         btnBack.setOnClickListener  { finish() }
+        btnHome.setOnClickListener {
+            val intent = Intent(this, RoleSelectActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+        }
         btnIssue.setOnClickListener { issueTicket() }
     }
 
