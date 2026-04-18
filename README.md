@@ -25,7 +25,7 @@ Hệ thống hỗ trợ **4 kênh xác thực** tại cổng ra/vào khu du lị
 | Kênh | Mô tả | Bắt buộc |
 |------|-------|----------|
 | QR e-ticket | Quét mã QR ký số RS256, chống giả, chống dùng lại | ✅ |
-| Face Verify 1:1 | So khớp khuôn mặt với ảnh đăng ký. **AI Pose guidance** giúp đảm bảo chất lượng ảnh mẫu | Tùy chọn |
+| Face Verify 1:1 | So khớp khuôn mặt with ảnh đăng ký. **AI Pose guidance** giúp đảm bảo chất lượng ảnh mẫu | Tùy chọn |
 | Identity Hash | Tra cứu theo hash CCCD hoặc mã đặt vé. Enforce định danh cho khách mua online | Tùy chọn |
 | Manual Fallback | Tra cứu theo SĐT / tên khách | Dự phòng |
 
@@ -33,6 +33,7 @@ Hệ thống hỗ trợ **4 kênh xác thực** tại cổng ra/vào khu du lị
 - **Accountability**: Truy vết trách nhiệm từng vé (Người bán - Thời gian - Kênh).
 - **Staff Presence**: Theo dõi trạng thái Online/Offline của nhân viên vận hành thời gian thực.
 - **Customer Feedback**: Hệ thống đánh giá 1-5 sao sau khi sử dụng dịch vụ.
+- **Customer Experience**: Ứng dụng khách hàng hiện đại với **Bottom Navigation**, **Day/Night Theme** và chỉnh sửa hồ sơ trực tiếp.
 
 ---
 
@@ -190,7 +191,7 @@ tourism-access-control/
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-├── 🤖 ai-services/                          # Dịch vụ AI độc lập
+├── 🤖 ai_services/                          # Dịch vụ AI độc lập
 │   ├── face_verification/
 │   │   ├── models/
 │   │   │   ├── facenet_512.onnx            # Model trích xuất embedding khuôn mặt
@@ -337,9 +338,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ### 3. AI Services — chạy độc lập
 
 ```bash
-cd ai-services
+cd ai_services
 pip install -r face_verification/requirements.txt
-uvicorn face_verification.face_service:app --reload --port 8001
+python -m face_verification.face_service
 ```
 
 ---
