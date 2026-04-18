@@ -28,8 +28,27 @@ router = APIRouter(prefix="/api/tickets", tags=["Tickets"])
 def _load_qr_keys() -> tuple[Optional[str], Optional[str]]:
     """Load RSA private/public key từ config (ưu tiên string trong ENV, sau đó đến file)."""
     # 1. Thử lấy trực tiếp từ string (cho Render)
-    private = settings.QR_PRIVATE_KEY
-    public  = settings.QR_PUBLIC_KEY
+    raw_private = settings.QR_PRIVATE_KEY
+    raw_public  = settings.QR_PUBLIC_KEY
+
+    import base64
+    import re
+
+    def _safe_decode(val: Optional[str]) -> Optional[str]:
+        if not val: return None
+        # Nếu chuỗi có vẻ là Base64 của cả file (thường bắt đầu bằng LS0tLS1 cho -----), ta decode nó trước.
+        if val.startswith("LS0tLS1"):
+            try:
+                # Thử decode base64
+                decoded = base64.b64decode(val).decode("utf-8")
+                if "-----BEGIN" in decoded:
+                    return decoded
+            except Exception:
+                pass
+        return val
+
+    private = _safe_decode(raw_private)
+    public  = _safe_decode(raw_public)
 
     def _sanitize(key_str: Optional[str], key_type: str = "PRIVATE") -> Optional[str]:
         if not key_str:
