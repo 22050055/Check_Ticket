@@ -117,7 +117,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     )
 
 
-@router.get("/users", response_model=dict)
+@router.get("/users")
 async def list_users(
     current_user: dict = Depends(require_role(Role.ADMIN, Role.MANAGER)),
     db: AsyncIOMotorDatabase = Depends(get_db),

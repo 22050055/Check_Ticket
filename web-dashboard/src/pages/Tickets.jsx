@@ -12,7 +12,7 @@ const STATUS_CONFIG = {
   INSIDE:  { color: 'var(--green)',   bg: 'var(--green-dim)',  label: 'Trong khu' },
   revoked: { color: 'var(--red)',     bg: 'var(--red-dim)',    label: 'Thu hồi' },
   expired: { color: 'var(--text-3)', bg: 'transparent',       label: 'Hết hạn' },
-  active:  { color: 'var(--text-2)', bg: 'var(--bg-hover)',   label: 'Ngoài khu' },  // compat
+  active:  { color: 'var(--text-2)', bg: 'var(--bg-hover)',   label: 'Chưa sử dụng' },
 }
 
 const StatusBadge = ({ status }) => {

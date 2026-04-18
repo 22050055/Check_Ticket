@@ -310,7 +310,7 @@ async def search_tickets(
     
     if q:
         # Tìm kiếm theo ID hoặc Booking ID (hoặc SĐT khách hàng if we link it)
-        q_clean = q.trim() if hasattr(q, "trim") else q.strip()
+        q_clean = q.strip()
         filter_query["$or"] = [
             {"_id": q_clean},
             {"booking_id": {"$regex": q_clean, "$options": "i"}}
@@ -384,7 +384,7 @@ async def download_qr(
     if not ticket:
         raise HTTPException(404, "Vé không tồn tại.")
         
-    token = _make_qr_token(ticket_id, ticket["ticket_type"], ticket["valid_until"], ticket["venue_id"])
+    token = _make_qr_token(ticket_id, ticket["ticket_type"], ticket["valid_until"], ticket.get("venue_id", ""))
     if not token:
         raise HTTPException(500, "Không thể sinh chữ ký QR. Có thể thiếu private key.")
         
