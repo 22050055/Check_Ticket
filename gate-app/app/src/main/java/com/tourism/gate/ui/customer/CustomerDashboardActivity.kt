@@ -28,16 +28,6 @@ class CustomerDashboardActivity : AppCompatActivity() {
 
         bottomNav = findViewById(R.id.bottom_navigation)
 
-        // Mặc định mở Trang chủ (Home) hoặc tab được chỉ định từ Intent
-        if (savedInstanceState == null) {
-            val openTab = intent.getIntExtra("open_tab", R.id.nav_home)
-            if (openTab != R.id.nav_home) {
-                bottomNav.selectedItemId = openTab
-            } else {
-                replaceFragment(HomeFragment())
-            }
-        }
-
         // Xử lý sự kiện click trên thanh điều hướng
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -48,7 +38,29 @@ class CustomerDashboardActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
+        // Mặc định mở Trang chủ (Home) hoặc tab được chỉ định từ Intent
+        if (savedInstanceState == null) {
+            val openTab = intent.getIntExtra("open_tab", R.id.nav_home)
+            if (openTab != R.id.nav_home) {
+                // Việc gán selectedItemId ở đây sẽ kích hoạt Listener bên trên
+                bottomNav.selectedItemId = openTab
+            } else {
+                replaceFragment(HomeFragment())
+            }
+        }
     }
+
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val openTab = intent.getIntExtra("open_tab", -1)
+        if (openTab != -1) {
+            bottomNav.selectedItemId = openTab
+        }
+    }
+
 
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
