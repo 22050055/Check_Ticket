@@ -31,9 +31,9 @@ object ApiClient {
         val token   = prefs.getString("token", null)
 
         val client = OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)     // face verify có thể mất 5-10s
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)  // Tăng lên 60s để đợi Server khởi động
+            .readTimeout(60, TimeUnit.SECONDS)     // Đợi xử lý mặt lâu hơn
+            .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(AuthInterceptor(token))
             .addInterceptor(buildLoggingInterceptor())
             .build()

@@ -12,12 +12,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.lifecycle.lifecycleScope
 import com.google.gson.JsonParser
 import com.tourism.gate.R
 import com.tourism.gate.data.api.ApiClient
 import com.tourism.gate.data.model.CustomerTicket
 import com.tourism.gate.ui.QrDisplayActivity
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,25 +46,24 @@ class TicketsFragment : Fragment() {
     private fun loadTickets() {
         showLoading(true)
         val api = ApiClient.create(requireContext())
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val tickets = api.getCustomerTickets()
-                withContext(Dispatchers.Main) {
-                    showLoading(false)
-                    if (tickets.isEmpty()) {
-                        showEmpty(true)
-                    } else {
-                        showEmpty(false)
-                        tvTicketCount.text = "${tickets.size} vé đang sở hữu"
-                        setupAdapter(tickets)
-                    }
+                val tickets = withContext(Dispatchers.IO) { api.getCustomerTickets() }
+                if (!isAdded) return@launch
+                
+                showLoading(false)
+                if (tickets.isEmpty()) {
+                    showEmpty(true)
+                } else {
+                    showEmpty(false)
+                    tvTicketCount.text = "${tickets.size} vé đang sở hữu"
+                    setupAdapter(tickets)
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showLoading(false)
-                    showEmpty(true)
-                    Toast.makeText(context, "Lỗi tải danh sách vé: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                if (!isAdded) return@launch
+                showLoading(false)
+                showEmpty(true)
+                Toast.makeText(context, "Lỗi tải danh sách vé: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -85,20 +84,19 @@ class TicketsFragment : Fragment() {
     private fun downloadQr(ticket: CustomerTicket) {
         Toast.makeText(context, "Đang tải mã QR vé #${ticket.ticketId.take(8)}...", Toast.LENGTH_SHORT).show()
         val api = ApiClient.create(requireContext())
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = api.downloadCustomerQr(ticket.ticketId)
+                val response = withContext(Dispatchers.IO) { api.downloadCustomerQr(ticket.ticketId) }
                 val qrBytes = response.bytes()
-                withContext(Dispatchers.Main) {
-                    val intent = Intent(requireContext(), QrDisplayActivity::class.java)
-                    intent.putExtra("qr_bytes", qrBytes)
-                    intent.putExtra("ticket_id", ticket.ticketId)
-                    startActivity(intent)
-                }
+                if (!isAdded) return@launch
+                
+                val intent = Intent(requireContext(), QrDisplayActivity::class.java)
+                intent.putExtra("qr_bytes", qrBytes)
+                intent.putExtra("ticket_id", ticket.ticketId)
+                startActivity(intent)
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Lỗi tải QR: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                if (!isAdded) return@launch
+                Toast.makeText(context, "Lỗi tải QR: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -137,32 +135,33 @@ class TicketsFragment : Fragment() {
             return
         }
         val api = ApiClient.create(requireContext())
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                api.reviewTicket(ticketId, com.tourism.gate.data.model.ReviewRequest(rating, comment))
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Cảm ơn bạn đã đánh giá!", Toast.LENGTH_SHORT).show()
-                    loadTickets()
+                withContext(Dispatchers.IO) { 
+                    api.reviewTicket(ticketId, com.tourism.gate.data.model.ReviewRequest(rating, comment))
                 }
+                if (!isAdded) return@launch
+                
+                Toast.makeText(context, "Cảm ơn bạn đã đánh giá!", Toast.LENGTH_SHORT).show()
+                loadTickets()
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    val errorMsg = try {
-                        if (e is retrofit2.HttpException) {
-                            val errorBody = e.response()?.errorBody()?.string()
-                            if (errorBody != null) {
-                                val json = JsonParser.parseString(errorBody).asJsonObject
-                                json.get("detail").asString
-                            } else {
-                                e.message ?: "Lỗi không xác định"
-                            }
+                if (!isAdded) return@launch
+                val errorMsg = try {
+                    if (e is retrofit2.HttpException) {
+                        val errorBody = e.response()?.errorBody()?.string()
+                        if (errorBody != null) {
+                            val json = JsonParser.parseString(errorBody).asJsonObject
+                            json.get("detail").asString
                         } else {
                             e.message ?: "Lỗi không xác định"
                         }
-                    } catch (ex: Exception) {
-                        e.message ?: "Lỗi kết nối"
+                    } else {
+                        e.message ?: "Lỗi không xác định"
                     }
-                    Toast.makeText(context, "Lỗi gửi đánh giá: $errorMsg", Toast.LENGTH_LONG).show()
+                } catch (ex: Exception) {
+                    e.message ?: "Lỗi kết nối"
                 }
+                Toast.makeText(context, "Lỗi gửi đánh giá: $errorMsg", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -181,19 +180,18 @@ class TicketsFragment : Fragment() {
     private fun performCancelTicket(ticketId: String) {
         showLoading(true)
         val api = ApiClient.create(requireContext())
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                api.cancelTicket(ticketId)
-                withContext(Dispatchers.Main) {
-                    showLoading(false)
-                    Toast.makeText(context, "Đã hủy vé thành công. Hoàn tiền 50% đang được xử lý.", Toast.LENGTH_LONG).show()
-                    loadTickets() // Tải lại danh sách
-                }
+                withContext(Dispatchers.IO) { api.cancelTicket(ticketId) }
+                if (!isAdded) return@launch
+                
+                showLoading(false)
+                Toast.makeText(context, "Đã hủy vé thành công. Hoàn tiền 50% đang được xử lý.", Toast.LENGTH_LONG).show()
+                loadTickets() // Tải lại danh sách
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showLoading(false)
-                    Toast.makeText(context, "Lỗi hủy vé: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                if (!isAdded) return@launch
+                showLoading(false)
+                Toast.makeText(context, "Lỗi hủy vé: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

@@ -15,6 +15,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import android.view.WindowManager
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.tourism.gate.R
@@ -131,6 +132,9 @@ class ScanActivity : AppCompatActivity() {
         } else {
             requestPermission.launch(Manifest.permission.CAMERA)
         }
+
+        // Chống tắt màn hình khi đang ở trạm soát vé
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     // ── Mode switching ─────────────────────────────────────────

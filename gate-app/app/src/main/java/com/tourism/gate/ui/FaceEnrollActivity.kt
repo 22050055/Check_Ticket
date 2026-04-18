@@ -16,6 +16,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import android.view.WindowManager
 import com.tourism.gate.R
 import com.tourism.gate.data.api.ApiClient
 import com.google.mlkit.vision.common.InputImage
@@ -114,6 +115,9 @@ class FaceEnrollActivity : AppCompatActivity() {
         } else {
             requestPermission.launch(Manifest.permission.CAMERA)
         }
+
+        // Đảm bảo màn hình không tắt khi đang đăng ký khuôn mặt
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     // ── Camera ────────────────────────────────────────────────
