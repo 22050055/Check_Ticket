@@ -6,6 +6,7 @@ Cách dùng:
     from app.core.config import settings
     print(settings.MONGO_URI)
 """
+from typing import Optional
 from pydantic_settings import BaseSettings
 
 
