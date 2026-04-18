@@ -2,7 +2,7 @@
 
 > **Phát triển hệ thống kiểm soát ra/vào khu du lịch đa kênh dựa trên QR và xác thực định danh, tích hợp Dashboard phân tích vận hành**
 >
-> Đồ án Tốt nghiệp — Trần Mạnh Khang
+> Đồ án Tốt nghiệp — Ngô Mạnh Khang
 
 ---
 
@@ -43,25 +43,21 @@ Hệ thống hỗ trợ **4 kênh xác thực** tại cổng ra/vào khu du lị
 ## Kiến trúc hệ thống
 
 ```
-┌─────────────────────┐         REST API (JWT)        ┌──────────────────────┐
-│  Android Gate App   │ ──────────────────────────►   │                      │
-│  (Nhân viên cổng)   │                               │   FastAPI Backend     │
-│  ─────────────────  │ ◄──────────────────────────   │   (Render Cloud)     │
-│  Android Customer   │       JSON Response            │                      │
-│  App (Khách hàng)   │                               └───────────┬──────────┘
-└─────────────────────┘                                           │
-                                                      ┌───────────▼──────────┐
-┌─────────────────────┐                               │     MongoDB Atlas     │
-│  Web Dashboard      │ ──── REST API / WebSocket ──► │  (vé, log, giao dịch,│
-│  (Admin / Kế toán)  │                               │   khách, identities) │
-│  Cloudflare Pages   │                               └──────────────────────┘
-└─────────────────────┘
-                                                      ┌──────────────────────┐
-                                                      │   AI Services        │
-                                                      │  (Local + Ngrok)     │
-                                                      │  ArcFace buffalo_l   │
-                                                      │  QR RS256 Verifier   │
-                                                      └──────────────────────┘
+┌─────────────────────┐         REST API (JWT)        ┌──────────────────────────────┐
+│  Android Gate App   │ ──────────────────────────►   │                              │
+│  (Nhân viên cổng)   │                               │       FastAPI Backend        │
+│  ─────────────────  │ ◄──────────────────────────   │       (Render Cloud)         │
+│  Android Customer   │       JSON Response            │                              │
+│  App (Khách hàng)   │                               └────┬──────────────────┬──────┘
+└─────────────────────┘                                    │                  │
+                                                           │ Motor async      │ HTTP (Ngrok)
+┌─────────────────────┐    REST API / WebSocket            │                  │
+│  Web Dashboard      │ ──────────────────────────────────►│        ┌─────────▼───────────┐
+│  (Admin / Kế toán)  │                                    │        │    AI Services       │
+│  Cloudflare Pages   │                               ┌────▼─────┐  │  (Local + Ngrok)    │
+└─────────────────────┘                               │ MongoDB  │  │  ArcFace buffalo_l  │
+                                                      │  Atlas   │  │  QR RS256 Verifier  │
+                                                      └──────────┘  └─────────────────────┘
 ```
 
 > [!IMPORTANT]
@@ -196,25 +192,25 @@ Check_ticket/
 ## Triển khai (Deployment)
 
 ### ⚙️ Backend — Render
-- **URL:** *(Xem riêng — không public)*
+- **URL:** `https://check-ticket-1hyd.onrender.com`
 - **Build:** Auto-deploy từ GitHub `main` branch qua Dockerfile.
 - **Biến môi trường cần thiết trên Render:**
 
 | Biến | Giá trị |
 |------|---------|
-| `MONGO_URI` | `mongodb+srv://<user>:{password}@<cluster>.mongodb.net/?appName=<app>` |
-| `MONGO_PASSWORD` | *(password MongoDB — xem riêng)* |
+| `MONGO_URI` | `mongodb+srv://22050055_db_user:<password>@khang1402.e2kn7mt.mongodb.net/...` |
+| `MONGO_PASSWORD` | `khang123` |
 | `JWT_SECRET` | *(chuỗi ngẫu nhiên 32+ ký tự)* |
 | `AI_SERVICE_URL` | URL Ngrok đang chạy, VD: `https://xxxx.ngrok-free.app` |
 | `QR_PRIVATE_KEY` | Nội dung file `private.pem` (paste trực tiếp) |
 | `QR_PUBLIC_KEY` | Nội dung file `public.pem` (paste trực tiếp) |
 
 ### 🌐 Web Dashboard — Cloudflare Pages
-- **URL:** *(Xem riêng — không public)*
+- **URL:** `https://fc439656.tourism-dashboard.pages.dev`
 - **Root Directory:** `web-dashboard`
 - **Build Command:** `npm run build`
 - **Output Directory:** `dist`
-- **Biến môi trường:** `VITE_API_URL=https://<backend-url>`
+- **Biến môi trường:** `VITE_API_URL=https://check-ticket-1hyd.onrender.com`
 
 ### 🤖 AI Service — Local + Ngrok
 ```bash
@@ -247,8 +243,7 @@ cd backend
 pip install -r requirements.txt
 
 # Tạo file .env
-MONGO_URI=mongodb+srv://22050055_db_user:{your_password}@khang1402.e2kn7mt.mongodb.net/?appName=khang1402&retryWrites=true&w=majority
-MONGO_PASSWORD=your_mongo_password_here
+MONGO_URI=mongodb+srv://22050055_db_user:khang123@khang1402.e2kn7mt.mongodb.net/?appName=khang1402&retryWrites=true&w=majority
 JWT_SECRET=dev-secret-key-change-in-prod
 AI_SERVICE_URL=http://localhost:8001
 QR_PRIVATE_KEY_PATH=../ai_services/qr_generator/keys/private.pem
@@ -390,9 +385,9 @@ docker-compose up --build
 
 | Họ tên | MSSV | Vai trò |
 |--------|------|---------|
-| Trần Mạnh Khang | 22050055 | Phát triển toàn hệ thống |
+| Ngô Mạnh Khang | 22050055 | Phát triển toàn hệ thống |
 
-**Giảng viên hướng dẫn:** *(Thêm tên GV)*
+**Giảng viên hướng dẫn:** Dương Anh Tuấn
 
 **Trường:** Đại học Bình Dương — Khoa Công nghệ Thông tin
 
