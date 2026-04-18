@@ -37,6 +37,29 @@
             android:paddingHorizontal="12dp"
             android:layout_marginBottom="20dp"/>
 
+        <!-- Ngày đi -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CHỌN NGÀY VÀO CỔNG"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            android:letterSpacing="0.12"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvSelectDate"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:background="@drawable/bg_input"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="20dp"
+            android:text="Hôm nay"
+            android:gravity="center_vertical"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+
         <!-- Tổng tiền -->
         <LinearLayout
             android:layout_width="match_parent"

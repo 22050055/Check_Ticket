@@ -19,11 +19,15 @@ import java.util.*
 class BuyFragment : Fragment() {
 
     private lateinit var spinnerType:  Spinner
+    private lateinit var tvSelectDate: TextView
     private lateinit var tvTotalPrice: TextView
     private lateinit var switchFace:   android.widget.Switch
     private lateinit var btnBuy:       TextView
     private lateinit var progressBar:  ProgressBar
     private lateinit var tvError:      TextView
+
+    private var selectedDate: Calendar = Calendar.getInstance()
+    private val dateFormatter = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     private var lastGeneratedTicketId: String? = null
     private var lastGeneratedQrB64:   String? = null
@@ -36,6 +40,7 @@ class BuyFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_buy, container, false)
         
         spinnerType  = view.findViewById(R.id.spinnerTicketType)
+        tvSelectDate = view.findViewById(R.id.tvSelectDate)
         tvTotalPrice = view.findViewById(R.id.tvTotalPrice)
         switchFace   = view.findViewById(R.id.switchFace)
         btnBuy       = view.findViewById(R.id.btnBuy)
@@ -43,6 +48,7 @@ class BuyFragment : Fragment() {
         tvError      = view.findViewById(R.id.tvError)
 
         setupSpinner()
+        tvSelectDate.setOnClickListener { showDatePicker() }
         btnBuy.setOnClickListener { performBuy() }
         
         return view
@@ -67,6 +73,23 @@ class BuyFragment : Fragment() {
         tvTotalPrice.text = "${formatted}đ"
     }
 
+    private fun showDatePicker() {
+        val dpd = android.app.DatePickerDialog(
+            requireContext(),
+            { _, y, m, d ->
+                selectedDate.set(y, m, d)
+                val displayFormat = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                tvSelectDate.text = displayFormat.format(selectedDate.time)
+            },
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH),
+            selectedDate.get(Calendar.DAY_OF_MONTH)
+        )
+        // Chỉ cho phép chọn từ ngày hôm nay trở đi
+        dpd.datePicker.minDate = System.currentTimeMillis() - 1000
+        dpd.show()
+    }
+
     private fun performBuy() {
         val pos = spinnerType.selectedItemPosition
         val selectedKey = ticketTypeKeys[pos]
@@ -81,7 +104,8 @@ class BuyFragment : Fragment() {
                     ticketType = selectedKey,
                     price = ticketPrices[pos].toDouble(),
                     validFrom = "",
-                    validUntil = ""
+                    validUntil = "",
+                    validDate = dateFormatter.format(selectedDate.time)
                 )
                 
                 val response = api.buyTicket(req)

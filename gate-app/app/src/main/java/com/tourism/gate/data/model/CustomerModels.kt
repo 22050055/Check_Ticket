@@ -28,7 +28,8 @@ data class CustomerBuyTicketRequest(
     @SerializedName("ticket_type") val ticketType: String,
     @SerializedName("price") val price: Double,
     @SerializedName("valid_from") val validFrom: String,
-    @SerializedName("valid_until") val validUntil: String
+    @SerializedName("valid_until") val validUntil: String,
+    @SerializedName("valid_date") val validDate: String? = null
 )
 
 // Response từ GET /api/customer/tickets

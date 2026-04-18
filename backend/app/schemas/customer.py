@@ -27,6 +27,7 @@ class CustomerBuyTicketRequest(BaseModel):
     ticket_type: str               # adult | child | student | group
     payment_method: str = "demo"   # demo = giả lập thanh toán cho đồ án
     venue_id: str = "tourism_default"
+    valid_date: Optional[str] = None # Ngày hiệu lực, format: "yyyy-MM-dd"
 
 class CustomerUpdateByAdminRequest(BaseModel):
     """Admin cập nhật thông tin khách hàng."""

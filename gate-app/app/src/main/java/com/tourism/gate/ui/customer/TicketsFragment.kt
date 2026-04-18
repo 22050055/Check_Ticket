@@ -75,7 +75,8 @@ class TicketsFragment : Fragment() {
             tickets = tickets,
             onDownloadQr = { ticket -> downloadQr(ticket) },
             onEnrollFace = { ticket -> enrollFace(ticket) },
-            onReview     = { ticket -> showReviewDialog(ticket) }
+            onReview     = { ticket -> showReviewDialog(ticket) },
+            onCancel     = { ticket -> showCancelConfirmation(ticket) }
         )
         recyclerTickets.adapter = adapter
         recyclerTickets.visibility = View.VISIBLE
@@ -161,6 +162,37 @@ class TicketsFragment : Fragment() {
                         e.message ?: "Lỗi kết nối"
                     }
                     Toast.makeText(context, "Lỗi gửi đánh giá: $errorMsg", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun showCancelConfirmation(ticket: CustomerTicket) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Xác nhận hủy vé")
+            .setMessage("Bạn có chắc chắn muốn hủy vé? Hệ thống chỉ có thể hoàn 50% số tiền.")
+            .setPositiveButton("Chắc chắn hủy") { _, _ ->
+                performCancelTicket(ticket.ticketId)
+            }
+            .setNegativeButton("Quay lại", null)
+            .show()
+    }
+
+    private fun performCancelTicket(ticketId: String) {
+        showLoading(true)
+        val api = ApiClient.create(requireContext())
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                api.cancelTicket(ticketId)
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    Toast.makeText(context, "Đã hủy vé thành công. Hoàn tiền 50% đang được xử lý.", Toast.LENGTH_LONG).show()
+                    loadTickets() // Tải lại danh sách
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    Toast.makeText(context, "Lỗi hủy vé: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }

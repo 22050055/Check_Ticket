@@ -178,8 +178,20 @@ async def buy_ticket(
     
     # Hiệu lực trong ngày
     from datetime import time
-    valid_until = datetime.combine(now.date(), time(23, 59, 59)).replace(tzinfo=timezone.utc)
-    
+    if req.valid_date:
+        try:
+            target_date = datetime.strptime(req.valid_date, "%Y-%m-%d").date()
+            if target_date == now.date():
+                valid_from = now
+            else:
+                valid_from = datetime.combine(target_date, time(0, 0, 0)).replace(tzinfo=timezone.utc)
+            valid_until = datetime.combine(target_date, time(23, 59, 59)).replace(tzinfo=timezone.utc)
+        except ValueError:
+            valid_from = now
+            valid_until = datetime.combine(now.date(), time(23, 59, 59)).replace(tzinfo=timezone.utc)
+    else:
+        valid_from = now
+        valid_until = datetime.combine(now.date(), time(23, 59, 59)).replace(tzinfo=timezone.utc)
     customer_id = str(customer["_id"])
     
     # 0. Nới lỏng: Cho phép khách mua online ngay cả khi chưa cập nhật SĐT/CCCD.
@@ -199,7 +211,7 @@ async def buy_ticket(
         "customer_id": customer_id,
         "ticket_type": req.ticket_type,
         "price": price,
-        "valid_from": now,
+        "valid_from": valid_from,
         "valid_until": valid_until,
         "status": "active",
         "venue_id": req.venue_id,
@@ -248,13 +260,56 @@ async def buy_ticket(
         booking_id=booking_id,
         ticket_type=req.ticket_type,
         price=price,
-        valid_from=now,
+        valid_from=valid_from,
         valid_until=valid_until,
         status="active",
         has_face=False,
         qr_image_b64=qr_b64,
         created_at=now
     )
+
+@router.post("/tickets/{ticket_id}/cancel")
+async def cancel_my_ticket(
+    ticket_id: str,
+    customer: dict = Depends(get_current_customer),
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    """Khách hàng tự hủy vé cũ (trước ngày đi). Hoàn 50% tiền."""
+    ticket = await db["tickets"].find_one({"_id": ticket_id, "customer_id": str(customer["_id"])})
+    if not ticket:
+        raise HTTPException(404, "Vé không tồn tại hoặc không thuộc về bạn.")
+    
+    if ticket.get("status") != "active":
+        raise HTTPException(400, f"Vé đang ở trạng thái '{ticket.get('status')}' không thể hủy.")
+    
+    now = datetime.now(timezone.utc)
+    valid_until = ticket.get("valid_until", now).replace(tzinfo=timezone.utc)
+    if valid_until < now:
+        raise HTTPException(400, "Vé đã hết hạn, không thể hủy.")
+        
+    # Cập nhật status => revoked
+    await db["tickets"].update_one(
+        {"_id": ticket_id},
+        {"$set": {
+            "status": "revoked",
+            "updated_at": now
+        }}
+    )
+    
+    refund_amount = ticket.get("price", 0) * 0.5
+    
+    await db["transactions"].insert_one({
+        "_id": str(uuid.uuid4()),
+        "ticket_id": ticket_id,
+        "action": "CANCEL_REFUND",
+        "actor_id": str(customer["_id"]),
+        "actor_role": "customer",
+        "amount": -refund_amount,
+        "payment_method": "system_refund",
+        "timestamp": now
+    })
+    
+    return {"message": "Hủy vé thành công. Bạn sẽ nhận lại 50% số tiền theo chính sách."}
 
 # ── Quản lý khách hàng (Admin/Manager) ────────────────────────
 

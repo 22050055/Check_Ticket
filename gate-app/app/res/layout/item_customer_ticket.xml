@@ -161,20 +161,36 @@
     </LinearLayout>
 
     <!-- ── Row 3: Nút tải QR + đăng ký mặt ── -->
+    <!-- ── Row 3: Nút tải QR + đăng ký mặt + Huỷ ── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="14dp"
-        android:weightSum="2">
+        android:weightSum="100">
+
+        <!-- Nút huỷ vé -->
+        <TextView
+            android:id="@+id/btn_cancel_ticket"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="25"
+            android:text="✖ Hủy vé"
+            android:textColor="#FF6B6B"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_input"
+            android:layout_marginEnd="6dp"
+            android:visibility="gone"/>
 
         <!-- Nút tải QR -->
         <TextView
             android:id="@+id/btn_download_qr"
             android:layout_width="0dp"
             android:layout_height="40dp"
-            android:layout_weight="1"
-            android:text="📥  Tải mã QR"
+            android:layout_weight="37.5"
+            android:text="📥 QR Code"
             android:textColor="@color/navy_deep"
             android:textSize="12sp"
             android:textStyle="bold"
@@ -187,14 +203,13 @@
             android:id="@+id/btn_enroll_face"
             android:layout_width="0dp"
             android:layout_height="40dp"
-            android:layout_weight="1"
-            android:text="🤳  Đăng ký mặt"
+            android:layout_weight="37.5"
+            android:text="🤳 Đăng ký Face"
             android:textColor="@color/text_primary"
             android:textSize="12sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:background="@drawable/bg_input"
-            android:layout_marginStart="6dp"/>
+            android:background="@drawable/bg_input"/>
     </LinearLayout>
 
     <!-- ── Row 4: Nút Đánh giá (chỉ hiện khi đã sử dụng) ── -->

@@ -18,7 +18,8 @@ class CustomerTicketAdapter(
     private val tickets: List<CustomerTicket>,
     private val onDownloadQr: (ticket: CustomerTicket) -> Unit,
     private val onEnrollFace: (ticket: CustomerTicket) -> Unit,
-    private val onReview: (ticket: CustomerTicket) -> Unit
+    private val onReview: (ticket: CustomerTicket) -> Unit,
+    private val onCancel: (ticket: CustomerTicket) -> Unit
 ) : RecyclerView.Adapter<CustomerTicketAdapter.TicketViewHolder>() {
 
     inner class TicketViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -30,6 +31,7 @@ class CustomerTicketAdapter(
         val tvPrice: TextView       = view.findViewById(R.id.tv_price)
         val btnDownloadQr: TextView = view.findViewById(R.id.btn_download_qr)
         val btnEnrollFace: TextView = view.findViewById(R.id.btn_enroll_face)
+        val btnCancelTicket: TextView = view.findViewById(R.id.btn_cancel_ticket)
         val btnReview: TextView     = view.findViewById(R.id.btn_review)
     }
 
@@ -104,11 +106,19 @@ class CustomerTicketAdapter(
             holder.btnReview.visibility     = View.GONE
             holder.btnDownloadQr.visibility = View.VISIBLE
             holder.btnEnrollFace.visibility = View.VISIBLE
+            
+            // Chỉ cho phép hủy nếu là vé "active" (chưa dùng)
+            if (ticket.status.lowercase() == "active") {
+                holder.btnCancelTicket.visibility = View.VISIBLE
+            } else {
+                holder.btnCancelTicket.visibility = View.GONE
+            }
         }
 
         // Sự kiện bấm nút
         holder.btnDownloadQr.setOnClickListener { onDownloadQr(ticket) }
         holder.btnEnrollFace.setOnClickListener  { onEnrollFace(ticket) }
+        holder.btnCancelTicket.setOnClickListener { onCancel(ticket) }
         holder.btnReview.setOnClickListener     { onReview(ticket) }
     }
 
