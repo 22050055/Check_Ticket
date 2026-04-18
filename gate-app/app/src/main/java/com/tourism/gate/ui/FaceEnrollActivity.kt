@@ -295,8 +295,11 @@ class FaceEnrollActivity : AppCompatActivity() {
 
     private fun enrollFaceMulti(bitmaps: List<Bitmap>) {
         val imagesB64 = bitmaps.map { bmp ->
+            // Tối ưu hóa: Resize ảnh xuống max 640px
+            val resizedBmp = getResizedBitmap(bmp, 640)
+            
             val stream = ByteArrayOutputStream()
-            bmp.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+            resizedBmp.compress(Bitmap.CompressFormat.JPEG, 70, stream)
             "data:image/jpeg;base64," +
                     Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
         }
@@ -334,6 +337,20 @@ class FaceEnrollActivity : AppCompatActivity() {
         val bytes  = ByteArray(buffer.remaining())
         buffer.get(bytes)
         return android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
+
+    private fun getResizedBitmap(image: Bitmap, maxSize: Int): Bitmap {
+        var width  = image.width
+        var height = image.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true)
     }
 
     override fun onDestroy() {

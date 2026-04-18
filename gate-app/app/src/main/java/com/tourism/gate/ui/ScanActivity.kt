@@ -333,8 +333,11 @@ class ScanActivity : AppCompatActivity() {
     private fun doQrFaceCheckin(token: String, bitmap: Bitmap) {
         tvStatus.text = "Đang xác thực khuôn mặt..."
 
+        // Tối ưu hóa: Resize ảnh xuống max 640px để giảm latency mạng (Ngrok/Render)
+        val resizedBmp = getResizedBitmap(bitmap, 640)
+        
         val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+        resizedBmp.compress(Bitmap.CompressFormat.JPEG, 70, stream)
         val probeB64 = "data:image/jpeg;base64," +
                 Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
 
@@ -399,6 +402,20 @@ class ScanActivity : AppCompatActivity() {
         val bytes  = ByteArray(buffer.remaining())
         buffer.get(bytes)
         return android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
+
+    private fun getResizedBitmap(image: Bitmap, maxSize: Int): Bitmap {
+        var width  = image.width
+        var height = image.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true)
     }
 
     override fun onDestroy() {

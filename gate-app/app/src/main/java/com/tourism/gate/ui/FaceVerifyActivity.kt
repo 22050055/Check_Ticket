@@ -146,12 +146,9 @@ class FaceVerifyActivity : AppCompatActivity() {
 
     private fun captureAndVerify() {
         val capture = imageCapture ?: return
-        isProcessing            = true
-        btnCapture.isEnabled    = false
-        btnFlipCamera.isEnabled = false
-        btnSkip.isEnabled       = false
-        progressBar.visibility  = View.VISIBLE
-        tvStatus.text           = "Đang chụp ảnh..."
+        isProcessing = true
+        setLoading(true)
+        tvStatus.text = "Đang chụp ảnh..."
 
         capture.takePicture(
             ContextCompat.getMainExecutor(this),
@@ -159,13 +156,29 @@ class FaceVerifyActivity : AppCompatActivity() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     val bmp = imageProxyToBitmap(image)
                     image.close()
-                    doQrFaceCheckin(bmp)
+
+                    // Tối ưu hóa: Resize ảnh xuống max 640px
+                    val resizedBmp = getResizedBitmap(bmp, 640)
+                    
+                    val stream = ByteArrayOutputStream()
+                    resizedBmp.compress(Bitmap.CompressFormat.JPEG, 70, stream)
+                    val probeB64 = "data:image/jpeg;base64," +
+                            Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+                    
+                    doQrFaceCheckin(probeB64)
                 }
                 override fun onError(e: ImageCaptureException) {
                     onError("Chụp ảnh thất bại: ${e.message}")
                 }
             }
         )
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        btnCapture.isEnabled = !isLoading
+        btnFlipCamera.isEnabled = !isLoading
+        btnSkip.isEnabled = !isLoading
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     /**
@@ -272,6 +285,20 @@ class FaceVerifyActivity : AppCompatActivity() {
         val bytes  = ByteArray(buffer.remaining())
         buffer.get(bytes)
         return android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
+
+    private fun getResizedBitmap(image: Bitmap, maxSize: Int): Bitmap {
+        var width  = image.width
+        var height = image.height
+        val bitmapRatio = width.toFloat() / height.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true)
     }
 
     override fun onDestroy() {
