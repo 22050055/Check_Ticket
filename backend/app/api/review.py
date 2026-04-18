@@ -25,7 +25,8 @@ async def submit_review(
         raise HTTPException(404, "Vé không tồn tại hoặc không thuộc quyền sở hữu của bạn.")
     
     # 2. Kiểm tra trạng thái vé (cho phép đánh giá khi đang hoạt động, đã vào cổng hoặc hết hạn)
-    if ticket.get("status") not in ["active", "used", "inside", "outside", "expired"]:
+    ticket_status = ticket.get("status", "").lower()
+    if ticket_status not in ["active", "used", "inside", "outside", "expired"]:
         raise HTTPException(400, "Bạn chỉ có thể đánh giá sau khi mua vé, sử dụng vé hoặc vé đã hết hạn.")
 
     # 3. Kiểm tra xem đã đánh giá chưa

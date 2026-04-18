@@ -181,12 +181,13 @@ async def buy_ticket(
     
     customer_id = str(customer["_id"])
     
-    # 0. Kiểm tra danh tính trước khi mua online (Yêu cầu SĐT và CCCD)
-    if not customer.get("phone") or not customer.get("cccd"):
-        raise HTTPException(
-            status_code=400, 
-            detail="Bạn cần cập nhật Số điện thoại và CCCD trong phần quản lý tài khoản trước khi mua vé online."
-        )
+    # 0. Nới lỏng: Cho phép khách mua online ngay cả khi chưa cập nhật SĐT/CCCD.
+    # (Vì App Android hiện tại chưa có form cập nhật thông tin cá nhân)
+    # if not customer.get("phone") or not customer.get("cccd"):
+    #     raise HTTPException(
+    #         status_code=400, 
+    #         detail="Bạn cần cập nhật Số điện thoại và CCCD trong phần quản lý tài khoản trước khi mua vé online."
+    #     )
 
     booking_id = f"OL-{uuid.uuid4().hex[:8].upper()}"
 
