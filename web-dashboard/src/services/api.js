@@ -4,8 +4,16 @@
  */
 import axios from 'axios'
 
+const getBaseURL = () => {
+  const url = import.meta.env.VITE_API_URL || ''
+  if (url && !url.endsWith('/api')) {
+    return `${url}/api`
+  }
+  return url || '/api'
+}
+
 const api = axios.create({ 
-  baseURL: import.meta.env.VITE_API_URL || '/api', 
+  baseURL: getBaseURL(), 
   timeout: 15000 
 })
 
