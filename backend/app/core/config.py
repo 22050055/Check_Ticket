@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     # ── App ───────────────────────────────────────────────────
     APP_NAME: str    = "Tourism Gate Backend"
-    APP_VERSION: str = "1.0.1"
+    APP_VERSION: str = "1.0.2"
     DEBUG: bool      = False
 
     # ── MongoDB Atlas ─────────────────────────────────────────
