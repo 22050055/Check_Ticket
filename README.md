@@ -196,13 +196,13 @@ Check_ticket/
 ## Triển khai (Deployment)
 
 ### ⚙️ Backend — Render
-- **URL:** `https://check-ticket-1hyd.onrender.com`
+- **URL:** *(Xem riêng — không public)*
 - **Build:** Auto-deploy từ GitHub `main` branch qua Dockerfile.
 - **Biến môi trường cần thiết trên Render:**
 
 | Biến | Giá trị |
 |------|---------|
-| `MONGO_URI` | `mongodb+srv://22050055_db_user:{password}@khang1402.e2kn7mt.mongodb.net/?appName=khang1402` |
+| `MONGO_URI` | `mongodb+srv://<user>:{password}@<cluster>.mongodb.net/?appName=<app>` |
 | `MONGO_PASSWORD` | *(password MongoDB — xem riêng)* |
 | `JWT_SECRET` | *(chuỗi ngẫu nhiên 32+ ký tự)* |
 | `AI_SERVICE_URL` | URL Ngrok đang chạy, VD: `https://xxxx.ngrok-free.app` |
@@ -210,11 +210,11 @@ Check_ticket/
 | `QR_PUBLIC_KEY` | Nội dung file `public.pem` (paste trực tiếp) |
 
 ### 🌐 Web Dashboard — Cloudflare Pages
-- **URL:** `https://fc439656.tourism-dashboard.pages.dev`
+- **URL:** *(Xem riêng — không public)*
 - **Root Directory:** `web-dashboard`
 - **Build Command:** `npm run build`
 - **Output Directory:** `dist`
-- **Biến môi trường:** `VITE_API_URL=https://check-ticket-1hyd.onrender.com`
+- **Biến môi trường:** `VITE_API_URL=https://<backend-url>`
 
 ### 🤖 AI Service — Local + Ngrok
 ```bash
