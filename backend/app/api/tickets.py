@@ -26,13 +26,25 @@ router = APIRouter(prefix="/api/tickets", tags=["Tickets"])
 # ── QR: load public key trực tiếp (không qua sys.path) ───────
 
 def _load_qr_keys() -> tuple[Optional[str], Optional[str]]:
-    """Load RSA private/public key từ đường dẫn trong config."""
-    priv_path = Path(settings.QR_PRIVATE_KEY_PATH)
-    pub_path  = Path(settings.QR_PUBLIC_KEY_PATH)
-    private   = priv_path.read_text().strip() if priv_path.exists() else None
-    public    = pub_path.read_text().strip()  if pub_path.exists()  else None
+    """Load RSA private/public key từ config (ưu tiên string trong ENV, sau đó đến file)."""
+    # 1. Thử lấy trực tiếp từ string (cho Render)
+    private = settings.QR_PRIVATE_KEY
+    public  = settings.QR_PUBLIC_KEY
+
+    # 2. Nếu không có, thử đọc từ file
     if not private:
-        logger.warning("QR private key không tìm thấy: %s", priv_path)
+        priv_path = Path(settings.QR_PRIVATE_KEY_PATH)
+        if priv_path.exists():
+            private = priv_path.read_text().strip()
+            
+    if not public:
+        pub_path  = Path(settings.QR_PUBLIC_KEY_PATH)
+        if pub_path.exists():
+            public = pub_path.read_text().strip()
+
+    if not private:
+        logger.warning("QR private key không tìm thấy trong cả ENV và file path.")
+        
     return private, public
 
 

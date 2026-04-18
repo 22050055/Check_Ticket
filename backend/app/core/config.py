@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # ── QR RSA Keys (dùng chung với ai-services) ──────────────
     QR_PRIVATE_KEY_PATH: str = "../ai-services/qr_generator/keys/private.pem"
     QR_PUBLIC_KEY_PATH: str  = "../ai-services/qr_generator/keys/public.pem"
+    
+    # Cho phép dán trực tiếp nội dung PEM vào ENV (ưu tiên hơn file path)
+    QR_PRIVATE_KEY: Optional[str] = None
+    QR_PUBLIC_KEY: Optional[str]  = None
 
     # ── ID / Phone Hash pepper (phải khớp với ai-services) ────
     ID_HASH_PEPPER: str = "tourism_id_pepper_v1_CHANGE_IN_PROD"
