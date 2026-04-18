@@ -159,13 +159,8 @@ class FaceVerifyActivity : AppCompatActivity() {
 
                     // Tối ưu hóa: Resize ảnh xuống max 640px
                     val resizedBmp = getResizedBitmap(bmp, 640)
-                    
-                    val stream = ByteArrayOutputStream()
-                    resizedBmp.compress(Bitmap.CompressFormat.JPEG, 70, stream)
-                    val probeB64 = "data:image/jpeg;base64," +
-                            Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
-                    
-                    doQrFaceCheckin(probeB64)
+
+                    doQrFaceCheckin(resizedBmp)
                 }
                 override fun onError(e: ImageCaptureException) {
                     onError("Chụp ảnh thất bại: ${e.message}")
@@ -306,4 +301,3 @@ class FaceVerifyActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 }
- 

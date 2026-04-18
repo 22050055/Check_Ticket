@@ -144,7 +144,18 @@ class TicketsFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Lỗi gửi đánh giá: ${e.message}", Toast.LENGTH_LONG).show()
+                    val errorMsg = try {
+                        if (e is retrofit2.HttpException) {
+                            val errorBody = e.response()?.errorBody()?.string()
+                            val json = com.google.gson.JsonParser.parseString(errorBody).asJsonObject
+                            json.get("detail").asString
+                        } else {
+                            e.message ?: "Lỗi không xác định"
+                        }
+                    } catch (ex: Exception) {
+                        e.message ?: "Lỗi kết nối"
+                    }
+                    Toast.makeText(context, "Lỗi gửi đánh giá: $errorMsg", Toast.LENGTH_LONG).show()
                 }
             }
         }
