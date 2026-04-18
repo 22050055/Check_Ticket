@@ -14,7 +14,7 @@ from .core.config import settings
 from .core.database import connect_db, close_db, get_db
 from .core.security import hash_password
 from .models import new_user, new_gate
-from .api import auth, tickets, checkin, gates, reports, websocket, face_enroll, customer
+from .api import auth, tickets, checkin, gates, reports, websocket, face_enroll, customer, review
 from .middleware.audit import AuditMiddleware
 
 logging.basicConfig(

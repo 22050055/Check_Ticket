@@ -1,0 +1,7 @@
+{
+  "ticket_type": "adult",
+  "venue_id": "tourism_default",
+  "valid_until": "2026-12-31T23:59:59Z",
+  "customer_name": "CMD Tester",
+  "customer_email": "cmd_test@example.com"
+}

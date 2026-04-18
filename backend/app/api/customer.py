@@ -28,24 +28,32 @@ async def register_customer(req: CustomerRegisterRequest, db: AsyncIOMotorDataba
     if existing and existing.get("hashed_password"):
         raise HTTPException(status_code=400, detail="Email này đã được đăng ký tài khoản.")
         
-    hashed_pwd = hash_password(req.password)
-    customer_id = str(uuid.uuid4())
-    
-    if existing:
-        customer_id = str(existing["_id"])
-        await db["customers"].update_one(
-            {"_id": customer_id}, 
-            {"$set": {"hashed_password": hashed_pwd, "name": req.name}}
-        )
-    else:
-        await db["customers"].insert_one({
+    try:
+        hashed_pwd = hash_password(req.password)
+        customer_id = str(uuid.uuid4())
+        
+        # Chuẩn bị dữ liệu chèn (Chỉ bao gồm phone nếu có giá trị để tránh lỗi UNIQUE index khi giá trị là null)
+        insert_data = {
             "_id": customer_id,
             "name": req.name,
             "email": req.email,
-            "phone": req.phone,
             "hashed_password": hashed_pwd,
             "created_at": now
-        })
+        }
+        if req.phone:
+            insert_data["phone"] = req.phone
+
+        if existing:
+            customer_id = str(existing["_id"])
+            await db["customers"].update_one(
+                {"_id": customer_id}, 
+                {"$set": {"hashed_password": hashed_pwd, "name": req.name}}
+            )
+        else:
+            await db["customers"].insert_one(insert_data)
+    except Exception as e:
+        logger.error(f"Error registering customer: {e}")
+        raise HTTPException(status_code=500, detail=f"DEBUG ERROR: {str(e)}")
         
     return CustomerResponse(id=customer_id, name=req.name, email=req.email)
 
