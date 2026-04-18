@@ -31,6 +31,6 @@ Pillow>=10.3.0                   # image processing cho qrcode
 # ── Type hints ────────────────────────────────────────────────
 typing-extensions>=4.11.0        # TypedDict, NotRequired trong models/__init__.py
 
-# ── Utils ─────────────────────────────────────────────────────
-python-dotenv>=1.0.0             # load .env khi chạy local (không cần trong Docker)
+# ── AI Assistant ──────────────────────────────────────────────
+google-generativeai>=0.8.0       # Trợ lý AI Sên (RAG / Function Calling)
  
