@@ -78,5 +78,10 @@ export const reportApi = {
   auditLogs:  (params) => api.get('/reports/audit-logs',           { params }),
 }
 
+// ── AI Assistant ─────────────────────────────────────────────
+export const aiApi = {
+  chat: (message, history) => api.post('/ai/chat', { message, history }),
+}
+
 export default api
  

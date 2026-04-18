@@ -14,7 +14,7 @@ from .core.config import settings
 from .core.database import connect_db, close_db, get_db
 from .core.security import hash_password
 from .models import new_user, new_gate
-from .api import auth, tickets, checkin, gates, reports, websocket, face_enroll, customer, review
+from .api import auth, tickets, checkin, gates, reports, websocket, face_enroll, customer, review, ai
 from .middleware.audit import AuditMiddleware
 
 logging.basicConfig(
@@ -140,6 +140,7 @@ app.include_router(checkin.router)
 app.include_router(gates.router)
 app.include_router(reports.router)
 app.include_router(websocket.router)
+app.include_router(ai.router)
 app.include_router(face_enroll.router)
 app.include_router(customer.router)
 app.include_router(review.router)

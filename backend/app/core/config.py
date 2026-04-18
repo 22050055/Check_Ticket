@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     # Nonce settings
     NONCE_TTL_HOURS: int = 24
 
+    # AI Gemini (RAG / Assistant)
+    GOOGLE_API_KEY: str = "YOUR_GEMINI_API_KEY_HERE"
+
     # Helpers
     @property
     def mongo_uri_with_password(self) -> str:

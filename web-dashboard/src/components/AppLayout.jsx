@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout } from 'antd'
 import useAuth from '../hooks/useAuth'
+import AiAssistantBall from './AiAssistant/AiAssistantBall'
 
 const { Sider, Content } = Layout
 
@@ -169,6 +170,7 @@ export default function AppLayout() {
           <Outlet />
         </Content>
       </Layout>
+      <AiAssistantBall />
     </Layout>
   )
 }
