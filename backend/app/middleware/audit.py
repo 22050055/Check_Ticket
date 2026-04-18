@@ -33,6 +33,7 @@ ACTION_CREATE_USER     = Action.CREATE_USER
 ACTION_CREATE_GATE     = Action.CREATE_GATE
 ACTION_DEACTIVATE_GATE = Action.DEACTIVATE_GATE
 ACTION_EXPORT_REPORT   = Action.EXPORT_REPORT
+ACTION_TICKET_AUTO_EXPIRED = "ticket_auto_expired"
 
 
 # ── Manual log ────────────────────────────────────────────────

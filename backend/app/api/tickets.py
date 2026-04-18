@@ -16,7 +16,7 @@ from ..core.database import get_db
 from ..core.security import get_current_user, require_role, require_min_role, Role
 from fastapi.responses import StreamingResponse
 from ..schemas.ticket import TicketIssueRequest, TicketEnrollFaceRequest, TicketResponse, TicketRevokeRequest
-from ..middleware.audit import log_action, ACTION_ISSUE_TICKET, ACTION_REVOKE_TICKET
+from ..middleware.audit import log_action, ACTION_ISSUE_TICKET, ACTION_REVOKE_TICKET, ACTION_TICKET_AUTO_EXPIRED
 from ..services.qr_image_service import generate_qr_b64, generate_qr_png_bytes
 
 logger = logging.getLogger(__name__)
@@ -295,6 +295,51 @@ async def enroll_face(
 
 # ── GET /api/tickets/search — Tra cứu vé ──────────────────────
 
+async def _auto_cleanup_expired_tickets(db: AsyncIOMotorDatabase):
+    """
+    Tìm và tự động chuyển trạng thái vé hết hạn.
+    Ghi log lý do (quên checkout vs chưa dùng).
+    """
+    now = datetime.now(timezone.utc)
+    
+    # Tìm vé chưa hết hạn nhưng đã quá valid_until
+    # Trạng thái cần check: active (chưa dùng), inside (đang ở trong), used (đã dùng nhưng có thể chưa check out hết các gate)
+    cursor = db["tickets"].find({
+        "status": {"$in": ["active", "inside", "used"]},
+        "valid_until": {"$lt": now}
+    })
+    
+    expired_tickets = await cursor.to_list(length=1000)
+    for t in expired_tickets:
+        ticket_id = str(t["_id"])
+        old_status = t.get("status")
+        
+        # 1. Cập nhật trạng thái vé
+        await db["tickets"].update_one(
+            {"_id": ticket_id},
+            {"$set": {"status": "expired", "updated_at": now}}
+        )
+        
+        # 2. Ghi log điều tra
+        reason = "never_used" if old_status == "active" else "failed_checkout"
+        detail_msg = "Chưa sử dụng nhưng hết hạn" if old_status == "active" else "Đã vào cổng nhưng không checkout (tự động đóng)"
+        
+        await log_action(
+            db,
+            user_id="system_auto",
+            action=ACTION_TICKET_AUTO_EXPIRED,
+            resource=ticket_id,
+            detail={
+                "old_status": old_status,
+                "reason": reason,
+                "message": detail_msg,
+                "valid_until": t["valid_until"].isoformat() if t.get("valid_until") else None
+            }
+        )
+    
+    if expired_tickets:
+        logger.info(f"Hệ thống đã tự động xử lý hết hạn cho {len(expired_tickets)} vé.")
+
 @router.get("/search", response_model=list[TicketResponse])
 async def search_tickets(
     q: Optional[str] = Query(None, description="Tìm theo Ticket ID hoặc Booking ID"),
@@ -305,7 +350,11 @@ async def search_tickets(
 ):
     """
     Tra cứu danh sách vé với các điều kiện lọc nâng cao.
+    Tự động gọi cleanup để đảm bảo dữ liệu mới nhất.
     """
+    # Auto cleanup trước khi search
+    await _auto_cleanup_expired_tickets(db)
+    
     filter_query = {}
     
     if q:

@@ -11,7 +11,7 @@ from ..core.database import get_db
 from ..core.security import hash_password, verify_password, create_access_token, get_current_customer, Role, require_min_role
 from ..schemas.customer import CustomerRegisterRequest, CustomerLoginRequest, CustomerResponse, TokenResponse, CustomerBuyTicketRequest, CustomerUpdateByAdminRequest
 from ..schemas.ticket import TicketResponse, TicketEnrollFaceRequest
-from .tickets import _make_qr_token
+from .tickets import _make_qr_token, _auto_cleanup_expired_tickets
 from ..services.qr_image_service import generate_qr_b64, generate_qr_png_bytes
 from ..middleware.audit import log_action, ACTION_REVOKE_TICKET
 
@@ -74,7 +74,8 @@ async def get_my_tickets(
     customer: dict = Depends(get_current_customer),
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    """Lấy danh sách các vé do customer này đã mua."""
+    """Lấy danh sách các vé do customer này đã mua. Tự động kiểm tra hết hạn."""
+    await _auto_cleanup_expired_tickets(db)
     cursor = db["tickets"].find({"customer_id": str(customer["_id"])})
     tickets = await cursor.to_list(length=100)
     
