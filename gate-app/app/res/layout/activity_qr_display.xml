@@ -16,6 +16,7 @@
         android:background="@color/navy_card">
 
         <TextView
+            android:id="@+id/tvToolbarTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -42,6 +43,7 @@
 
         <!-- Success badge -->
         <TextView
+            android:id="@+id/tvStatusBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="PHÁT HÀNH THÀNH CÔNG"
@@ -92,6 +94,7 @@
 
         <!-- Hint -->
         <TextView
+            android:id="@+id/tvHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Chụp màn hình hoặc in QR để đưa cho khách"

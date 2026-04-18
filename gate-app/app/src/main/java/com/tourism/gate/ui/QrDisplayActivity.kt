@@ -48,17 +48,28 @@ class QrDisplayActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.tvQrFallback).visibility = View.VISIBLE
         }
 
-        // Nút "Phát hành vé mới"
+        val prefs    = getSharedPreferences("gate_prefs", MODE_PRIVATE)
+        val role     = prefs.getString("role", "") ?: ""
+        val isCustomer = role.isEmpty()
+
+        if (isCustomer) {
+            findViewById<TextView>(R.id.tvToolbarTitle).text = "Mã vé điện tử"
+            findViewById<TextView>(R.id.tvStatusBadge).text  = "MUA VÉ THÀNH CÔNG"
+            findViewById<TextView>(R.id.tvHint).text         = "Xuất trình mã này tại cổng soát vé"
+            findViewById<TextView>(R.id.btnNewTicket).text   = "🎫 Mua thêm vé mới"
+        }
+
+        // Nút "Phát hành vé mới / Mua vé mới"
         findViewById<TextView>(R.id.btnNewTicket).setOnClickListener {
+            if (isCustomer) {
+                startActivity(Intent(this, com.tourism.gate.ui.customer.CustomerBuyTicketActivity::class.java))
+            }
             finish()
         }
 
         // Nút "Về trang chủ"
         findViewById<TextView>(R.id.btnHome).setOnClickListener {
-            val prefs = getSharedPreferences("gate_prefs", MODE_PRIVATE)
-            val role = prefs.getString("role", "")
-            
-            val destActivity = if (role.isNullOrEmpty()) {
+            val destActivity = if (isCustomer) {
                 com.tourism.gate.ui.customer.CustomerDashboardActivity::class.java
             } else {
                 RoleSelectActivity::class.java
