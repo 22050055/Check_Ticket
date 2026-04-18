@@ -5,6 +5,14 @@ Sử dụng InsightFace buffalo_l model pack
 import os
 from pathlib import Path
 
+# Load file .env nếu có
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent.parent / '.env'
+    load_dotenv(dotenv_path=env_path)
+except ImportError:
+    pass
+
 BASE_DIR   = Path(__file__).parent
 MODELS_DIR = BASE_DIR / "models"
 BUFFALO_DIR = MODELS_DIR / "buffalo_l"
