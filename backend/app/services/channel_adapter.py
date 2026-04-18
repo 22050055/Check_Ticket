@@ -53,7 +53,7 @@ def _get_public_key() -> Optional[str]:
     return _PUBLIC_KEY
 
 
-# ── Hash helpers (khớp với ai-services/id_service) ────────────
+# ── Hash helpers (khớp với ai_services/id_service) ────────────
 
 def _hash_id(id_number: str) -> str:
     """HMAC-SHA256 số CCCD/ID — khớp với id_hash_service.py."""

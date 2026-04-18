@@ -42,8 +42,8 @@ class Settings(BaseSettings):
     AI_SERVICE_TIMEOUT: float = 10.0    # giây
 
     # QR RSA Keys
-    QR_PRIVATE_KEY_PATH: str = "../ai-services/qr_generator/keys/private.pem"
-    QR_PUBLIC_KEY_PATH: str  = "../ai-services/qr_generator/keys/public.pem"
+    QR_PRIVATE_KEY_PATH: str = "../ai_services/qr_generator/keys/private.pem"
+    QR_PUBLIC_KEY_PATH: str  = "../ai_services/qr_generator/keys/public.pem"
     
     # Cho phép dán trực tiếp nội dung PEM vào ENV (ưu tiên hơn file path)
     QR_PRIVATE_KEY: Optional[str] = None
