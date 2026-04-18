@@ -1,8 +1,14 @@
 package com.tourism.gate.ui.customer
 
+import android.content.Intent
+import android.os.Bundle
 import android.view.MotionEvent
-import android.view.View
 import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.tourism.gate.R
 import com.tourism.gate.ui.AiChatActivity
 
 /**
@@ -18,8 +24,8 @@ class CustomerDashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Áp dụng theme (Sáng/Tối) trước khi setContentView
         val prefs = getSharedPreferences("gate_prefs", MODE_PRIVATE)
-        val savedTheme = prefs.getInt("app_theme", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(savedTheme)
+        val savedTheme = prefs.getInt("app_theme", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        AppCompatDelegate.setDefaultNightMode(savedTheme)
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_customer_dashboard)
