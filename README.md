@@ -143,8 +143,13 @@ tourism-access-control/
 │   │       ├── gateStore.js
 │   │       └── reportStore.js
 │   ├── package.json
-│   ├── Dockerfile                  # Build image cho Dashboard (Nginx) [NEW]
-│   └── nginx.conf                  # Cấu hình proxy API cho Dashboard [NEW]
+│   ├── tests/                          # Mock data & unit tests cho Dashbard [NEW]
+│   ├── Dockerfile                      # Build image cho Dashboard (Nginx) [NEW]
+│   └── nginx.conf                      # Cấu hình proxy API cho Dashboard [NEW]
+│
+├── 🧪 tests/                                    # [NEW] Trung tâm kiểm thử hệ thống
+│   ├── payloads/                               # Dữ liệu JSON mẫu (login, register, issue)
+│   └── scripts/                                # Script batch test API nhanh (.bat)
 │
 ├── ⚙️ backend/                              # FastAPI Backend
 │   ├── app/
@@ -213,10 +218,8 @@ tourism-access-control/
 │   │   ├── id_hash_service.py              # SHA-256 hash CCCD/ID, không lưu ảnh gốc
 │   │   └── booking_lookup.py              # Tra cứu theo booking ID / SĐT
 │   ├── eval/                               # Script đánh giá Chương 4
-│   │   ├── test_far_frr.py                 # Tính FAR / FRR với data mô phỏng
-│   │   ├── test_qr_fraud.py                # Test phát hiện vé giả / đã dùng
-│   │   ├── test_load_simulation.py         # Mô phỏng tải theo giờ cao điểm
-│   │   └── sample_images/                  # Ảnh mẫu cho demo FAR/FRR
+│   │   ├── ...
+│   ├── tests/                              # Unit tests & AI logic tests [NEW]
 │   └── Dockerfile
 │
 ├── 🐳 docker-compose.yml                   # Gom toàn bộ services
