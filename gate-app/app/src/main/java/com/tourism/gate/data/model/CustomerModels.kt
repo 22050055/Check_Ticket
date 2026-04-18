@@ -44,4 +44,18 @@ data class CustomerTicket(
     @SerializedName("has_face")    val hasFace:    Boolean,
     @SerializedName("created_at")  val createdAt:  String?
 )
- 
+
+// Request / Response cho POST /api/customer/tickets/{id}/review
+data class ReviewRequest(
+    @SerializedName("rating")  val rating:  Int,
+    @SerializedName("comment") val comment: String
+)
+
+data class ReviewResponse(
+    @SerializedName("id")            val id:           String?,
+    @SerializedName("ticket_id")     val ticketId:     String?,
+    @SerializedName("customer_name") val customerName: String?,
+    @SerializedName("rating")        val rating:       Int?,
+    @SerializedName("comment")       val comment:      String?,
+    @SerializedName("message")       val message:      String?
+)

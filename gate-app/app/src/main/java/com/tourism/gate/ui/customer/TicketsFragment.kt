@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.JsonParser
 import com.tourism.gate.R
 import com.tourism.gate.data.api.ApiClient
 import com.tourism.gate.data.model.CustomerTicket
@@ -137,7 +138,7 @@ class TicketsFragment : Fragment() {
         val api = ApiClient.create(requireContext())
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                api.reviewTicket(ticketId, mapOf("rating" to rating, "comment" to comment))
+                api.reviewTicket(ticketId, com.tourism.gate.data.model.ReviewRequest(rating, comment))
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Cảm ơn bạn đã đánh giá!", Toast.LENGTH_SHORT).show()
                     loadTickets()
@@ -147,8 +148,12 @@ class TicketsFragment : Fragment() {
                     val errorMsg = try {
                         if (e is retrofit2.HttpException) {
                             val errorBody = e.response()?.errorBody()?.string()
-                            val json = com.google.gson.JsonParser.parseString(errorBody).asJsonObject
-                            json.get("detail").asString
+                            if (errorBody != null) {
+                                val json = JsonParser.parseString(errorBody).asJsonObject
+                                json.get("detail").asString
+                            } else {
+                                e.message ?: "Lỗi không xác định"
+                            }
                         } else {
                             e.message ?: "Lỗi không xác định"
                         }

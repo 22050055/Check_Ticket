@@ -59,8 +59,8 @@ interface ApiService {
     @POST("api/customer/tickets/{id}/review")
     suspend fun reviewTicket(
         @Path("id") ticketId: String,
-        @Body req: Map<String, Any>
-    ): Map<String, Any>
+        @Body req: ReviewRequest
+    ): ReviewResponse
 
 }
  
