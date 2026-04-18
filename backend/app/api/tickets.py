@@ -31,22 +31,35 @@ def _load_qr_keys() -> tuple[Optional[str], Optional[str]]:
     private = settings.QR_PRIVATE_KEY
     public  = settings.QR_PUBLIC_KEY
 
-    def _sanitize(key_str: Optional[str]) -> Optional[str]:
+    def _sanitize(key_str: Optional[str], key_type: str = "PRIVATE") -> Optional[str]:
         if not key_str:
             return None
+            
+        import re
+        # 1. Xóa sạch khoảng trắng dư thừa
         s = key_str.strip()
-        # Nếu khóa bị mất dấu xuống dòng (thành 1 dòng dài), 
-        # ta cần đảm bảo header/footer và nội dung được tách hợp lệ.
-        if "-----BEGIN" in s and "\n" not in s:
-            # Reconstruct PEM format
-            s = s.replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n")
-            s = s.replace("-----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----")
-            s = s.replace("-----BEGIN PUBLIC KEY-----", "-----BEGIN PUBLIC KEY-----\n")
-            s = s.replace("-----END PUBLIC KEY-----", "\n-----END PUBLIC KEY-----")
-        return s
+        
+        # 2. Tìm phần nội dung Base64 ở giữa (bất kể định dạng ban đầu ra sao)
+        # Regex tìm mọi thứ nằm giữa BEGIN và END
+        pattern = rf"-----BEGIN {key_type} KEY-----([\s\S]*?)-----END {key_type} KEY-----"
+        match = re.search(pattern, s)
+        
+        if not match:
+            # Nếu không tìm thấy header, có lẽ user chỉ dán mỗi đoạn Base64?
+            # Thử làm sạch và bọc lại.
+            clean_content = re.sub(r"[\s\r\n]", "", s)
+        else:
+            # Lấy nội dung ở giữa và xóa sạch xuống dòng/khoảng trắng
+            clean_content = re.sub(r"[\s\r\n]", "", match.group(1))
 
-    private = _sanitize(private)
-    public  = _sanitize(public)
+        # 3. Build lại chuẩn PEM: xuống dòng mỗi 64 ký tự
+        lines = [clean_content[i:i+64] for i in range(0, len(clean_content), 64)]
+        formatted_content = "\n".join(lines)
+        
+        return f"-----BEGIN {key_type} KEY-----\n{formatted_content}\n-----END {key_type} KEY-----"
+
+    private = _sanitize(private, "PRIVATE")
+    public  = _sanitize(public, "PUBLIC")
 
     # 2. Nếu không có ở ENV, thử đọc từ file
     if not private:
