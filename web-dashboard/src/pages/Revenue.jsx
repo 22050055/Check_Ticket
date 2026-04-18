@@ -7,8 +7,7 @@ import DateRangePicker  from '../components/DateRangePicker'
 import ExportButton     from '../components/ExportButton'
 import { reportApi }   from '../services/api'
 
-const fmtVnd = v => new Intl.NumberFormat('vi-VN').format(v) + 'đ'
-const fmtVndFull = v => new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(v)
+import { fmtVnd, fmtNum, NUM_COL_STYLE } from '../utils/format'
 
 const Panel = ({ children, style }) => (
   <div style={{ background:'var(--bg-card)', border:'1px solid var(--border-dim)', borderRadius:'var(--radius-md)', padding:20, ...style }}>
@@ -71,9 +70,9 @@ export default function Revenue() {
         </Col>
         <Col xs={12} md={6}>
           <Panel style={{ borderTop:'2px solid var(--green)' }}>
-            <div style={{ color:'var(--text-2)', fontSize:10, letterSpacing:'0.15em', marginBottom:10, fontFamily:'var(--font-mono)' }}>TỔNG VÉ BÁN</div>
+            <div style={{ color:'var(--text-2)', fontSize:10, letterSpacing:'0.12em', marginBottom:10, fontFamily:'var(--font-mono)' }}>TỔNG VÉ BÁN</div>
             <div style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:22, color:'var(--green)' }}>
-              {new Intl.NumberFormat('vi-VN').format(totalTickets)}
+              {fmtNum(totalTickets)}
             </div>
           </Panel>
         </Col>
@@ -140,8 +139,8 @@ export default function Revenue() {
                         <span style={{ color:'var(--text-1)' }}>{TYPE_MAP[type] || type}</span>
                       </div>
                     </td>
-                    <td style={{ padding:'10px 12px', color:'var(--text-2)' }}>{new Intl.NumberFormat('vi-VN').format(val.count)}</td>
-                    <td style={{ padding:'10px 12px', color:'var(--cyan)', fontWeight:500 }}>{fmtVnd(val.revenue)}</td>
+                    <td style={{ padding:'10px 12px', ...NUM_COL_STYLE, color:'var(--text-2)' }}>{fmtNum(val.count)}</td>
+                    <td style={{ padding:'10px 12px', ...NUM_COL_STYLE, color:'var(--cyan)', fontWeight:700 }}>{fmtVnd(val.revenue)}</td>
                     <td style={{ padding:'10px 12px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                         <div style={{ flex:1, height:4, background:'var(--bg-hover)', borderRadius:2, maxWidth:100 }}>

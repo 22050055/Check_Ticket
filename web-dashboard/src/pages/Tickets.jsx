@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Input, Button, Tag, Space, Modal, message } from 'antd'
+import { Table, Input, Button, Tag, Space, Modal, message, Select } from 'antd'
 import { ticketApi } from '../services/api'
 import dayjs from 'dayjs'
 import QrDownloadButton from '../components/QrDownloadButton'
+import { fmtVnd, fmtDateTime, NUM_COL_STYLE } from '../utils/format'
+
+const { Option } = Select
 
 const STATUS_CONFIG = {
   OUTSIDE: { color: 'var(--text-2)',  bg: 'var(--bg-hover)', label: 'Ngoài khu' },
@@ -31,28 +34,34 @@ export default function Tickets() {
   const [data, setData]         = useState([])
   const [loading, setLoading]   = useState(false)
   const [search, setSearch]     = useState('')
+  const [ticketType, setTicketType] = useState(null)
+  const [status, setStatus]     = useState(null)
   const [revoking, setRevoking] = useState(null)
 
-  const load = async (q = '') => {
+  const load = async () => {
     setLoading(true)
     try {
-      // Demo: load ticket by ID search
-      if (q.length > 4) {
-        const r = await ticketApi.get(q.trim())
-        setData([r.data])
-      } else {
-        setData([])
-      }
+      // Gọi API search mới được update ở backend
+      const r = await ticketApi.search({
+        q: search || undefined,
+        ticket_type: ticketType || undefined,
+        status: status || undefined
+      })
+      setData(r.data || [])
     } catch { setData([]) }
     finally { setLoading(false) }
   }
+
+  useEffect(() => {
+    load()
+  }, [])
 
   const handleRevoke = async (ticket_id) => {
     try {
       await ticketApi.revoke(ticket_id, { reason: 'manual_revoke' })
       message.success('Đã thu hồi vé')
       setRevoking(null)
-      load(search)
+      load()
     } catch (e) {
       message.error(e.response?.data?.detail || 'Lỗi thu hồi vé')
     }
@@ -60,8 +69,8 @@ export default function Tickets() {
 
   const COLS = [
     {
-      title: 'TICKET ID', dataIndex: 'ticket_id', width: 280,
-      render: v => <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--cyan)' }}>{v}</span>
+      title: 'TICKET ID', dataIndex: 'ticket_id', width: 220,
+      render: v => <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--cyan)' }}>{v}</span>
     },
     {
       title: 'LOẠI VÉ', dataIndex: 'ticket_type',
@@ -69,22 +78,26 @@ export default function Tickets() {
     },
     {
       title: 'GIÁ', dataIndex: 'price',
-      render: v => <span style={{ fontFamily: 'var(--font-mono)' }}>{new Intl.NumberFormat('vi-VN').format(v)}đ</span>
+      render: v => <span style={NUM_COL_STYLE}>{fmtVnd(v)}</span>
     },
     {
       title: 'TRẠNG THÁI', dataIndex: 'status',
       render: v => <StatusBadge status={v} />
     },
     {
+        title: 'NGƯỜI BÁN', dataIndex: 'issued_by_name',
+        render: v => <span style={{ color: 'var(--text-3)', fontSize: 11 }}>{v || 'Online'}</span>
+    },
+    {
       title: 'FACE ID', dataIndex: 'has_face',
       render: v => v
-        ? <span style={{ color:'var(--green)', fontSize:11, fontFamily:'var(--font-mono)' }}>✓ ĐÃ ĐĂNG KÝ</span>
-        : <span style={{ color:'var(--text-3)', fontSize:11, fontFamily:'var(--font-mono)' }}>— Không có</span>
+        ? <span style={{ color:'var(--green)', fontSize:10, fontFamily:'var(--font-mono)' }}>✓ ĐÃ ĐĂNG KÝ</span>
+        : <span style={{ color:'var(--text-3)', fontSize:10, fontFamily:'var(--font-mono)' }}>— Trống</span>
     },
     {
       title: 'HẾT HẠN', dataIndex: 'valid_until',
-      render: v => <span style={{ color:'var(--text-2)', fontSize:12, fontFamily:'var(--font-mono)' }}>
-        {dayjs(v).format('DD/MM/YYYY HH:mm')}
+      render: v => <span style={{ color:'var(--text-2)', fontSize:11, ...NUM_COL_STYLE }}>
+        {fmtDateTime(v)}
       </span>
     },
     {
@@ -99,10 +112,9 @@ export default function Tickets() {
                 background: 'var(--red-dim)', border: '1px solid rgba(255,51,102,0.3)',
                 color: 'var(--red)', padding: '5px 12px', borderRadius: 4,
                 cursor: 'pointer', fontSize: 11, fontFamily: 'var(--font-mono)',
-                letterSpacing: '0.08em',
               }}
             >
-              THU HỒI
+              ✕
             </button>
           )}
         </Space>
@@ -114,50 +126,48 @@ export default function Tickets() {
     <div className="fade-in">
       <div style={{ marginBottom: 24, display:'flex', alignItems:'baseline', justifyContent:'space-between' }}>
         <div>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, color:'var(--text-1)', marginBottom:4 }}>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight: 800, color: 'var(--text-1)', marginBottom: 4 }}>
             Quản lý vé
           </h2>
-          <p style={{ color:'var(--text-2)', fontSize:12, fontFamily:'var(--font-mono)' }}>
-            Tra cứu, kiểm tra trạng thái và thu hồi vé
+          <p style={{ color: 'var(--text-2)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
+            Tra cứu, lọc dữ liệu và thu hồi vé
           </p>
         </div>
-        {/* State machine legend */}
-        <div style={{ display:'flex', gap:12, alignItems:'center' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span style={{ width:8, height:8, borderRadius:'50%', background:'var(--text-2)', display:'inline-block' }}/>
-            <span style={{ color:'var(--text-2)', fontSize:11, fontFamily:'var(--font-mono)' }}>OUTSIDE</span>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span style={{ width:8, height:8, borderRadius:'50%', background:'var(--green)', display:'inline-block' }}/>
-            <span style={{ color:'var(--text-2)', fontSize:11, fontFamily:'var(--font-mono)' }}>INSIDE</span>
-          </div>
-        </div>
       </div>
 
-      {/* Info banner */}
-      <div style={{
-        marginBottom: 20, padding: '12px 16px',
-        background: 'var(--cyan-dim)', border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-sm)', display:'flex', gap:12, alignItems:'center',
+      {/* Filter Toolbar */}
+      <div style={{ 
+        display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap',
+        background: 'var(--bg-card)', padding: '16px', borderRadius: 'var(--radius-sm)',
+        border: '1px solid var(--border-dim)' 
       }}>
-        <span style={{ color:'var(--cyan)', fontSize:16 }}>ℹ</span>
-        <span style={{ color:'var(--text-2)', fontSize:12, fontFamily:'var(--font-mono)' }}>
-          Phát hành vé mới được thực hiện tại <strong style={{ color:'var(--text-1)' }}>Gate App</strong> (Nhân viên bán vé). Dashboard chỉ tra cứu và thu hồi.
-        </span>
-      </div>
-
-      {/* Search */}
-      <div style={{ display:'flex', gap:10, marginBottom:20 }}>
-        <Input
-          placeholder="Nhập Ticket ID để tra cứu..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          onPressEnter={() => load(search)}
-          style={{ maxWidth: 400, height:42, borderRadius:'var(--radius-sm)' }}
-        />
-        <Button onClick={() => load(search)} loading={loading} style={{ height:42, borderRadius:'var(--radius-sm)' }}>
-          Tra cứu
-        </Button>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ color: 'var(--text-3)', fontSize: 10, marginBottom: 6, fontFamily: 'var(--font-mono)' }}>TÌM KIẾM (ID/BOOKING)</div>
+          <Input
+            placeholder="Nhập Ticket ID hoặc Booking ID..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onPressEnter={load}
+            style={{ height: 38 }}
+          />
+        </div>
+        <div style={{ width: 140 }}>
+            <div style={{ color: 'var(--text-3)', fontSize: 10, marginBottom: 6, fontFamily: 'var(--font-mono)' }}>LOẠI VÉ</div>
+            <Select value={ticketType} onChange={setTicketType} style={{ width: '100%', height: 38 }} placeholder="Tất cả" allowClear>
+                {Object.entries(TYPE_MAP).map(([k, v]) => <Option key={k} value={k}>{v}</Option>)}
+            </Select>
+        </div>
+        <div style={{ width: 140 }}>
+            <div style={{ color: 'var(--text-3)', fontSize: 10, marginBottom: 6, fontFamily: 'var(--font-mono)' }}>TRẠNG THÁI</div>
+            <Select value={status} onChange={setStatus} style={{ width: '100%', height: 38 }} placeholder="Tất cả" allowClear>
+                {Object.entries(STATUS_CONFIG).map(([k, v]) => <Option key={k} value={k}>{v.label}</Option>)}
+            </Select>
+        </div>
+        <div style={{ alignSelf: 'flex-end' }}>
+            <Button type="primary" onClick={load} loading={loading} style={{ height: 38, padding: '0 24px' }}>
+                LỌC DỮ LIỆU
+            </Button>
+        </div>
       </div>
 
       {/* Table */}
@@ -167,29 +177,28 @@ export default function Tickets() {
           dataSource={data}
           loading={loading}
           rowKey="ticket_id"
-          pagination={false}
+          pagination={{ pageSize: 10, showSizeChanger: false }}
           locale={{ emptyText: (
-            <div style={{ padding:'40px 0', color:'var(--text-3)', fontFamily:'var(--font-mono)', fontSize:13, textAlign:'center' }}>
-              Nhập Ticket ID để tra cứu vé
+            <div style={{ padding:'40px 0', color:'var(--text-3)', fontFamily:'var(--font-mono)', fontSize:13 }}>
+              {search || ticketType || status ? 'Không tìm thấy vé nào phù hợp' : 'Nhấn "Lọc dữ liệu" để xem danh sách vé mới nhất'}
             </div>
           )}}
         />
       </div>
 
-      {/* Revoke confirm */}
       <Modal
         open={!!revoking}
-        title={<span style={{ fontFamily:'var(--font-mono)', color:'var(--text-1)' }}>Xác nhận thu hồi vé</span>}
+        title={<span style={{ fontFamily:'var(--font-mono)', color:'var(--text-1)' }}>✕ THU HỒI VÉ</span>}
         onOk={() => handleRevoke(revoking?.ticket_id)}
         onCancel={() => setRevoking(null)}
-        okText="Thu hồi"
+        okText="Xác nhận thu hồi"
         okButtonProps={{ danger: true }}
         styles={{ body: { background:'var(--bg-card)' }, header: { background:'var(--bg-card)' }, footer: { background:'var(--bg-card)' }, mask: { backdropFilter:'blur(4px)' } }}
       >
-        <p style={{ color:'var(--text-2)', fontFamily:'var(--font-mono)', fontSize:13 }}>
-          Thu hồi vé <strong style={{ color:'var(--cyan)' }}>{revoking?.ticket_id}</strong>?
-          <br/><br/>
-          Hành động này không thể hoàn tác.
+        <p style={{ color:'var(--text-2)', fontFamily:'var(--font-mono)', fontSize:13, lineHeight: 1.6 }}>
+          Bạn đang thu hồi vé <strong style={{ color:'var(--cyan)' }}>{revoking?.ticket_id}</strong>?
+          <br/>
+          Hành động này không thể hoàn tác và vé sẽ không thể check-in được nữa.
         </p>
       </Modal>
     </div>

@@ -34,6 +34,8 @@ class UserCreate(BaseModel):
     password:  str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=1)
     role:      str = Field(..., pattern="^(admin|manager|operator|cashier)$")
+    phone:     Optional[str] = None
+    cccd:      Optional[str] = None
     gate_id:   Optional[str] = None   # Gán cổng mặc định cho operator
 
     @field_validator("username")
@@ -52,8 +54,11 @@ class UserResponse(BaseModel):
     username:  str
     full_name: str
     role:      str
+    phone:     Optional[str] = None
+    cccd:      Optional[str] = None
     gate_id:   Optional[str] = None
     is_active: bool
+    is_online: Optional[bool] = False  # Trạng thái real-time
 
 
 class UserListResponse(BaseModel):

@@ -11,6 +11,7 @@ import Reports        from './pages/Reports'
 import AgeGroupAnalysis from './pages/AgeGroupAnalysis'
 import UserManagement from './pages/UserManagement'
 import CustomerManagement from './pages/CustomerManagement'
+import Reviews        from './pages/Reviews'
 import AppLayout      from './components/AppLayout'
 import useAuthStore   from './store/authStore'
 
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="age-groups"     element={<AgeGroupAnalysis />} />
           <Route path="users"          element={<UserManagement />} />
           <Route path="customers"      element={<CustomerManagement />} />
+          <Route path="reviews"        element={<Reviews />} />
         </Route>
       </Routes>
     </ConfigProvider>

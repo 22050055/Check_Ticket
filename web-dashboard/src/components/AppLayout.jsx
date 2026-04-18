@@ -10,6 +10,7 @@ const MENU = [
   { path: '/',         icon: '⬡', label: 'Tổng quan',        roles: null },
   { path: '/gates',    icon: '◈', label: 'Giám sát cổng',    roles: null },
   { path: '/revenue',  icon: '◎', label: 'Doanh thu',        roles: ['admin','manager','cashier'] },
+  { path: '/reviews',  icon: '⭐', label: 'Đánh giá',        roles: ['admin','manager'] },
   { path: '/visitors', icon: '◉', label: 'Lượt khách',       roles: ['admin','manager','operator'] },
   { path: '/tickets',  icon: '◇', label: 'Quản lý vé',       roles: ['admin','manager'] },
   { path: '/reports',  icon: '◫', label: 'Báo cáo / Export', roles: ['admin','manager'] },

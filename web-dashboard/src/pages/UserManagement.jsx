@@ -129,6 +129,8 @@ export default function UserManagement() {
     editForm.setFieldsValue({
       full_name: user.full_name || user.fullName,
       role:      user.role,
+      phone:     user.phone || '',
+      cccd:      user.cccd || '',
       gate_id:   user.gate_id || user.gateId || undefined,
       is_active: user.is_active !== false,
     })
@@ -338,7 +340,7 @@ export default function UserManagement() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
             <thead>
               <tr>
-                {['USERNAME','HỌ TÊN','ROLE','CỔNG','TRẠNG THÁI', isAdmin ? 'THAO TÁC' : ''].filter(Boolean).map(h => (
+                {['TRẠNG THÁI','USERNAME','HỌ TÊN','SĐT / CCCD','ROLE','CỔNG', isAdmin ? 'THAO TÁC' : ''].filter(Boolean).map(h => (
                   <th key={h} style={{
                     padding: '9px 12px', textAlign: 'left',
                     color: 'var(--text-3)', fontSize: 10, letterSpacing: '0.1em',
@@ -360,16 +362,30 @@ export default function UserManagement() {
               )}
               {users.map(u => (
                 <tr key={u._id || u.id || u.username} style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                  <td style={{ padding: '10px 12px' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <div style={{ 
+                        width: 8, height: 8, borderRadius: '50%', 
+                        background: u.is_online ? 'var(--green)' : 'transparent',
+                        border: u.is_online ? 'none' : '1px solid var(--text-3)',
+                        boxShadow: u.is_online ? '0 0 10px var(--green)' : 'none'
+                      }} />
+                      <span style={{ 
+                        color: u.is_online ? 'var(--green)' : 'var(--text-3)', 
+                        fontSize: 10, fontWeight: u.is_online ? 700 : 400 
+                      }}>
+                        {u.is_online ? 'ONLINE' : 'OFFLINE'}
+                      </span>
+                    </div>
+                  </td>
                   <td style={{ padding: '10px 12px', color: 'var(--cyan)' }}>{u.username}</td>
                   <td style={{ padding: '10px 12px', color: 'var(--text-1)' }}>{u.full_name || u.fullName}</td>
+                  <td style={{ padding: '10px 12px', color: 'var(--text-2)', fontSize: 11 }}>
+                    <div>{u.phone || '—'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-3)' }}>{u.cccd || '—'}</div>
+                  </td>
                   <td style={{ padding: '10px 12px' }}><RoleBadge role={u.role} /></td>
                   <td style={{ padding: '10px 12px', color: 'var(--text-2)' }}>{u.gate_id || u.gateId || '—'}</td>
-                  <td style={{ padding: '10px 12px' }}>
-                    {u.is_active !== false
-                      ? <span style={{ color: 'var(--green)', fontSize: 11 }}>● Active</span>
-                      : <span style={{ color: 'var(--text-3)', fontSize: 11 }}>○ Inactive</span>
-                    }
-                  </td>
                   {isAdmin && (
                     <td style={{ padding: '10px 12px' }}>
                       <ActionButtons user={u} />
@@ -402,6 +418,14 @@ export default function UserManagement() {
           <Form.Item name="password" label="MẬT KHẨU" rules={[{ required: true, min: 6 }]}>
             <Input.Password placeholder="Tối thiểu 6 ký tự" style={{ height: 42, borderRadius: 'var(--radius-sm)' }} />
           </Form.Item>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Form.Item name="phone" label="SỐ ĐIỆN THOẠI">
+                <Input placeholder="vd: 0987..." style={{ height: 42, borderRadius: 'var(--radius-sm)' }} />
+            </Form.Item>
+            <Form.Item name="cccd" label="CCCD / CMND">
+                <Input placeholder="vd: 031..." style={{ height: 42, borderRadius: 'var(--radius-sm)' }} />
+            </Form.Item>
+          </div>
           <Form.Item name="role" label="ROLE" rules={[{ required: true }]}>
             <Select placeholder="Chọn role..." style={{ height: 42 }} options={roleSelectOptions} />
           </Form.Item>
@@ -461,6 +485,14 @@ export default function UserManagement() {
           <Form.Item name="full_name" label="HỌ TÊN" rules={[{ required: true }]}>
             <Input style={{ height: 42, borderRadius: 'var(--radius-sm)' }} />
           </Form.Item>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Form.Item name="phone" label="SỐ ĐIỆN THOẠI">
+                <Input placeholder="vd: 0987..." style={{ height: 42, borderRadius: 'var(--radius-sm)' }} />
+            </Form.Item>
+            <Form.Item name="cccd" label="CCCD / CMND">
+                <Input placeholder="vd: 031..." style={{ height: 42, borderRadius: 'var(--radius-sm)' }} />
+            </Form.Item>
+          </div>
           <Form.Item name="role" label="ROLE / PHÂN QUYỀN" rules={[{ required: true }]}>
             <Select style={{ height: 42 }} options={roleSelectOptions} />
           </Form.Item>

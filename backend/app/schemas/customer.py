@@ -15,6 +15,8 @@ class CustomerResponse(BaseModel):
     id: str
     name: str
     email: str
+    phone: Optional[str] = None
+    cccd: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -30,4 +32,6 @@ class CustomerUpdateByAdminRequest(BaseModel):
     """Admin cập nhật thông tin khách hàng."""
     name: Optional[str] = None
     email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    cccd: Optional[str] = None
  

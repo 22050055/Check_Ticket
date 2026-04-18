@@ -197,5 +197,19 @@
             android:layout_marginStart="6dp"/>
     </LinearLayout>
 
+    <!-- ── Row 4: Nút Đánh giá (chỉ hiện khi đã sử dụng) ── -->
+    <TextView
+        android:id="@+id/btn_review"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:text="⭐  Đánh giá dịch vụ"
+        android:textColor="@color/navy_deep"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="@drawable/bg_btn_accent"
+        android:visibility="gone"/>
+
 </LinearLayout>
  

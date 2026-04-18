@@ -45,11 +45,18 @@ export const authApi = {
 
 // ── Tickets ───────────────────────────────────────────────────
 export const ticketApi = {
-  issue:   (data)      => api.post('/tickets',             data),
-  get:     (id)        => api.get(`/tickets/${id}`),
-  revoke:  (id, data)  => api.put(`/tickets/${id}/revoke`, data),
-  enroll:  (id, data)  => api.post(`/tickets/${id}/enroll-face`, data),
-  downloadQr: (id)     => api.get(`/tickets/${id}/qr.png`, { responseType: 'blob' }),
+  issue:      (data)      => api.post('/tickets',             data),
+  get:        (id)        => api.get(`/tickets/${id}`),
+  search:     (params)    => api.get('/tickets/search',       { params }),
+  revoke:     (id, data)  => api.put(`/tickets/${id}/revoke`, data),
+  enroll:     (id, data)  => api.post(`/tickets/${id}/enroll-face`, data),
+  downloadQr: (id)        => api.get(`/tickets/${id}/qr.png`, { responseType: 'blob' }),
+}
+
+// ── Reviews ───────────────────────────────────────────────────
+export const reviewApi = {
+  list:     () => api.get('/reports/reviews'),
+  getStats: () => api.get('/reports/review-stats'),
 }
 
 // ── Gates ─────────────────────────────────────────────────────

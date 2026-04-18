@@ -79,6 +79,7 @@ class TicketResponse(BaseModel):
     status:       str                       # active | used | revoked | expired
     has_face:     bool = False              # Đã đăng ký face hay chưa
     qr_image_b64: Optional[str] = None     # PNG base64 — chỉ trả về khi issue
+    issued_by_name: Optional[str] = None    # Người bán vé
     created_at:   datetime
 
 

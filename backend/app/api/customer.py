@@ -172,6 +172,14 @@ async def buy_ticket(
     valid_until = datetime.combine(now.date(), time(23, 59, 59)).replace(tzinfo=timezone.utc)
     
     customer_id = str(customer["_id"])
+    
+    # 0. Kiểm tra danh tính trước khi mua online (Yêu cầu SĐT và CCCD)
+    if not customer.get("phone") or not customer.get("cccd"):
+        raise HTTPException(
+            status_code=400, 
+            detail="Bạn cần cập nhật Số điện thoại và CCCD trong phần quản lý tài khoản trước khi mua vé online."
+        )
+
     booking_id = f"OL-{uuid.uuid4().hex[:8].upper()}"
 
     # 1. Tạo Ticket
@@ -185,12 +193,15 @@ async def buy_ticket(
         "valid_until": valid_until,
         "status": "active",
         "venue_id": req.venue_id,
+        "issued_by_id": customer_id,
+        "issued_by_name": customer.get("name", "Khách hàng"),
         "created_at": now,
         "updated_at": now
     })
     
-    # 2. Tạo Identity
-    await db["identities"].insert_one({
+    # 2. Tạo Identity (Lưu hash SĐT/CCCD để đối soát tại cổng)
+    from .tickets import _hash_id, _hash_phone
+    identity_doc = {
         "_id": str(uuid.uuid4()),
         "ticket_id": ticket_id,
         "booking_id": booking_id,
@@ -198,7 +209,13 @@ async def buy_ticket(
         "face_image_hash": None,
         "has_face": False,
         "created_at": now
-    })
+    }
+    try:
+        identity_doc["id_hash"] = _hash_id(customer["cccd"])
+        identity_doc["phone_hash"] = _hash_phone(customer["phone"])
+    except: pass
+    
+    await db["identities"].insert_one(identity_doc)
     
     # 3. Tạo Transaction
     await db["transactions"].insert_one({

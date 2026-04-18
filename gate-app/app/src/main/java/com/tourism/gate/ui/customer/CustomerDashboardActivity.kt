@@ -103,7 +103,8 @@ class CustomerDashboardActivity : AppCompatActivity() {
             context = this,
             tickets = tickets,
             onDownloadQr = { ticket -> downloadQr(ticket) },
-            onEnrollFace = { ticket -> enrollFace(ticket) }
+            onEnrollFace = { ticket -> enrollFace(ticket) },
+            onReview     = { ticket -> showReviewDialog(ticket) }
         )
         recyclerTickets.adapter = adapter
         recyclerTickets.visibility = View.VISIBLE
@@ -143,6 +144,52 @@ class CustomerDashboardActivity : AppCompatActivity() {
         intent.putExtra("ticket_id", ticket.ticketId)
         intent.putExtra("mode", "customer") // phân biệt với chế độ nhân viên
         startActivity(intent)
+    }
+
+    // ── Đánh giá dịch vụ ───────────────────────────────────────
+    private fun showReviewDialog(ticket: CustomerTicket) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_review, null)
+        val ratingBar = dialogView.findViewById<android.widget.RatingBar>(R.id.ratingBar)
+        val edtComment = dialogView.findViewById<android.widget.EditText>(R.id.edt_comment)
+
+        AlertDialog.Builder(this)
+            .setTitle("Đánh giá dịch vụ")
+            .setView(dialogView)
+            .setPositiveButton("Gửi đánh giá") { _, _ ->
+                val rating = ratingBar.rating.toInt()
+                val comment = edtComment.text.toString().trim()
+                submitReview(ticket.ticketId, rating, comment)
+            }
+            .setNegativeButton("Bỏ qua", null)
+            .show()
+    }
+
+    private fun submitReview(ticketId: String, rating: Int, comment: String) {
+        if (rating == 0) {
+            Toast.makeText(this, "Vui lòng chọn số sao!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        showLoading(true)
+        val api = ApiClient.create(this)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                api.reviewTicket(ticketId, mapOf(
+                    "rating" to rating,
+                    "comment" to comment
+                ))
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    Toast.makeText(this@CustomerDashboardActivity, "Cảm ơn bạn đã đánh giá!", Toast.LENGTH_SHORT).show()
+                    loadTickets() // Refresh to update UI if needed (though review doesn't currently change UI)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    Toast.makeText(this@CustomerDashboardActivity, "Lỗi gửi đánh giá: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     // ── Xác nhận đăng xuất ─────────────────────────────────────

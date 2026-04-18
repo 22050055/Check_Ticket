@@ -77,8 +77,9 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:$camerax_version"
     implementation "androidx.camera:camera-view:$camerax_version"
 
-    // ── ML Kit — Barcode scanning (quét QR) ───────────────
+    // ── ML Kit — Barcode scanning & Face detection ──────────
     implementation 'com.google.mlkit:barcode-scanning:17.2.0'
+    implementation 'com.google.mlkit:face-detection:16.1.6'
 
     // ── Retrofit + Gson — gọi backend API ─────────────────
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'

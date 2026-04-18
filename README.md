@@ -25,9 +25,14 @@ Hệ thống hỗ trợ **4 kênh xác thực** tại cổng ra/vào khu du lị
 | Kênh | Mô tả | Bắt buộc |
 |------|-------|----------|
 | QR e-ticket | Quét mã QR ký số RS256, chống giả, chống dùng lại | ✅ |
-| Face Verify 1:1 | So khớp khuôn mặt với ảnh đăng ký (opt-in) | Tùy chọn |
-| CCCD / Booking ID | Tra cứu theo hash CCCD hoặc mã đặt vé | Tùy chọn |
+| Face Verify 1:1 | So khớp khuôn mặt với ảnh đăng ký. **AI Pose guidance** giúp đảm bảo chất lượng ảnh mẫu | Tùy chọn |
+| Identity Hash | Tra cứu theo hash CCCD hoặc mã đặt vé. Enforce định danh cho khách mua online | Tùy chọn |
 | Manual Fallback | Tra cứu theo SĐT / tên khách | Dự phòng |
+
+**Điểm nhấn hệ thống:**
+- **Accountability**: Truy vết trách nhiệm từng vé (Người bán - Thời gian - Kênh).
+- **Staff Presence**: Theo dõi trạng thái Online/Offline của nhân viên vận hành thời gian thực.
+- **Customer Feedback**: Hệ thống đánh giá 1-5 sao sau khi sử dụng dịch vụ.
 
 ---
 
@@ -229,13 +234,13 @@ tourism-access-control/
 
 | Thành phần | Công nghệ |
 |-----------|-----------|
-| Android App | Kotlin, Retrofit2, CameraX, ML Kit (QR scan), Room DB |
+| Android App | Kotlin, Retrofit2, CameraX, **ML Kit (QR & Face Pose Detection)**, Room DB |
 | Backend | FastAPI, Beanie ODM, Motor (async), JWT, Pydantic |
 | Database | MongoDB |
 | AI - Face | ONNX Runtime, FaceNet-512, YuNet (OpenCV) |
 | AI - QR | RS256 (python-jose), HMAC-SHA256 |
 | Web Dashboard | React, Recharts, Ant Design, Axios |
-| Realtime | WebSocket (FastAPI native) |
+| Realtime | **WebSocket (Presence tracking & Event log push)** |
 | Deploy | Docker, Docker Compose |
 
 ---
@@ -382,8 +387,17 @@ npm run dev
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
 | GET | `/api/customer/all` | Danh sách toàn bộ khách hàng |
-| PATCH | `/api/customer/{id}` | Cập nhật thông tin khách |
+| PATCH | `/api/customer/{id}` | Cập nhật thông tin khách (SĐT, CCCD) |
 | DELETE | `/api/customer/{id}` | Xóa tài khoản khách |
+
+### Reviews & Presence
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| POST | `/api/customer/tickets/{id}/review` | Khách hàng đánh giá vé đã sử dụng |
+| GET | `/api/reports/reviews` | Danh sách đánh giá (Dashboard) |
+| GET | `/api/reports/review-stats` | Thống kê sao trung bình |
+| WS | `/ws/presence?token=...` | Tracking trạng thái Online của Staff |
 
 ### Check-in / Out
 
@@ -451,9 +465,8 @@ Dự án được cấu hình để deploy tự động lên **Render** thông q
 > ⚠️ Hệ thống tuân thủ các nguyên tắc bảo vệ dữ liệu cá nhân:
 
 - **CCCD / ID:** Chỉ lưu hash SHA-256, không lưu số CCCD gốc, không lưu ảnh CCCD.
-- **Khuôn mặt:** Chỉ lưu vector embedding, không lưu ảnh gốc. Triển khai theo cơ chế **opt-in** từ khách.
-- **Face Verification:** Chỉ ở mức **1:1 (verification)**, không nhận diện đại trà 1:N.
-- **Mục đích:** Hệ thống phục vụ vận hành và báo cáo, không sử dụng cho mục đích giám sát hoặc xâm phạm quyền riêng tư.
+- **Khuôn mặt:** Chỉ lưu vector embedding, không lưu ảnh gốc. Triển khai theo cơ chế **opt-in** từ khách. **AI Pose Detection** tích hợp trên App đảm bảo ảnh chụp đủ 3 góc (Thẳng, Trái, Phải) để tăng độ chính xác mà vẫn bảo mật.
+- **Minh bạch & Trách nhiệm:** Mọi vé phát hành đều được gắn với định danh nhân viên `issued_by`. Hệ thống **Staff Presence** chỉ giám sát nhân viên đang trực, không theo dõi vị trí hay trạng thái của khách hàng để đảm bảo quyền riêng tư.
 
 ---
 

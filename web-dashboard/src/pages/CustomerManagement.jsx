@@ -73,8 +73,10 @@ export default function CustomerManagement() {
   const openEdit = (cust) => {
     setEditCust(cust)
     editForm.setFieldsValue({
-      name: cust.name,
+      name:  cust.name,
       email: cust.email,
+      phone: cust.phone || '',
+      cccd:  cust.cccd || '',
     })
   }
 
@@ -110,7 +112,8 @@ export default function CustomerManagement() {
   // Lọc danh sách theo search
   const filtered = customers.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
-    c.email.toLowerCase().includes(search.toLowerCase())
+    c.email.toLowerCase().includes(search.toLowerCase()) ||
+    (c.phone && c.phone.includes(search))
   )
 
   return (
@@ -170,7 +173,7 @@ export default function CustomerManagement() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
                 <thead>
                   <tr>
-                    {['TÊN KHÁCH HÀNG','EMAIL','ID','THAO TÁC'].map(h => (
+                    {['TÊN KHÁCH HÀNG / EMAIL','SĐT / CCCD','ID','THAO TÁC'].map(h => (
                       <th key={h} style={{
                         padding: '9px 12px', textAlign: 'left',
                         color: 'var(--text-3)', fontSize: 10, letterSpacing: '0.1em',
@@ -192,8 +195,14 @@ export default function CustomerManagement() {
                   )}
                   {filtered.map(c => (
                     <tr key={c.id} style={{ borderBottom: '1px solid var(--border-dim)' }}>
-                      <td style={{ padding: '12px', color: 'var(--text-1)', fontWeight: 600 }}>{c.name}</td>
-                      <td style={{ padding: '12px', color: 'var(--cyan)' }}>{c.email}</td>
+                      <td style={{ padding: '12px' }}>
+                        <div style={{ color: 'var(--text-1)', fontWeight: 600 }}>{c.name}</div>
+                        <div style={{ color: 'var(--cyan)', fontSize: 11 }}>{c.email}</div>
+                      </td>
+                      <td style={{ padding: '12px', color: 'var(--text-2)', fontSize: 11 }}>
+                        <div>{c.phone || '—'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-3)' }}>{c.cccd || '—'}</div>
+                      </td>
                       <td style={{ padding: '12px', color: 'var(--text-3)', fontSize: 11 }}>{c.id}</td>
                       <td style={{ padding: '12px' }}>
                         <div style={{ display: 'flex', gap: 8 }}>
@@ -281,6 +290,14 @@ export default function CustomerManagement() {
           <Form.Item name="email" label="EMAIL" rules={[{ required: true, type: 'email' }]}>
             <Input style={{ height: 42, background: 'var(--bg-card)', color: 'var(--text-1)' }} />
           </Form.Item>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Form.Item name="phone" label="SỐ ĐIỆN THOẠI">
+                <Input placeholder="098..." style={{ height: 42, background: 'var(--bg-card)', color: 'var(--text-1)' }} />
+            </Form.Item>
+            <Form.Item name="cccd" label="CCCD / CMND">
+                <Input placeholder="031..." style={{ height: 42, background: 'var(--bg-card)', color: 'var(--text-1)' }} />
+            </Form.Item>
+          </div>
         </Form>
       </Modal>
     </div>

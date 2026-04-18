@@ -3,6 +3,7 @@ face_service.py — FastAPI service nội bộ cho face verification 1:1
 Theo góp ý GVHD: đăng ký 3–5 mẫu embedding, verify lấy MAX similarity.
 """
 import logging
+import uvicorn
 from typing import Optional
 
 import numpy as np
@@ -197,6 +198,6 @@ async def verify_face(req: VerifyRequest):
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("face_service:app", host="0.0.0.0", port=8001, reload=True)
+    # Chạy uvicorn trực tiếp với object app thay vì chuỗi module để tránh lỗi import khi chạy dạng package
+    uvicorn.run(app, host="0.0.0.0", port=8001)
  

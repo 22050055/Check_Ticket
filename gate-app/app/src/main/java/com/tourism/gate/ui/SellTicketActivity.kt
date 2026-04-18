@@ -55,7 +55,6 @@ class SellTicketActivity : AppCompatActivity() {
         etPhone        = findViewById(R.id.etPhone)
         spinnerType    = findViewById(R.id.spinnerTicketType)
         etPrice        = findViewById(R.id.etPrice)
-        etBookingId    = findViewById(R.id.etBookingId)
         switchFace     = findViewById(R.id.switchFace)
         btnIssue       = findViewById(R.id.btnIssue)
         progressBar    = findViewById(R.id.progressBar)
@@ -74,10 +73,7 @@ class SellTicketActivity : AppCompatActivity() {
 
         spinnerType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                if (etPrice.text.toString().isEmpty() ||
-                    etPrice.text.toString() in defaultPrices) {
-                    etPrice.setText(defaultPrices[pos])
-                }
+                etPrice.setText(defaultPrices[pos])
             }
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
@@ -119,7 +115,7 @@ class SellTicketActivity : AppCompatActivity() {
                     validFrom     = sdf.format(Date(now)),
                     validUntil    = sdf.format(Date(endOfDay)),
                     paymentMethod = "cash",
-                    bookingId     = etBookingId.text.toString().trim().ifEmpty { null }
+                    bookingId     = null   // Bỏ bookingId thủ công, hệ thống tự generate hoặc link logic khác
                 )
                 val ticket = api.issueTicket(req)
 

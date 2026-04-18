@@ -190,6 +190,8 @@ async def issue_ticket(
         "valid_until": req.valid_until,
         "status":      "active",
         "venue_id":    req.venue_id,
+        "issued_by_id":   str(current_user["_id"]),
+        "issued_by_name": current_user.get("full_name", "Nhân viên"),
         "created_at":  now,
         "updated_at":  now,
     })
@@ -289,6 +291,56 @@ async def enroll_face(
         "ticket_id":     ticket_id,
         "embedding_dim": len(data.get("embedding", [])),
     }
+
+
+# ── GET /api/tickets/search — Tra cứu vé ──────────────────────
+
+@router.get("/search", response_model=list[TicketResponse])
+async def search_tickets(
+    q: Optional[str] = Query(None, description="Tìm theo Ticket ID hoặc Booking ID"),
+    ticket_type: Optional[str] = Query(None, description="Lọc theo loại vé"),
+    status: Optional[str] = Query(None, description="Lọc theo trạng thái"),
+    current_user: dict = Depends(require_min_role(Role.CASHIER)),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Tra cứu danh sách vé với các điều kiện lọc nâng cao.
+    """
+    filter_query = {}
+    
+    if q:
+        # Tìm kiếm theo ID hoặc Booking ID (hoặc SĐT khách hàng if we link it)
+        q_clean = q.trim() if hasattr(q, "trim") else q.strip()
+        filter_query["$or"] = [
+            {"_id": q_clean},
+            {"booking_id": {"$regex": q_clean, "$options": "i"}}
+        ]
+        
+    if ticket_type:
+        filter_query["ticket_type"] = ticket_type
+        
+    if status:
+        filter_query["status"] = status
+        
+    cursor = db["tickets"].find(filter_query).sort("created_at", -1).limit(100)
+    tickets = await cursor.to_list(length=100)
+    
+    results = []
+    for t in tickets:
+        identity = await db["identities"].find_one({"ticket_id": str(t["_id"])})
+        results.append(TicketResponse(
+            ticket_id=str(t["_id"]),
+            booking_id=t.get("booking_id"),
+            ticket_type=t["ticket_type"],
+            price=t["price"],
+            valid_from=t["valid_from"],
+            valid_until=t["valid_until"],
+            status=t["status"],
+            has_face=identity.get("has_face", False) if identity else False,
+            issued_by_name=t.get("issued_by_name"),
+            created_at=t["created_at"],
+        ))
+    return results
 
 
 # ── GET /api/tickets/{id} ────────────────────────────────────

@@ -133,6 +133,8 @@
                     android:inputType="numberDecimal"
                     android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_input"
+                    android:focusable="false"
+                    android:clickable="false"
                     android:layout_marginBottom="12dp"/>
 
                 <EditText
@@ -145,7 +147,8 @@
                     android:textSize="15sp"
                     android:inputType="text"
                     android:paddingHorizontal="14dp"
-                    android:background="@drawable/bg_input"/>
+                    android:background="@drawable/bg_input"
+                    android:visibility="gone"/>
             </LinearLayout>
 
             <!-- Face opt-in toggle -->

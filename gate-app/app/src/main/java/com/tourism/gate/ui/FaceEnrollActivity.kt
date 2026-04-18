@@ -16,8 +16,10 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.tourism.gate.R
-import com.tourism.gate.data.api.ApiClient
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetector
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
@@ -56,7 +58,12 @@ class FaceEnrollActivity : AppCompatActivity() {
     private var useFrontCamera   = true
     private var cameraProvider:  ProcessCameraProvider? = null
 
-    // Multi-shot state
+    // ML Kit Face Detector
+    private lateinit var faceDetector:   FaceDetector
+    private var currentYaw:             Float = 0f
+    private var requiredPose:           String = "FRONT" // FRONT, LEFT, RIGHT
+    private var isPoseMet:              Boolean = false
+
     private val capturedImages   = mutableListOf<Bitmap>()
     private var isCapturing      = false
 
@@ -92,6 +99,13 @@ class FaceEnrollActivity : AppCompatActivity() {
         btnCapture.setOnClickListener    { if (!isCapturing) startMultiShot() }
         btnFlipCamera.setOnClickListener { if (!isCapturing) flipCamera() }
 
+        val options = FaceDetectorOptions.Builder()
+            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+            .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+            .build()
+        faceDetector = FaceDetection.getClient(options)
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED) {
             startCamera()
@@ -122,13 +136,62 @@ class FaceEnrollActivity : AppCompatActivity() {
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                it.setAnalyzer(cameraExecutor) { imageProxy ->
+                    processImageProxy(imageProxy)
+                }
+            }
 
         try {
             provider.unbindAll()
-            provider.bindToLifecycle(this, selector, preview, imageCapture)
+            provider.bindToLifecycle(this, selector, preview, imageCapture, imageAnalysis)
             btnFlipCamera.text = if (useFrontCamera) "🔄" else "🤳"
         } catch (e: Exception) {
             tvStatus.text = "Lỗi camera: ${e.message}"
+        }
+    }
+
+    @ExperimentalGetImage
+    private fun processImageProxy(imageProxy: ImageProxy) {
+        val mediaImage = imageProxy.image ?: run { imageProxy.close(); return }
+        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+        
+        faceDetector.process(image)
+            .addOnSuccessListener { faces ->
+                if (faces.isNotEmpty()) {
+                    val face = faces[0]
+                    currentYaw = face.headEulerAngleY
+                    checkPose(currentYaw)
+                } else {
+                    isPoseMet = false
+                    if (!isCapturing) tvStatus.text = "Không tìm thấy khuôn mặt"
+                }
+            }
+            .addOnCompleteListener {
+                imageProxy.close()
+            }
+    }
+
+    private fun checkPose(yaw: Float) {
+        if (isCapturing) return
+
+        val (met, hint) = when (requiredPose) {
+            "FRONT" -> (yaw in -12f..12f) to "Nhìn thẳng vào camera"
+            "LEFT"  -> (yaw > 25f)       to "Quay mặt sang trái ←"
+            "RIGHT" -> (yaw < -25f)      to "Quay mặt sang phải →"
+            else -> false to ""
+        }
+        
+        isPoseMet = met
+        if (met) {
+            tvStatus.text = "✅ Sẵn sàng! Bấm nút để chụp"
+            btnCapture.alpha = 1.0f
+        } else {
+            tvStatus.text = "⚠️ $hint"
+            btnCapture.alpha = 0.5f
         }
     }
 
@@ -157,8 +220,21 @@ class FaceEnrollActivity : AppCompatActivity() {
 
     private fun captureNextShot() {
         val shotNum = capturedImages.size + 1
-        val hints   = listOf("Nhìn thẳng", "Xoay nhẹ trái", "Xoay nhẹ phải")
-        tvStatus.text = "📷 Ảnh $shotNum/$TOTAL_SHOTS — ${hints.getOrElse(capturedImages.size) { "Giữ nguyên" }}"
+        requiredPose = when(shotNum) {
+            1 -> "FRONT"
+            2 -> "LEFT"
+            3 -> "RIGHT"
+            else -> "FRONT"
+        }
+
+        val hint = when(requiredPose) {
+            "FRONT" -> "Nhìn thẳng"
+            "LEFT"  -> "Quay trái"
+            "RIGHT" -> "Quay phải"
+            else    -> ""
+        }
+        
+        tvStatus.text = "📷 Đang chụp ảnh $shotNum/3 ($hint)..."
 
         val capture = imageCapture ?: run { onCaptureError("Camera chưa sẵn sàng"); return }
         capture.takePicture(
@@ -170,13 +246,28 @@ class FaceEnrollActivity : AppCompatActivity() {
                     capturedImages.add(bmp)
 
                     if (capturedImages.size < TOTAL_SHOTS) {
-                        // Chụp ảnh tiếp theo sau delay ngắn
+                        // Cập nhật pose tiếp theo và chờ khách chuẩn bị
+                        val nextPose = when(capturedImages.size + 1) {
+                            2 -> "LEFT"
+                            3 -> "RIGHT"
+                            else -> "FRONT"
+                        }
+                        requiredPose = nextPose
+                        isPoseMet    = false
+                        
+                        val msg = when(nextPose) {
+                            "LEFT" -> "Tốt! Bây giờ hãy QUAY SANG TRÁI ←"
+                            "RIGHT" -> "Tốt! Bây giờ hãy QUAY SANG PHẢI →"
+                            else -> "Chuẩn bị..."
+                        }
+                        tvStatus.text = msg
+                        
+                        // Delay ngắn để khách di chuyển
                         Handler(Looper.getMainLooper()).postDelayed({
                             captureNextShot()
-                        }, SHOT_DELAY)
+                        }, 1500)
                     } else {
-                        // Đã đủ 3 ảnh → gửi lên server
-                        tvStatus.text = "✅ Đã chụp $TOTAL_SHOTS ảnh. Đang đăng ký..."
+                        tvStatus.text = "✅ Đã chụp đủ $TOTAL_SHOTS ảnh. Đang đăng ký..."
                         enrollFaceMulti(capturedImages.toList())
                     }
                 }

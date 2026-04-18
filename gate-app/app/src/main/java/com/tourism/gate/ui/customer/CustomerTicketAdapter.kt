@@ -17,7 +17,8 @@ class CustomerTicketAdapter(
     private val context: Context,
     private val tickets: List<CustomerTicket>,
     private val onDownloadQr: (ticket: CustomerTicket) -> Unit,
-    private val onEnrollFace: (ticket: CustomerTicket) -> Unit
+    private val onEnrollFace: (ticket: CustomerTicket) -> Unit,
+    private val onReview: (ticket: CustomerTicket) -> Unit
 ) : RecyclerView.Adapter<CustomerTicketAdapter.TicketViewHolder>() {
 
     inner class TicketViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -29,6 +30,7 @@ class CustomerTicketAdapter(
         val tvPrice: TextView       = view.findViewById(R.id.tv_price)
         val btnDownloadQr: TextView = view.findViewById(R.id.btn_download_qr)
         val btnEnrollFace: TextView = view.findViewById(R.id.btn_enroll_face)
+        val btnReview: TextView     = view.findViewById(R.id.btn_review)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TicketViewHolder {
@@ -92,9 +94,22 @@ class CustomerTicketAdapter(
             holder.btnEnrollFace.alpha = 1.0f
         }
 
+        // ── Logic Đánh giá ──
+        val isUsedOrExpired = ticket.status.lowercase() in listOf("used", "inside", "outside", "expired")
+        if (isUsedOrExpired) {
+            holder.btnReview.visibility     = View.VISIBLE
+            holder.btnDownloadQr.visibility = View.GONE
+            holder.btnEnrollFace.visibility = View.GONE
+        } else {
+            holder.btnReview.visibility     = View.GONE
+            holder.btnDownloadQr.visibility = View.VISIBLE
+            holder.btnEnrollFace.visibility = View.VISIBLE
+        }
+
         // Sự kiện bấm nút
         holder.btnDownloadQr.setOnClickListener { onDownloadQr(ticket) }
         holder.btnEnrollFace.setOnClickListener  { onEnrollFace(ticket) }
+        holder.btnReview.setOnClickListener     { onReview(ticket) }
     }
 
     override fun getItemCount() = tickets.size

@@ -124,6 +124,7 @@ app.include_router(reports.router)
 app.include_router(websocket.router)
 app.include_router(face_enroll.router)
 app.include_router(customer.router)
+app.include_router(review.router)
 
 
 # ── Health check ──────────────────────────────────────────────
