@@ -55,9 +55,19 @@ class QrDisplayActivity : AppCompatActivity() {
 
         // Nút "Về trang chủ"
         findViewById<TextView>(R.id.btnHome).setOnClickListener {
-            startActivity(Intent(this, RoleSelectActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            val prefs = getSharedPreferences("gate_prefs", MODE_PRIVATE)
+            val role = prefs.getString("role", "")
+            
+            val destActivity = if (role.isNullOrEmpty()) {
+                com.tourism.gate.ui.customer.CustomerDashboardActivity::class.java
+            } else {
+                RoleSelectActivity::class.java
+            }
+
+            startActivity(Intent(this, destActivity).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             })
+            finish()
         }
     }
 }

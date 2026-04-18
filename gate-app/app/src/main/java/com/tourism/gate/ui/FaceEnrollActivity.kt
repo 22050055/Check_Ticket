@@ -16,6 +16,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.tourism.gate.R
+import com.tourism.gate.data.api.ApiClient
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
@@ -339,4 +341,3 @@ class FaceEnrollActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 }
- 

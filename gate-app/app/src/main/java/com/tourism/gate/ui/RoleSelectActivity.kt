@@ -37,9 +37,16 @@ class RoleSelectActivity : AppCompatActivity() {
         btnLogout    = findViewById(R.id.btnLogout)
 
         val prefs    = getSharedPreferences("gate_prefs", MODE_PRIVATE)
-        val fullName = prefs.getString("full_name", "Nhân viên") ?: "Nhân viên"
         val role     = prefs.getString("role", "") ?: ""
 
+        // Chuyển hướng nếu là khách hàng (không có role nhân viên)
+        if (role.isEmpty()) {
+            startActivity(Intent(this, com.tourism.gate.ui.customer.CustomerDashboardActivity::class.java))
+            finish()
+            return
+        }
+
+        val fullName = prefs.getString("full_name", "Nhân viên") ?: "Nhân viên"
         tvFullName.text = fullName
         tvRole.text     = role.replaceFirstChar { it.uppercase() }
         tvShiftInfo.text = "Ca trực: ${java.text.SimpleDateFormat("HH:mm dd/MM/yyyy").format(java.util.Date())}"
