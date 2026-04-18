@@ -26,14 +26,32 @@ logger = logging.getLogger(__name__)
 
 # Lifespan
 
+import asyncio
+from .api.tickets import _auto_cleanup_expired_tickets
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: kết nối Atlas, seed data. Shutdown: đóng kết nối."""
+    """Startup: kết nối Atlas, seed data, chạy cleanup task. Shutdown: đóng kết nối."""
     await connect_db()
     await _seed_default_data()
+    
+    # Chạy task dọn dẹp vé hết hạn định kỳ (10 phút/lần)
+    cleanup_task = asyncio.create_task(_run_periodic_cleanup())
+    
     logger.info("🚀 Backend ready — Docs: http://localhost:8000/docs")
     yield
+    cleanup_task.cancel()
     await close_db()
+
+async def _run_periodic_cleanup():
+    """Vòng lặp chạy dọn dẹp vé hết hạn ngầm."""
+    db = get_db()
+    while True:
+        try:
+            await _auto_cleanup_expired_tickets(db)
+        except Exception as e:
+            logger.error("Lỗi trong periodic cleanup task: %s", e)
+        await asyncio.sleep(600) # 10 phút
 
 
 async def _seed_default_data():

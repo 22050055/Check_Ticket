@@ -480,4 +480,50 @@ async def revoke_ticket(
                      resource=ticket_id, detail={"reason": req.reason})
 
     return {"message": "Vé đã bị thu hồi.", "ticket_id": ticket_id}
+
+
+# ── Internal Cleanup Task ────────────────────────────────────
+
+async def _auto_cleanup_expired_tickets(db: AsyncIOMotorDatabase):
+    """
+    Quét và đánh dấu vé hết hạn.
+    Chỉ xử lý các vé ở trạng thái 'active', 'inside', 'outside' mà đã quá 'valid_until'.
+    Múi giờ: valid_until đã được chuẩn chuẩn hóa UTC trong DB.
+    """
+    from ..middleware.audit import log_action, ACTION_TICKET_AUTO_EXPIRED
+    
+    now = datetime.now(timezone.utc)
+    
+    # 1. Tìm các vé hết hạn
+    cursor = db["tickets"].find({
+        "status": {"$in": ["active", "inside", "outside"]},
+        "valid_until": {"$lt": now}
+    })
+    
+    expired_tickets = await cursor.to_list(100)
+    if not expired_tickets:
+        return
+        
+    count = 0
+    for t in expired_tickets:
+        tid = t["_id"]
+        # Cập nhật status
+        await db["tickets"].update_one(
+            {"_id": tid},
+            {"$set": {"status": "expired", "updated_at": now}}
+        )
+        
+        # Ghi log (Actor = "system")
+        await log_action(
+            db, "system", ACTION_TICKET_AUTO_EXPIRED,
+            resource=tid,
+            detail={
+                "prev_status": t.get("status"),
+                "valid_until": t.get("valid_until").isoformat() if t.get("valid_until") else None
+            }
+        )
+        count += 1
+        
+    if count > 0:
+        logger.info("✅ Auto-Cleanup: Đã đánh dấu hết hạn %d vé.", count)
  
