@@ -31,7 +31,24 @@ def _load_qr_keys() -> tuple[Optional[str], Optional[str]]:
     private = settings.QR_PRIVATE_KEY
     public  = settings.QR_PUBLIC_KEY
 
-    # 2. Nếu không có, thử đọc từ file
+    def _sanitize(key_str: Optional[str]) -> Optional[str]:
+        if not key_str:
+            return None
+        s = key_str.strip()
+        # Nếu khóa bị mất dấu xuống dòng (thành 1 dòng dài), 
+        # ta cần đảm bảo header/footer và nội dung được tách hợp lệ.
+        if "-----BEGIN" in s and "\n" not in s:
+            # Reconstruct PEM format
+            s = s.replace("-----BEGIN PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----\n")
+            s = s.replace("-----END PRIVATE KEY-----", "\n-----END PRIVATE KEY-----")
+            s = s.replace("-----BEGIN PUBLIC KEY-----", "-----BEGIN PUBLIC KEY-----\n")
+            s = s.replace("-----END PUBLIC KEY-----", "\n-----END PUBLIC KEY-----")
+        return s
+
+    private = _sanitize(private)
+    public  = _sanitize(public)
+
+    # 2. Nếu không có ở ENV, thử đọc từ file
     if not private:
         priv_path = Path(settings.QR_PRIVATE_KEY_PATH)
         if priv_path.exists():
