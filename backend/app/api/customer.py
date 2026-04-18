@@ -1,7 +1,7 @@
 import uuid
 import logging
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import httpx
@@ -13,6 +13,7 @@ from ..schemas.customer import CustomerRegisterRequest, CustomerLoginRequest, Cu
 from ..schemas.ticket import TicketResponse, TicketEnrollFaceRequest
 from .tickets import _make_qr_token
 from ..services.qr_image_service import generate_qr_b64, generate_qr_png_bytes
+from ..middleware.audit import log_action, ACTION_REVOKE_TICKET
 
 logger = logging.getLogger(__name__)
 
@@ -271,6 +272,7 @@ async def buy_ticket(
 @router.post("/tickets/{ticket_id}/cancel")
 async def cancel_my_ticket(
     ticket_id: str,
+    request: Request,
     customer: dict = Depends(get_current_customer),
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
@@ -298,6 +300,7 @@ async def cancel_my_ticket(
     
     refund_amount = ticket.get("price", 0) * 0.5
     
+    # 1. Ghi nhận giao dịch tài chính
     await db["transactions"].insert_one({
         "_id": str(uuid.uuid4()),
         "ticket_id": ticket_id,
@@ -308,6 +311,20 @@ async def cancel_my_ticket(
         "payment_method": "system_refund",
         "timestamp": now
     })
+
+    # 2. Ghi Audit Log để Dashboard Admin theo dõi được
+    await log_action(
+        db, 
+        user_id=str(customer["_id"]), 
+        action=ACTION_REVOKE_TICKET,
+        resource=ticket_id,
+        detail={
+            "reason": "Customer cancelled online",
+            "refund_amount": refund_amount,
+            "original_price": ticket.get("price")
+        },
+        ip=request.client.host if request.client else None
+    )
     
     return {"message": "Hủy vé thành công. Bạn sẽ nhận lại 50% số tiền theo chính sách."}
 

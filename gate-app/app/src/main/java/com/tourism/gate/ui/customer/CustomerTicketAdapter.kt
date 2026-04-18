@@ -68,11 +68,12 @@ class CustomerTicketAdapter(
                 holder.tvStatus.setBackgroundResource(R.drawable.bg_badge_used)
             }
             "revoked" -> {
-                holder.tvStatus.text = "Đã thu hồi"
+                holder.tvStatus.text = "Đã hủy (Hoàn 50%)"
                 holder.tvStatus.setBackgroundResource(R.drawable.bg_badge_revoked)
             }
             "expired" -> {
-                holder.tvStatus.text = "Hết hạn"
+                val dateStr = formatDate(ticket.validUntil)
+                holder.tvStatus.text = "Hết hạn ngày $dateStr"
                 holder.tvStatus.setBackgroundResource(R.drawable.bg_badge_revoked)
             }
             else -> holder.tvStatus.text = ticket.status
