@@ -11,7 +11,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -110,76 +110,69 @@ def decode_token(token: str) -> dict:
 
 # ── Current user dependency ───────────────────────────────────
 
-async def get_current_user(
+async def get_current_actor(
+    request: Request,
     token: str = Depends(oauth2_scheme),
     db=Depends(get_db),
 ) -> dict:
     """
-    FastAPI dependency: verify JWT → lấy user từ MongoDB.
-    Raise 401 nếu token sai hoặc user không tồn tại/bị vô hiệu.
-
-    Dùng:
-        @router.get("/me")
-        async def me(user = Depends(get_current_user)):
-            return user
+    Dependency chung để xác định Actor (có thể là User hoặc Customer).
+    Tự động gán user_id và role vào request.state để AuditMiddleware sử dụng.
     """
     payload = decode_token(token)
+    actor_id = payload.get("sub")
+    role     = payload.get("role")
 
-    if payload.get("type") != "access":
+    if not actor_id:
+        raise HTTPException(401, "Token thiếu thông tin định danh.")
+
+    actor = None
+    if role == Role.CUSTOMER.value:
+        actor = await db["customers"].find_one({"_id": actor_id})
+        if actor:
+            actor["role"] = Role.CUSTOMER.value
+    else:
+        actor = await db["users"].find_one({"_id": actor_id, "is_active": True})
+
+    if not actor:
+        raise HTTPException(401, "Danh tính không hợp lệ hoặc đã bị vô hiệu.")
+
+    # Gán vào state cho middleware log
+    request.state.user_id = actor_id
+    request.state.role    = actor.get("role")
+    
+    return actor
+
+
+async def get_current_user(
+    request: Request,
+    actor: dict = Depends(get_current_actor),
+) -> dict:
+    """
+    Wrapper của get_current_actor: chỉ cho phép các role User (không phải Customer).
+    """
+    if actor.get("role") == Role.CUSTOMER.value:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Cần access token, không phải refresh token.",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản nhân viên được yêu cầu, không phải khách hàng.",
         )
+    return actor
 
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token thiếu thông tin user.",
-        )
-
-    user = await db["users"].find_one({"_id": user_id, "is_active": True})
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Tài khoản không tồn tại hoặc đã bị vô hiệu hóa.",
-        )
-
-    return user
 
 async def get_current_customer(
-    token: str = Depends(oauth2_scheme),
-    db=Depends(get_db),
+    request: Request,
+    actor: dict = Depends(get_current_actor),
 ) -> dict:
     """
-    FastAPI dependency: verify JWT → lấy customer từ MongoDB thay vì users.
-    Raise 401 nếu token sai hoặc customer không tồn tại.
+    Wrapper của get_current_actor: chỉ cho phép role Customer.
     """
-    payload = decode_token(token)
-
-    if payload.get("type") != "access":
+    if actor.get("role") != Role.CUSTOMER.value:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Cần access token, không phải refresh token.",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản khách hàng được yêu cầu.",
         )
+    return actor
 
-    customer_id = payload.get("sub")
-    if not customer_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token thiếu thông tin khách hàng.",
-        )
-
-    customer = await db["customers"].find_one({"_id": customer_id})
-    if not customer:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khách hàng không tồn tại.",
-        )
-
-    # Đảm bảo gán thêm role customer vào object trả ra vì document có thể không lưu role
-    customer["role"] = Role.CUSTOMER.value
-    return customer
 
 
 # ── RBAC dependency factories ─────────────────────────────────
@@ -187,45 +180,40 @@ async def get_current_customer(
 def require_role(*roles: Role):
     """
     Dependency: chỉ cho phép đúng các role được liệt kê.
-
-    Dùng:
-        @router.delete("/", dependencies=[Depends(require_role(Role.ADMIN))])
-
-    hoặc:
-        @router.get("/", dependencies=[Depends(require_role(Role.ADMIN, Role.MANAGER))])
+    Chấp nhận cả User và Customer.
     """
-    async def _check(current_user: dict = Depends(get_current_user)) -> dict:
-        user_role = current_user.get("role", "")
+    async def _check(actor: dict = Depends(get_current_actor)) -> dict:
+        user_role = actor.get("role", "")
         allowed   = [r.value for r in roles]
         if user_role not in allowed:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Cần quyền: {allowed}. Bạn có: '{user_role}'.",
             )
-        return current_user
+        return actor
     return _check
 
 
 def require_min_role(min_role: Role):
     """
     Dependency: cho phép role >= min_role theo ROLE_HIERARCHY.
-    Ví dụ require_min_role(Role.OPERATOR) → OPERATOR, CASHIER, MANAGER, ADMIN đều qua.
-
-    Dùng:
-        @router.post("/checkin", dependencies=[Depends(require_min_role(Role.OPERATOR))])
+    Chấp nhận cả User và Customer.
     """
-    async def _check(current_user: dict = Depends(get_current_user)) -> dict:
-        user_role  = current_user.get("role", "")
+    async def _check(actor: dict = Depends(get_current_actor)) -> dict:
+        user_role  = actor.get("role", "")
         try:
-            user_level = ROLE_HIERARCHY[Role(user_role)]
+            # Nếu role rác hoặc không có trong enum, cho là 0 (customer)
+            r_obj = Role(user_role)
+            user_level = ROLE_HIERARCHY.get(r_obj, 0)
         except ValueError:
             user_level = 0
+            
         min_level = ROLE_HIERARCHY[min_role]
         if user_level < min_level:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Cần quyền tối thiểu: '{min_role.value}'. Bạn có: '{user_role}'.",
             )
-        return current_user
+        return actor
     return _check
  

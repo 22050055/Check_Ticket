@@ -18,7 +18,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from ..core.config import settings
 from ..core.database import get_db
-from ..core.security import require_min_role, Role
+from ..core.security import require_min_role, Role, get_current_actor
 from ..middleware.audit import log_action
 
 logger = logging.getLogger(__name__)
@@ -60,17 +60,33 @@ class FaceEnrollResponse(BaseModel):
 async def enroll_face(
     req: FaceEnrollRequest,
     request: Request,
-    current_user: dict = Depends(require_min_role(Role.OPERATOR)),
+    current_actor: dict = Depends(get_current_actor),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """
     Đăng ký khuôn mặt cho vé (opt-in).
-    Chỉ operator/admin mới thực hiện được — tại quầy hoặc cổng.
+    - Operator/Admin: Đăng ký cho bất kỳ vé active nào.
+    - Customer: Chỉ đăng ký được cho vé của CHÍNH MÌNH.
     """
+    # 0. Kiểm tra quyền cơ bản (role >= customer - luôn đúng nếu qua get_current_actor)
+    actor_role = current_actor.get("role")
+    actor_id   = str(current_actor["_id"])
+
     # 1. Kiểm tra vé
     ticket = await db["tickets"].find_one({"_id": req.ticket_id})
     if not ticket:
         raise HTTPException(status_code=404, detail="Vé không tồn tại.")
+    
+    # Kiểm tra quyền sở hữu nếu là customer
+    if actor_role == Role.CUSTOMER.value:
+        if ticket.get("customer_id") != actor_id:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền đăng ký khuôn mặt cho vé này.")
+    else:
+        # Nếu không phải customer, yêu cầu tối thiểu Operator
+        from ..core.security import ROLE_HIERARCHY
+        if ROLE_HIERARCHY.get(Role(actor_role), 0) < ROLE_HIERARCHY[Role.OPERATOR]:
+            raise HTTPException(status_code=403, detail="Cần quyền Operator để đăng ký khuôn mặt cho vé người khác.")
+
     if ticket.get("status") != "active":
         raise HTTPException(status_code=400,
                             detail=f"Vé không ở trạng thái active (hiện: {ticket.get('status')}).")
@@ -144,11 +160,12 @@ async def enroll_face(
     # 4. Audit log
     await log_action(
         db,
-        str(current_user["_id"]),
+        actor_id,
         "FACE_ENROLL",
         resource=req.ticket_id,
         detail={
             "n_samples":     n_saved,
+            "role":          actor_role,
             "embedding_dim": len(embeddings_multi[0]) if embeddings_multi else len(embedding_single),
             "hash_prefix":   face_image_hash[:16] + "..." if face_image_hash else "",
         },

@@ -17,9 +17,9 @@ from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from ..core.database import get_db
-from ..core.security import require_min_role, Role
+from ..core.security import require_min_role, require_role, Role
 from ..services.report_service import ReportService
-from ..middleware.audit import log_action, ACTION_EXPORT_REPORT
+from ..middleware.audit import log_action, get_audit_logs, ACTION_EXPORT_REPORT
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
@@ -164,4 +164,27 @@ async def export_gate_events(
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+# ── GET /api/reports/audit-logs ──────────────────────────────
+
+@router.get("/audit-logs")
+async def get_system_audit_logs(
+    user_id:   Optional[str] = Query(None, description="Lọc theo user thực hiện"),
+    action:    Optional[str] = Query(None, description="Lọc theo hành động"),
+    resource:  Optional[str] = Query(None, description="Lọc theo tài nguyên (ticket_id, ...)"),
+    limit:     int           = Query(50, ge=1, le=100),
+    skip:      int           = Query(0, ge=0),
+    current_user: dict = Depends(require_role(Role.ADMIN)),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Xem nhật ký thao tác toàn hệ thống.
+    CHỈ DÀNH CHO ADMIN.
+    """
+    logs = await get_audit_logs(
+        db, user_id=user_id, action=action, resource=resource,
+        limit=limit, skip=skip
+    )
+    return logs
  

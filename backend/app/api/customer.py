@@ -42,7 +42,7 @@ async def register_customer(req: CustomerRegisterRequest, db: AsyncIOMotorDataba
             "_id": customer_id,
             "name": req.name,
             "email": req.email,
-            "phone": None,
+            "phone": req.phone,
             "hashed_password": hashed_pwd,
             "created_at": now
         })
