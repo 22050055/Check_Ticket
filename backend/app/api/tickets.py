@@ -285,7 +285,8 @@ async def enroll_face(
     await db["identities"].update_one(
         {"ticket_id": ticket_id},
         {"$set": {
-            "face_embedding":  data.get("embedding"),
+            "face_embeddings": data.get("embeddings"), # Lưu danh sách mẫu (ưu tiên)
+            "face_embedding":  data.get("embeddings", [None])[0], # Fallback mẫu đầu tiên
             "face_image_hash": data.get("face_image_hash", ""),
             "has_face":        True,
         }},
@@ -294,7 +295,7 @@ async def enroll_face(
     return {
         "message":       "Đăng ký khuôn mặt thành công. Ảnh gốc không được lưu.",
         "ticket_id":     ticket_id,
-        "embedding_dim": len(data.get("embedding", [])),
+        "n_embeddings":  len(data.get("embeddings", [])),
     }
 
 
