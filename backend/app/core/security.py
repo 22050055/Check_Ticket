@@ -22,7 +22,7 @@ from .database import get_db
 logger = logging.getLogger(__name__)
 
 
-# ── Roles ─────────────────────────────────────────────────────
+# Roles
 
 class Role(str, Enum):
     ADMIN    = "admin"
@@ -41,7 +41,7 @@ ROLE_HIERARCHY: dict[Role, int] = {
 }
 
 
-# ── Password (bcrypt) ─────────────────────────────────────────
+# Password hashing (bcrypt)
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -52,7 +52,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     return _pwd_ctx.verify(plain, hashed)
 
 
-# ── JWT ───────────────────────────────────────────────────────
+# JWT Logic
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -108,7 +108,7 @@ def decode_token(token: str) -> dict:
         )
 
 
-# ── Current user dependency ───────────────────────────────────
+# Current actor dependency
 
 async def get_current_actor(
     request: Request,
@@ -175,7 +175,7 @@ async def get_current_customer(
 
 
 
-# ── RBAC dependency factories ─────────────────────────────────
+# RBAC factories
 
 def require_role(*roles: Role):
     """

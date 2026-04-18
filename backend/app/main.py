@@ -24,7 +24,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# ── Lifespan ──────────────────────────────────────────────────
+# Lifespan
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,7 +52,7 @@ async def _seed_default_data():
         )
         logger.warning("✅ Tạo tài khoản admin (password: admin123) — ĐỔI NGAY!")
 
-    # ── Tài khoản demo ───────────────────────────────────────────
+    # Tài khoản demo
     demo_users = [
         ("manager1",  "manager123",  "Quản lý 1",           "manager",  None),
         ("operator1", "operator123", "Nhân viên cổng A1",   "operator", "GATE_A1"),
@@ -77,7 +77,7 @@ async def _seed_default_data():
         logger.info("✅ Tạo 2 cổng demo: GATE_A1, GATE_A2")
 
 
-# ── App ───────────────────────────────────────────────────────
+# FastAPI App
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -103,7 +103,7 @@ Hệ thống kiểm soát ra/vào khu du lịch đa kênh:
     lifespan=lifespan,
 )
 
-# ── CORS ──────────────────────────────────────────────────────
+# CORS Middleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -114,7 +114,7 @@ app.add_middleware(
 )
 app.add_middleware(AuditMiddleware)
 
-# ── Routers ───────────────────────────────────────────────────
+# Routers
 
 app.include_router(auth.router)
 app.include_router(tickets.router)
@@ -127,7 +127,7 @@ app.include_router(customer.router)
 app.include_router(review.router)
 
 
-# ── Health check ──────────────────────────────────────────────
+# Health check
 
 @app.get("/health", tags=["Health"])
 async def health():

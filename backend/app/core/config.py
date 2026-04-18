@@ -12,12 +12,12 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
 
-    # ── App ───────────────────────────────────────────────────
+    # App settings
     APP_NAME: str    = "Tourism Gate Backend"
     APP_VERSION: str = "1.0.2"
     DEBUG: bool      = False
 
-    # ── MongoDB Atlas ─────────────────────────────────────────
+    # MongoDB Atlas
     # Password lưu riêng để không hardcode vào URI
     MONGO_PASSWORD: str = "CHANGE_ME"
     MONGO_DB: str       = "tourism_db"
@@ -31,17 +31,17 @@ class Settings(BaseSettings):
         "&retryWrites=true&w=majority"
     )
 
-    # ── JWT (HS256) ───────────────────────────────────────────
+    # JWT (HS256)
     JWT_SECRET: str                  = "CHANGE_THIS_TO_RANDOM_32_BYTES_IN_PRODUCTION"
     JWT_ALGORITHM: str               = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int   = 7
 
-    # ── AI Services — face_service (port 8001) ────────────────
+    # AI Services
     AI_SERVICE_URL: str    = "http://localhost:8001"
     AI_SERVICE_TIMEOUT: float = 10.0    # giây
 
-    # ── QR RSA Keys (dùng chung với ai-services) ──────────────
+    # QR RSA Keys
     QR_PRIVATE_KEY_PATH: str = "../ai-services/qr_generator/keys/private.pem"
     QR_PUBLIC_KEY_PATH: str  = "../ai-services/qr_generator/keys/public.pem"
     
@@ -49,20 +49,20 @@ class Settings(BaseSettings):
     QR_PRIVATE_KEY: Optional[str] = None
     QR_PUBLIC_KEY: Optional[str]  = None
 
-    # ── ID / Phone Hash pepper (phải khớp với ai-services) ────
+    # ID / Phone Hash
     ID_HASH_PEPPER: str = "tourism_id_pepper_v1_CHANGE_IN_PROD"
 
-    # ── CORS ──────────────────────────────────────────────────
+    # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "https://tourism-dashboard.pages.dev",  # Website của bạn trên Cloudflare
     ]
 
-    # ── Nonce TTL — phải khớp với ai-services nonce_store ─────
+    # Nonce settings
     NONCE_TTL_HOURS: int = 24
 
-    # ── Property: URI đã điền password ────────────────────────
+    # Helpers
     @property
     def mongo_uri_with_password(self) -> str:
         """
