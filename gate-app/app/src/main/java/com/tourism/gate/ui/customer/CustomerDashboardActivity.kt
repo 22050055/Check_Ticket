@@ -28,9 +28,14 @@ class CustomerDashboardActivity : AppCompatActivity() {
 
         bottomNav = findViewById(R.id.bottom_navigation)
 
-        // Mặc định mở Trang chủ (Home) khi lần đầu khởi chạy
+        // Mặc định mở Trang chủ (Home) hoặc tab được chỉ định từ Intent
         if (savedInstanceState == null) {
-            replaceFragment(HomeFragment())
+            val openTab = intent.getIntExtra("open_tab", R.id.nav_home)
+            if (openTab != R.id.nav_home) {
+                bottomNav.selectedItemId = openTab
+            } else {
+                replaceFragment(HomeFragment())
+            }
         }
 
         // Xử lý sự kiện click trên thanh điều hướng

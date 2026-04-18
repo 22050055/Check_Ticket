@@ -57,6 +57,7 @@ class QrDisplayActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.tvStatusBadge).text  = "MUA VÉ THÀNH CÔNG"
             findViewById<TextView>(R.id.tvHint).text         = "Xuất trình mã này tại cổng soát vé"
             findViewById<TextView>(R.id.btnNewTicket).text   = "🎫 Mua thêm vé mới"
+            findViewById<TextView>(R.id.btnHome).text        = "Vé của tôi"
         }
 
         // Nút "Phát hành vé mới / Mua vé mới"
@@ -77,6 +78,9 @@ class QrDisplayActivity : AppCompatActivity() {
 
             startActivity(Intent(this, destActivity).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                if (isCustomer) {
+                    putExtra("open_tab", R.id.nav_tickets)
+                }
             })
             finish()
         }
