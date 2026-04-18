@@ -59,7 +59,7 @@ class AiService:
         )
 
         self.model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
+            model_name='gemini-1.5-flash-latest',
             tools=self.tools,
             system_instruction=instruction,
             generation_config=self.generation_config
