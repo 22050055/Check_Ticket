@@ -214,7 +214,7 @@ class ReportService:
             {"$sort": {"count": -1}},
         ]
         by_channel_rows = await self._db["gate_events"].aggregate(by_channel_pipe).to_list(10)
-        by_channel = {r["_id"]: r["count"] for r in by_channel_rows}
+        by_channel = [{"channel": r["_id"], "count": r["count"]} for r in by_channel_rows]
 
         return {
             "total_checkins":  total_checkins,
