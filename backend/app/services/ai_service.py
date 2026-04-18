@@ -1,7 +1,5 @@
-import logging
-import json
-from typing import List, Dict, Any, Optional
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from datetime import datetime, timezone, timedelta
 
@@ -23,46 +21,78 @@ class AiService:
         self.user_email = user_email
         self.user_role = user_role
         
-        # Cấu hình Gemini
-        genai.configure(api_key=settings.GOOGLE_API_KEY)
+        # 1. Khởi tạo Client mới (chuẩn v1.0+)
+        self.client = genai.Client(api_key=settings.GOOGLE_API_KEY)
         
-        # Định nghĩa các Tools
-        self.tools = [
-            self.get_dashboard_summary,
-            self.get_revenue_report,
-            self.get_visitor_stats,
-            self.check_ticket_status,
-            self.list_gates_health,
-            self.get_my_tickets,
-            self.get_park_info
-        ]
-        
-        # System Instruction thay đổi tùy theo vai trò
+        # 2. Định nghĩa System Instruction
         role_desc = f"Bạn đang hỗ trợ người dùng có Email: {user_email} và Vai trò: {user_role}."
-        instruction = (
+        self.system_instruction = (
             "BẢN SẮC: Bạn là 'Sên', nhân viên ảo chính thức của hệ thống Tourism Gate. "
-            "BỐI CẢNH DỰ ÁN: Tourism Gate là hệ thống quản lý du lịch công nghệ cao, sử dụng QR Code và nhận diện khuôn mặt AI (FaceID) để kiểm soát vào ra. "
+            "BỐI CẢNH DỰ ÁN: Tourism Gate là hệ thống quản lý du lịch công nghệ cao, sử dụng QR Code và nhận diện khuôn mặt AI (FaceID). "
             f"{role_desc} "
-            "QUY TẮC PHỤC VỤ: "
-            "1. Luôn niềm nở, lịch sự với khách hàng như một chuyên viên ngành du lịch. "
-            "2. Khi khách hỏi về cách dùng, hãy nhấn mạnh ưu điểm của FaceID (không cần điện thoại, không cần chạm). "
-            "3. BẢO MẬT: Khách ('customer') CHỈ được xem vé của mình thông qua get_my_tickets. Tuyệt đối không tiết lộ doanh thu/số liệu hệ thống cho khách. "
-            "4. TRÌNH BÀY: Dùng Markdown chuyên nghiệp, biểu đồ bảng biểu khi báo cáo doanh thu cho quản lý. "
-            "5. NGÔN NGỮ: Tiếng Việt chuẩn mực."
+            "QUY TẮC: "
+            "1. Luôn niềm nở, lịch sự. "
+            "2. Nhấn mạnh ưu điểm FaceID. "
+            "3. BẢO MẬT: Khách CHỈ xem vé của mình. Không tiết lộ doanh thu cho khách. "
+            "4. TRÌNH BÀY: Dùng Markdown, bảng biểu chuyên nghiệp. "
+            "5. NGÔN NGỮ: Tiếng Việt."
         )
 
-        # Cấu hình tham số sinh văn bản dể tối ưu Token
-        self.generation_config = genai.GenerationConfig(
-            temperature=0.7,
-            top_p=0.9,
-            max_output_tokens=800,  # Giới hạn độ dài phản hồi để tiết kiệm token
-        )
+        # 3. Danh sách Tools (ánh xạ tên hàm)
+        self.tools = [
+            types.Tool(
+                function_declarations=[
+                    types.FunctionDeclaration(
+                        name="get_dashboard_summary",
+                        description="Lấy thông số tổng quan của dashboard hôm nay (doanh thu, lượt khách, tỷ lệ lỗi).",
+                    ),
+                    types.FunctionDeclaration(
+                        name="get_revenue_report",
+                        description="Lấy báo cáo doanh thu trong số ngày gần đây.",
+                        parameters={
+                            "type": "OBJECT",
+                            "properties": {"days": {"type": "INTEGER"}},
+                        },
+                    ),
+                    types.FunctionDeclaration(
+                        name="get_visitor_stats",
+                        description="Lấy thống kê lượt khách vào/ra trong số giờ gần đây.",
+                        parameters={
+                            "type": "OBJECT",
+                            "properties": {"hours": {"type": "INTEGER"}},
+                        },
+                    ),
+                    types.FunctionDeclaration(
+                        name="check_ticket_status",
+                        description="Kiểm tra chi tiết trạng thái của một mã vé cụ thể.",
+                        parameters={
+                            "type": "OBJECT",
+                            "properties": {"ticket_id": {"type": "STRING"}},
+                            "required": ["ticket_id"],
+                        },
+                    ),
+                    types.FunctionDeclaration(
+                        name="list_gates_health",
+                        description="Lấy danh sách tất cả các cổng và trạng thái hoạt động.",
+                    ),
+                    types.FunctionDeclaration(
+                        name="get_my_tickets",
+                        description="Lấy danh sách các vé mà khách hàng hiện tại đang sở hữu.",
+                    ),
+                    types.FunctionDeclaration(
+                        name="get_park_info",
+                        description="Lấy thông tin chung về khu du lịch và hướng dẫn sử dụng app.",
+                    ),
+                ]
+            )
+        ]
 
-        self.model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
+        # 4. Cấu hình sinh bản tin
+        self.config = types.GenerateContentConfig(
+            system_instruction=self.system_instruction,
             tools=self.tools,
-            system_instruction=instruction,
-            generation_config=self.generation_config
+            temperature=0.7,
+            max_output_tokens=800,
         )
 
     # ── Tools for Gemini ────────────────────────────────────────
@@ -162,41 +192,32 @@ class AiService:
     # ── Logic xử lý Chat ────────────────────────────────────────
 
     async def chat(self, user_message: str, history: List[Dict[str, str]] = None) -> str:
-        """
-        Xử lý tin nhắn từ người dùng, thực hiện function calling nếu cần.
-        Tối ưu Token bằng cách giới hạn lịch sử hội thoại.
-        """
-        # Chuyển đổi lịch sử sang định dạng Gemini (user/model)
-        formatted_history = []
+        """Xử lý tin nhắn sử dụng google-genai SDK mới."""
+        contents = []
         if history:
-            for msg in history:
-                role = "user" if msg.get("role") == "user" else "model"
-                content = msg.get("content") or ""
-                if content:
-                    formatted_history.append({"role": role, "parts": [content]})
-
-        chat = self.model.start_chat(history=formatted_history)
+            for m in history:
+                role = "user" if m.get("role") == "user" else "model"
+                contents.append(types.Content(role=role, parts=[types.Part(text=m.get("content", ""))]))
         
+        # Thêm tin nhắn hiện tại
+        contents.append(types.Content(role="user", parts=[types.Part(text=user_message)]))
+
         try:
-            # Gửi tin nhắn đầu tiên
-            response = chat.send_message(user_message)
-            
-            # Xử lý Function Calling (nếu Gemini yêu cầu)
-            # Gemini-python SDK tự động handle việc gọi hàm nếu model được khởi tạo với tools
-            # và sử dụng helper `enable_automatic_function_calling=True` (hoặc mặc định trong start_chat)
-            
-            # Tuy nhiên, do chúng ta dùng async-motor, chúng ta sẽ handle thủ công 
-            # hoặc đảm bảo các tool function là đồng bộ nếu model yêu cầu.
-            # Trong FastAPI, chúng ta sẽ bắt các call part và thực hiện await.
-            
-            while response.parts[0].function_call:
-                fc = response.parts[0].function_call
+            # Gửi yêu cầu lên Gemini
+            response = self.client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=contents,
+                config=self.config
+            )
+
+            # Vòng lặp xử lý Function Calling thủ công (vì chúng ta cần await async DB calls)
+            while response.candidates[0].content.parts[0].function_call:
+                fc = response.candidates[0].content.parts[0].function_call
                 fn_name = fc.name
                 fn_args = fc.args
                 
-                logger.info(f"AI Assistant call function: {fn_name} with {fn_args}")
-                
-                # Ánh xạ hàm
+                logger.info(f"Sên call function: {fn_name} | Args: {fn_args}")
+
                 fn_map = {
                     "get_dashboard_summary": self.get_dashboard_summary,
                     "get_revenue_report":    self.get_revenue_report,
@@ -206,26 +227,31 @@ class AiService:
                     "get_my_tickets":        self.get_my_tickets,
                     "get_park_info":         self.get_park_info
                 }
-                
+
                 if fn_name in fn_map:
-                    # Gọi hàm async
                     result = await fn_map[fn_name](**fn_args)
-                    # Gửi kết quả lại cho AI
-                    response = chat.send_message(
-                        genai.protos.Content(
-                            parts=[genai.protos.Part(
-                                function_response=genai.protos.FunctionResponse(
-                                    name=fn_name,
-                                    response={"result": result}
-                                )
-                            )]
-                        )
+                    # Cập nhật context để Gemini tiếp tục
+                    contents.append(response.candidates[0].content) # Thêm call vừa rồi vào history
+                    contents.append(types.Content(
+                        role="model",
+                        parts=[types.Part(
+                            function_response=types.FunctionResponse(
+                                name=fn_name,
+                                response={"result": result}
+                            )
+                        )]
+                    ))
+                    
+                    # Gọi lại Gemini với kết quả hàm
+                    response = self.client.models.generate_content(
+                        model='gemini-1.5-flash',
+                        contents=contents,
+                        config=self.config
                     )
                 else:
                     break
 
             return response.text
-
         except Exception as e:
-            logger.error(f"AiService.chat error: {e}")
-            return f"Xin lỗi, tôi gặp lỗi hệ thống: {str(e)}"
+            logger.error(f"AiService Error: {str(e)}")
+            return f"Sên rất tiếc, đã có lỗi xảy ra: {str(e)}"
