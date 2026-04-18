@@ -1,6 +1,8 @@
 # 🏖️ Tourism Access Control System
 
 > **Phát triển hệ thống kiểm soát ra/vào khu du lịch đa kênh dựa trên QR và xác thực định danh, tích hợp Dashboard phân tích vận hành**
+>
+> Đồ án Tốt nghiệp — Trần Mạnh Khang
 
 ---
 
@@ -10,8 +12,8 @@
 - [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
 - [Cấu trúc dự án](#cấu-trúc-dự-án)
 - [Công nghệ sử dụng](#công-nghệ-sử-dụng)
-- [Hướng dẫn cài đặt](#hướng-dẫn-cài-đặt)
-- [Hướng dẫn chạy từng phần](#hướng-dẫn-chạy-từng-phần)
+- [Triển khai (Deployment)](#triển-khai-deployment)
+- [Hướng dẫn chạy Local](#hướng-dẫn-chạy-local)
 - [API Reference](#api-reference)
 - [Tài khoản demo](#tài-khoản-demo)
 - [Ghi chú pháp lý](#ghi-chú-pháp-lý)
@@ -24,212 +26,154 @@ Hệ thống hỗ trợ **4 kênh xác thực** tại cổng ra/vào khu du lị
 
 | Kênh | Mô tả | Bắt buộc |
 |------|-------|----------|
-| QR e-ticket | Quét mã QR ký số RS256, chống giả, chống dùng lại | ✅ |
-| Face Verify 1:1 | So khớp khuôn mặt with ảnh đăng ký. **AI Pose guidance** giúp đảm bảo chất lượng ảnh mẫu | Tùy chọn |
-| Identity Hash | Tra cứu theo hash CCCD hoặc mã đặt vé. Enforce định danh cho khách mua online | Tùy chọn |
-| Manual Fallback | Tra cứu theo SĐT / tên khách | Dự phòng |
+| QR e-ticket | Quét mã QR ký số RS256, chống giả, chống dùng lại (nonce) | ✅ |
+| Face Verify 1:1 | So khớp khuôn mặt với embedding đã đăng ký (ArcFace) | Tùy chọn (opt-in) |
+| Identity Hash | Tra cứu theo hash CCCD hoặc mã đặt vé (Booking ID) | Tùy chọn |
+| Manual Fallback | Tra cứu thủ công theo SĐT / tên khách | Dự phòng |
 
-**Điểm nhấn hệ thống:**
-- **Accountability**: Truy vết trách nhiệm từng vé (Người bán - Thời gian - Kênh).
-- **Staff Presence**: Theo dõi trạng thái Online/Offline của nhân viên vận hành thời gian thực.
-- **Customer Feedback**: Hệ thống đánh giá 1-5 sao sau khi sử dụng dịch vụ.
-- **Customer Experience**: Ứng dụng khách hàng hiện đại với **Bottom Navigation**, **Day/Night Theme** và chỉnh sửa hồ sơ trực tiếp.
+**Đặc điểm nổi bật:**
+- **Dual App**: Ứng dụng Android dành riêng cho **Nhân viên cổng** (quét vé) và **Khách hàng** (mua vé, xem vé, đăng ký khuôn mặt).
+- **AI On-Premise**: AI Service chạy độc lập (localhost/Ngrok) với mô hình **ArcFace buffalo_l** (State-of-the-Art, ONNX Runtime GPU).
+- **Audit Trail**: Mọi action đều bị ghi lại `audit_log` với thông tin user, IP, thời gian, response status.
+- **Staff Presence**: Theo dõi trạng thái Online/Offline của nhân viên thời gian thực qua WebSocket.
+- **Customer Feedback**: Hệ thống đánh giá 1-5 sao cho vé đã sử dụng.
 
 ---
 
 ## Kiến trúc hệ thống
 
 ```
-┌─────────────────┐        REST API (JWT)       ┌──────────────────┐
-│  Android Gate   │ ─────────────────────────►  │                  │
-│     App         │                             │   FastAPI        │
-│  (Nhân viên     │ ◄─────────────────────────  │   Backend        │
-│   cổng)         │        JSON Response        │                  │
-└─────────────────┘                             └────────┬─────────┘
-                                                         │
-                                              ┌──────────▼──────────┐
-                                              │      MongoDB         │
-                                              │  (vé, log, giao      │
-                                              │   dịch, khách)       │
-                                              └──────────┬──────────┘
-                                                         │
-                                              ┌──────────▼──────────┐
-                                              │   AI Services        │
-                                              │  (Face + QR verify)  │
-                                              └──────────┬──────────┘
-                                                         │ WebSocket/SSE
-                                              ┌──────────▼──────────┐
-                                              │   Web Dashboard      │
-                                              │  (Admin/Kế toán)     │
-                                              └─────────────────────┘
+┌─────────────────────┐         REST API (JWT)        ┌──────────────────────┐
+│  Android Gate App   │ ──────────────────────────►   │                      │
+│  (Nhân viên cổng)   │                               │   FastAPI Backend     │
+│  ─────────────────  │ ◄──────────────────────────   │   (Render Cloud)     │
+│  Android Customer   │       JSON Response            │                      │
+│  App (Khách hàng)   │                               └───────────┬──────────┘
+└─────────────────────┘                                           │
+                                                      ┌───────────▼──────────┐
+┌─────────────────────┐                               │     MongoDB Atlas     │
+│  Web Dashboard      │ ──── REST API / WebSocket ──► │  (vé, log, giao dịch,│
+│  (Admin / Kế toán)  │                               │   khách, identities) │
+│  Cloudflare Pages   │                               └──────────────────────┘
+└─────────────────────┘
+                                                      ┌──────────────────────┐
+                                                      │   AI Services        │
+                                                      │  (Local + Ngrok)     │
+                                                      │  ArcFace buffalo_l   │
+                                                      │  QR RS256 Verifier   │
+                                                      └──────────────────────┘
 ```
+
+> [!IMPORTANT]
+> Backend gọi AI Service qua biến `AI_SERVICE_URL` (cấu hình trên Render). Khi demo local: chạy AI Service → expose qua Ngrok → cập nhật URL trên Render.
 
 ---
 
 ## Cấu trúc dự án
 
 ```
-tourism-access-control/
+Check_ticket/
 │
-├── 📱 gate-app/                             # Android App (Nhân viên cổng)
-│   └── app/src/main/
-│       ├── java/com/tourism/gate/
-│       │   ├── ui/
-│       │   │   ├── LoginActivity.kt         # Đăng nhập nhân viên
-│       │   │   ├── GateSelectActivity.kt    # Chọn cổng làm việc
-│       │   │   ├── SelectDirectionActivity.kt # Chọn hướng IN / OUT
-│       │   │   ├── ScanActivity.kt          # Quét QR
-│       │   │   ├── FaceVerifyActivity.kt    # Chụp ảnh xác thực khuôn mặt 1:1
-│       │   │   ├── ResultActivity.kt        # Hiển thị kết quả hợp lệ / không hợp lệ
-│       │   │   └── ManualSearchActivity.kt  # Tra cứu thủ công (SĐT / booking)
-│       │   ├── data/
-│       │   │   ├── api/
-│       │   │   │   ├── ApiService.kt        # Retrofit interface (các endpoint)
-│       │   │   │   └── ApiClient.kt         # Base URL, header JWT, timeout
-│       │   │   ├── model/
-│       │   │   │   ├── Ticket.kt            # Model vé điện tử
-│       │   │   │   ├── Identity.kt          # Model định danh (CCCD hash / booking)
-│       │   │   │   ├── GateEvent.kt         # Model sự kiện IN/OUT
-│       │   │   │   └── CheckinResult.kt     # Model kết quả check-in/out
-│       │   │   └── local/
-│       │   │       ├── OfflineCache.kt      # Room DB cache vé theo ca trực
-│       │   │       └── ShiftManager.kt      # Quản lý ca, đồng bộ nonce offline
-│       │   ├── viewmodel/
-│       │   │   ├── ScanViewModel.kt         # Logic quét QR
-│       │   │   ├── FaceViewModel.kt         # Logic xác thực khuôn mặt
-│       │   │   ├── ManualViewModel.kt       # Logic tra cứu thủ công
-│       │   │   └── GateViewModel.kt         # Logic chọn cổng / ca trực
-│       │   └── utils/
-│       │       ├── QrParser.kt             # Parse payload QR
-│       │       └── NetworkUtils.kt         # Detect offline / online, retry
-│       └── res/layout/
-│           ├── activity_login.xml
-│           ├── activity_scan.xml
-│           ├── activity_face_verify.xml
-│           ├── activity_result.xml
-│           └── activity_manual_search.xml
+├── 📱 gate-app/                              # Android App (Kotlin)
+│   └── app/src/main/java/com/tourism/gate/
+│       ├── ui/
+│       │   ├── LoginActivity.kt              # Đăng nhập — chọn vai trò Staff / Customer
+│       │   ├── RoleSelectActivity.kt         # Chọn vai trò vận hành
+│       │   ├── GateSelectActivity.kt         # Chọn cổng làm việc
+│       │   ├── SelectDirectionActivity.kt    # Chọn hướng IN / OUT
+│       │   ├── ScanActivity.kt               # Quét QR (ZXing) + chụp khuôn mặt
+│       │   ├── FaceEnrollActivity.kt         # Đăng ký khuôn mặt (3 mẫu)
+│       │   ├── FaceVerifyActivity.kt         # Xác thực khuôn mặt tại cổng (1:1)
+│       │   ├── ResultActivity.kt             # Hiển thị kết quả HỢP LỆ / KHÔNG HỢP LỆ
+│       │   ├── ManualSearchActivity.kt       # Tra cứu thủ công (SĐT / booking)
+│       │   ├── SellTicketActivity.kt         # Bán vé tại quầy (Nhân viên)
+│       │   ├── QrDisplayActivity.kt          # Hiển thị QR Code cho khách
+│       │   └── customer/                     # Luồng App Khách hàng (Bottom Nav)
+│       │       ├── CustomerWelcomeActivity.kt
+│       │       ├── CustomerRegisterActivity.kt
+│       │       ├── CustomerDashboardActivity.kt
+│       │       ├── CustomerBuyTicketActivity.kt
+│       │       ├── CustomerTicketAdapter.kt
+│       │       ├── HomeFragment.kt
+│       │       ├── TicketsFragment.kt        # Xem vé, hiển thị QR
+│       │       ├── BuyFragment.kt            # Mua vé online
+│       │       └── ProfileFragment.kt        # Chỉnh sửa hồ sơ, đăng ký Face ID
+│       ├── data/api/
+│       │   ├── ApiService.kt                 # Retrofit interface — định nghĩa endpoint
+│       │   └── ApiClient.kt                  # Base URL, JWT header, timeout
+│       ├── data/model/                       # Data class Kotlin
+│       └── viewmodel/                        # ViewModel cho từng màn hình
 │
-├── 🌐 web-dashboard/                        # Website Admin (React)
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Login.jsx                   # Đăng nhập JWT (Admin / Kế toán)
-│   │   │   ├── Dashboard.jsx               # Tổng quan realtime
-│   │   │   ├── GateMonitor.jsx             # Giám sát từng cổng realtime
-│   │   │   ├── Revenue.jsx                 # Doanh thu theo ngày / loại vé / kênh
-│   │   │   ├── Visitors.jsx                # Thống kê lượt khách
-│   │   │   ├── AgeGroupAnalysis.jsx        # Phân tích cơ cấu nhóm tuổi
-│   │   │   ├── Tickets.jsx                 # Quản lý vé (phát hành / huỷ)
-│   │   │   ├── CustomerManagement.jsx      # Quản lý khách hàng
-│   │   │   └── Reports.jsx                 # Xuất báo cáo CSV / PDF
-│   │   ├── components/
-│   │   │   ├── charts/
-│   │   │   │   ├── PeakHourChart.jsx       # Biểu đồ giờ cao điểm
-│   │   │   │   ├── ChannelPieChart.jsx     # Tỷ lệ kênh QR / Face / CCCD / Manual
-│   │   │   │   ├── RevenueLineChart.jsx    # Doanh thu theo thời gian
-│   │   │   │   ├── AgeGroupBarChart.jsx    # Cơ cấu khách theo nhóm tuổi
-│   │   │   │   └── ErrorRateChart.jsx      # Tỷ lệ lỗi check-in/out
-│   │   │   ├── RealtimeTable.jsx           # Bảng sự kiện check-in/out realtime
-│   │   │   ├── GateStatusCard.jsx          # Thẻ trạng thái từng cổng
-│   │   │   ├── ExportButton.jsx            # Nút xuất CSV / PDF
-│   │   │   └── DateRangePicker.jsx         # Bộ lọc khoảng thời gian
-│   │   ├── services/
-│   │   │   ├── api.js                      # Axios base config (JWT header)
-│   │   │   └── websocket.js               # Kết nối WebSocket / SSE realtime
-│   │   ├── hooks/
-│   │   │   ├── useWebSocket.js            # Hook nhận sự kiện realtime
-│   │   │   └── useAuth.js                 # Hook quản lý JWT, role check
-│   │   └── store/                         # Redux / Zustand (global state)
-│   │       ├── authStore.js
-│   │       ├── gateStore.js
-│   │       └── reportStore.js
-│   ├── package.json
-│   ├── tests/                          # Mock data & unit tests cho Dashbard [NEW]
-│   ├── Dockerfile                      # Build image cho Dashboard (Nginx) [NEW]
-│   └── nginx.conf                      # Cấu hình proxy API cho Dashboard [NEW]
+├── 🌐 web-dashboard/                         # Web Admin (React + Vite)
+│   └── src/
+│       ├── pages/
+│       │   ├── Login.jsx                     # Đăng nhập JWT
+│       │   ├── Dashboard.jsx                 # Tổng quan realtime
+│       │   ├── GateMonitor.jsx               # Giám sát từng cổng realtime
+│       │   ├── Revenue.jsx                   # Doanh thu theo ngày / loại vé / kênh
+│       │   ├── Visitors.jsx                  # Thống kê lượt khách
+│       │   ├── AgeGroupAnalysis.jsx          # Phân tích cơ cấu nhóm tuổi
+│       │   ├── Tickets.jsx                   # Quản lý vé (phát hành / huỷ)
+│       │   ├── CustomerManagement.jsx        # Quản lý khách hàng
+│       │   ├── UserManagement.jsx            # Quản lý tài khoản nhân viên
+│       │   ├── Reviews.jsx                   # Xem đánh giá từ khách hàng
+│       │   └── Reports.jsx                   # Xuất báo cáo CSV
+│       ├── components/                       # Biểu đồ, bảng, filter dùng lại
+│       ├── services/api.js                   # Axios base config (JWT header)
+│       ├── hooks/                            # useAuth, useWebSocket
+│       └── store/                            # Zustand global state
 │
-├── 🧪 tests/                                    # [NEW] Trung tâm kiểm thử hệ thống
-│   ├── payloads/                               # Dữ liệu JSON mẫu (login, register, issue)
-│   └── scripts/                                # Script batch test API nhanh (.bat)
+├── ⚙️ backend/                               # FastAPI Backend
+│   └── app/
+│       ├── main.py                           # Khởi động FastAPI, router, lifespan
+│       ├── core/
+│       │   ├── config.py                     # ENV variables (Pydantic Settings)
+│       │   ├── security.py                   # JWT HS256, RBAC helper
+│       │   └── database.py                   # MongoDB Motor async + indexes
+│       ├── api/
+│       │   ├── auth.py                       # Login, refresh token
+│       │   ├── tickets.py                    # Phát hành / validate / huỷ vé
+│       │   ├── checkin.py                    # Endpoint check-in/out thống nhất
+│       │   ├── gates.py                      # Quản lý cổng
+│       │   ├── reports.py                    # Doanh thu, lượt khách, export CSV
+│       │   ├── customer.py                   # API Khách hàng: mua vé, hồ sơ, đánh giá
+│       │   ├── face_enroll.py                # Đăng ký khuôn mặt (3–5 mẫu)
+│       │   ├── review.py                     # API đánh giá vé
+│       │   └── websocket.py                  # WebSocket: Staff Presence + Event push
+│       ├── services/
+│       │   ├── channel_adapter.py            # Adapter xử lý 4 kênh check-in/out
+│       │   ├── report_service.py             # MongoDB Aggregation Pipeline
+│       │   └── qr_image_service.py           # Render ảnh QR từ payload
+│       └── middleware/
+│           ├── rbac.py                       # Phân quyền: Admin / Operator / Cashier
+│           └── audit_middleware.py           # Tự động ghi audit_log mỗi request
 │
-├── ⚙️ backend/                              # FastAPI Backend
-│   ├── app/
-│   │   ├── main.py                         # Khởi động FastAPI, đăng ký router
-│   │   ├── core/
-│   │   │   ├── config.py                   # ENV variables, settings
-│   │   │   ├── security.py                 # JWT encode/decode, RBAC helper
-│   │   │   └── database.py                 # Kết nối MongoDB (Motor async)
-│   │   ├── api/
-│   │   │   ├── auth.py                     # Login, refresh token, RBAC
-│   │   │   ├── tickets.py                  # Issue / validate / revoke / hoàn huỷ vé
-│   │   │   ├── checkin.py                  # Check-in/out endpoint thống nhất (đa kênh)
-│   │   │   ├── gates.py                    # Quản lý cổng
-│   │   │   ├── reports.py                  # Doanh thu, lượt khách, channel usage, export
-│   │   │   ├── customer.py                 # API Khách hàng & Mua vé online [NEW]
-│   │   │   └── websocket.py                # WebSocket endpoint cho dashboard realtime
-│   │   ├── models/                         # MongoDB Document Schema (Beanie ODM)
-│   │   │   ├── customer.py                 # Collection: customers
-│   │   │   ├── identity.py                 # Collection: identities (qr/booking/phone/id_hash/face_embedding)
-│   │   │   ├── ticket.py                   # Collection: tickets
-│   │   │   ├── transaction.py              # Collection: transactions (doanh thu)
-│   │   │   ├── gate.py                     # Collection: gates
-│   │   │   ├── gate_event.py               # Collection: gate_events (IN/OUT log)
-│   │   │   └── audit_log.py                # Collection: audit_logs
-│   │   ├── schemas/                        # Pydantic validate request / response
-│   │   │   ├── auth.py                     # LoginRequest, TokenResponse
-│   │   │   ├── ticket.py                   # TicketCreate, TicketResponse
-│   │   │   ├── checkin.py                  # CheckinRequest, CheckinResult
-│   │   │   ├── gate.py                     # GateCreate, GateResponse
-│   │   │   ├── customer.py                 # Customer schemas [NEW]
-│   │   │   └── report.py                   # RevenueQuery, VisitorStats
-│   │   ├── services/
-│   │   │   ├── qr_service.py               # Gọi qr_generator: tạo & verify QR
-│   │   │   ├── face_service.py             # Gọi ai-services: face verify 1:1
-│   │   │   ├── channel_adapter.py          # Luồng check-in/out thống nhất (adapter pattern)
-│   │   │   └── report_service.py           # Aggregation pipeline MongoDB cho báo cáo
-│   │   ├── middleware/
-│   │   │   ├── rbac.py                     # Phân quyền: Admin / NV cổng / Kế toán
-│   │   │   └── audit_middleware.py         # Tự động ghi audit_log mỗi request
-│   │   └── tests/                          # Phục vụ Chương 4 thực nghiệm
-│   │       ├── test_checkin.py             # Test check-in/out 4 kênh
-│   │       ├── test_qr_fraud.py            # Test phát hiện vé giả / đã dùng
-│   │       └── test_load.py                # Test tải mô phỏng giờ cao điểm
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── 🤖 ai_services/                          # Dịch vụ AI độc lập
+├── 🤖 ai_services/                           # AI Service độc lập (chạy local)
 │   ├── face_verification/
 │   │   ├── models/
-│   │   │   ├── facenet_512.onnx            # Model trích xuất embedding khuôn mặt
-│   │   │   └── yunet_face_detect.onnx      # Model detect & crop khuôn mặt
-│   │   ├── detector.py                     # Detect khuôn mặt, crop vùng ROI
-│   │   ├── embedding.py                    # Trích xuất vector 512-d từ ảnh
-│   │   ├── similarity.py                   # Cosine similarity giữa 2 embedding
-│   │   ├── config.py                       # THRESHOLD = 0.6, model path
-│   │   ├── face_service.py                 # API nội bộ: nhận 2 ảnh → True/False + score
-│   │   └── privacy_guard.py               # Không lưu ảnh gốc, chỉ lưu embedding
+│   │   │   ├── buffalo_l/
+│   │   │   │   ├── w600k_r50.onnx            # ArcFace R50 — embedding 512-d
+│   │   │   │   ├── det_10g.onnx              # RetinaFace — detect khuôn mặt
+│   │   │   │   └── genderage.onnx            # Dự đoán tuổi/giới tính (Dashboard)
+│   │   │   └── yunet_face_detect.onnx        # Fallback detector (OpenCV)
+│   │   ├── config.py                         # FACE_THRESHOLD (load từ .env)
+│   │   ├── detector.py                       # Detect + aligned crop 112×112
+│   │   ├── embedding.py                      # ArcFace ONNX inference → 512-d vector
+│   │   ├── similarity.py                     # Cosine similarity, is_same_person_multi
+│   │   ├── face_service.py                   # FastAPI endpoints: /enroll, /verify
+│   │   └── privacy_guard.py                  # Không lưu ảnh gốc, chỉ lưu embedding
 │   ├── qr_generator/
-│   │   ├── qr_service.py                   # Tạo QR payload + ký RS256
-│   │   ├── nonce_store.py                  # Anti-reuse: lưu nonce đã dùng (MongoDB)
-│   │   ├── time_window.py                  # Kiểm tra QR còn hiệu lực (time-window)
+│   │   ├── qr_service.py                     # Tạo QR payload + ký RS256
 │   │   └── keys/
-│   │       ├── private.pem                 # Private key ký QR  ← GITIGNORE!
-│   │       └── public.pem                  # Public key verify
-│   ├── id_service/
-│   │   ├── id_hash_service.py              # SHA-256 hash CCCD/ID, không lưu ảnh gốc
-│   │   └── booking_lookup.py              # Tra cứu theo booking ID / SĐT
-│   ├── eval/                               # Script đánh giá Chương 4
-│   │   ├── ...
-│   ├── tests/                              # Unit tests & AI logic tests [NEW]
-│   └── Dockerfile
+│   │       ├── private.pem                   # Private key ký QR ← GITIGNORE
+│   │       └── public.pem                    # Public key verify
+│   ├── id_service/                           # Hash CCCD / tra cứu booking
+│   ├── .env                                  # FACE_THRESHOLD=0.60
+│   └── requirements.txt
 │
-├── 🐳 docker-compose.yml                   # Gom toàn bộ services
-├── .env.example                            # Mẫu biến môi trường
-├── .gitignore                              # Bỏ qua key, .env, __pycache__
-├── README.md                               # File này
-└── docs/
-    ├── huong-dan-cai-dat.md               # Hướng dẫn cài đặt chi tiết
-    ├── api-reference.md                    # Tài liệu API endpoint
-    └── architecture-diagram.png           # Sơ đồ kiến trúc
+├── 🐳 docker-compose.yml                     # Stack local đầy đủ
+├── .gitignore
+└── README.md
 ```
 
 ---
@@ -238,239 +182,206 @@ tourism-access-control/
 
 | Thành phần | Công nghệ |
 |-----------|-----------|
-| Android App | Kotlin, Retrofit2, CameraX, **ML Kit (QR & Face Pose Detection)**, Room DB |
-| Backend | FastAPI, Beanie ODM, Motor (async), JWT, Pydantic |
-| Database | MongoDB |
-| AI - Face | ONNX Runtime, FaceNet-512, YuNet (OpenCV) |
-| AI - QR | RS256 (python-jose), HMAC-SHA256 |
-| Web Dashboard | React, Recharts, Ant Design, Axios |
-| Realtime | **WebSocket (Presence tracking & Event log push)** |
-| Deploy | Docker, Docker Compose |
+| **Android App** | Kotlin, Retrofit2, CameraX, ZXing (QR), Bottom Navigation |
+| **Backend** | FastAPI, Motor (async MongoDB), JWT HS256, Pydantic v2 |
+| **Database** | MongoDB Atlas (Cloud, Free Tier M0) |
+| **AI - Khuôn mặt** | ArcFace w600k_r50 + RetinaFace det_10g (InsightFace buffalo_l), ONNX Runtime GPU |
+| **AI - QR** | RS256 ký số (python-jose), Nonce anti-reuse |
+| **Web Dashboard** | React + Vite, Recharts, Axios, Zustand |
+| **Realtime** | WebSocket (Staff Presence + Gate Event push) |
+| **Deploy** | Render (Backend), Cloudflare Pages (Web), Ngrok (AI local tunnel) |
 
 ---
 
-## Hướng dẫn cài đặt
+## Triển khai (Deployment)
+
+### ⚙️ Backend — Render
+- **URL:** `https://check-ticket-1hyd.onrender.com`
+- **Build:** Auto-deploy từ GitHub `main` branch qua Dockerfile.
+- **Biến môi trường cần thiết trên Render:**
+
+| Biến | Giá trị |
+|------|---------|
+| `MONGO_URI` | `mongodb+srv://22050055_db_user:<password>@khang1402.e2kn7mt.mongodb.net/...` |
+| `MONGO_PASSWORD` | `khang123` |
+| `JWT_SECRET` | *(chuỗi ngẫu nhiên 32+ ký tự)* |
+| `AI_SERVICE_URL` | URL Ngrok đang chạy, VD: `https://xxxx.ngrok-free.app` |
+| `QR_PRIVATE_KEY` | Nội dung file `private.pem` (paste trực tiếp) |
+| `QR_PUBLIC_KEY` | Nội dung file `public.pem` (paste trực tiếp) |
+
+### 🌐 Web Dashboard — Cloudflare Pages
+- **URL:** `https://fc439656.tourism-dashboard.pages.dev`
+- **Root Directory:** `web-dashboard`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Biến môi trường:** `VITE_API_URL=https://check-ticket-1hyd.onrender.com`
+
+### 🤖 AI Service — Local + Ngrok
+```bash
+# 1. Chạy AI Service
+cd ai_services
+python -m face_verification.face_service
+# → http://localhost:8001
+
+# 2. Expose qua Ngrok
+./ngrok http 8001
+# Lấy URL dạng https://xxxx.ngrok-free.app → cập nhật AI_SERVICE_URL trên Render
+```
+
+> [!NOTE]
+> Header `ngrok-skip-browser-warning: 69420` đã được thêm vào tất cả request từ Backend đến AI Service để bypass trang cảnh báo của Ngrok free tier.
+
+---
+
+## Hướng dẫn chạy Local
 
 ### Yêu cầu
-
-- Docker & Docker Compose
-- Android Studio (Hedgehog trở lên)
+- Python >= 3.11
 - Node.js >= 18
-- Python >= 3.10
+- Android Studio Hedgehog+
+- Docker (tuỳ chọn)
 
-### Clone dự án
-
+### 1. Backend (FastAPI)
 ```bash
-git clone https://github.com/<your-username>/tourism-access-control.git
-cd tourism-access-control
+cd backend
+pip install -r requirements.txt
+
+# Tạo file .env
+MONGO_URI=mongodb+srv://22050055_db_user:khang123@khang1402.e2kn7mt.mongodb.net/?appName=khang1402&retryWrites=true&w=majority
+JWT_SECRET=dev-secret-key-change-in-prod
+AI_SERVICE_URL=http://localhost:8001
+QR_PRIVATE_KEY_PATH=../ai_services/qr_generator/keys/private.pem
+QR_PUBLIC_KEY_PATH=../ai_services/qr_generator/keys/public.pem
+
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Cấu hình môi trường
-
+### 2. AI Services
 ```bash
-cp .env.example .env
-# Chỉnh sửa .env theo môi trường của bạn
+cd ai_services
+pip install -r requirements.txt
+
+# Đảm bảo đã có models trong face_verification/models/buffalo_l/
+python -m face_verification.face_service
+# → http://0.0.0.0:8001
 ```
 
-Nội dung `.env.example`:
-
-```env
-# MongoDB
-MONGO_URI=mongodb://mongo:27017
-MONGO_DB=tourism_db
-
-# JWT
-JWT_SECRET_KEY=your-secret-key-here
-JWT_ALGORITHM=RS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-
-# AI Services
-FACE_THRESHOLD=0.6
-FACE_SERVICE_URL=http://ai-services:8001
-QR_PRIVATE_KEY_PATH=./ai-services/qr_generator/keys/private.pem
-QR_PUBLIC_KEY_PATH=./ai-services/qr_generator/keys/public.pem
-
-# App
-BACKEND_URL=http://localhost:8000
-```
-
-### Tạo RSA Key cho QR
-
+### 3. Web Dashboard
 ```bash
-cd ai-services/qr_generator/keys
-openssl genrsa -out private.pem 2048
-openssl rsa -in private.pem -pubout -out public.pem
+cd web-dashboard
+npm install
+# Tạo file .env.local
+echo "VITE_API_URL=http://localhost:8000" > .env.local
+npm run dev
+# → http://localhost:5173
 ```
 
----
+### 4. Android Gate App
+1. Mở Android Studio → **Open** → chọn thư mục `gate-app/`
+2. Trong `app/src/main/java/.../data/api/ApiClient.kt`, sửa `BASE_URL` thành IP máy tính local.
+3. Kết nối thiết bị Android thật (khuyến nghị — camera ảo Emulator không hỗ trợ Face ID).
+4. Nhấn **Run ▶**
 
-## Hướng dẫn chạy từng phần
-
-### 1. Chạy toàn bộ bằng Docker Compose
-
+### 5. Chạy toàn bộ bằng Docker Compose
 ```bash
 docker-compose up --build
 ```
 
-Các service sẽ chạy tại:
-
 | Service | URL |
 |---------|-----|
-| **Web Dashboard** | [http://localhost:3000](http://localhost:3000) |
-| **Backend API** | [http://localhost:8000](http://localhost:8000) |
-| **API Docs (Swagger)** | [http://localhost:8000/docs](http://localhost:8000/docs) |
-| **AI Services** | [http://localhost:8001](http://localhost:8001) |
-| **MongoDB (Local)** | `localhost:27017` |
-
-> [!NOTE]
-> Khi chạy bằng Docker Compose, dữ liệu được lưu tại thư mục `./mongodb_data`.
-
----
-
-### 2. Backend (FastAPI) — chạy độc lập
-
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-uvicorn app.main:app --host 0.0.0.0 --port 8000
----
-
-### 3. AI Services — chạy độc lập
-
-```bash
-cd ai_services
-pip install -r face_verification/requirements.txt
-python -m face_verification.face_service
-```
-
----
-
-### 4. Web Dashboard — chạy độc lập
-
-```bash
-cd web-dashboard
-npm install
-npm run dev
-# Chạy tại http://localhost:3000
-```
-
----
-
-### 5. Android Gate App
-
-1. Mở Android Studio → **Open** → chọn thư mục `gate-app/`
-2. Sửa `ApiClient.kt`, đặt `BASE_URL = "http://<your-ip>:8000/"`
-3. Kết nối thiết bị Android hoặc dùng Emulator
-4. Nhấn **Run ▶**
+| Backend API | http://localhost:8000 |
+| Swagger Docs | http://localhost:8000/docs |
+| Web Dashboard | http://localhost:5173 |
+| AI Service | http://localhost:8001 |
 
 ---
 
 ## API Reference
 
 ### Auth
-
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | `/api/auth/login` | Đăng nhập, trả về access_token |
-| POST | `/api/auth/refresh` | Làm mới token |
+| POST | `/api/auth/login` | Đăng nhập Staff (username/password) → JWT |
+| POST | `/api/auth/refresh` | Làm mới access token |
+| POST | `/api/customer/login` | Đăng nhập Khách hàng (email/password) |
+| POST | `/api/customer/register` | Đăng ký tài khoản khách hàng |
 
 ### Tickets
-
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | `/api/tickets/issue` | Phát hành vé điện tử QR |
-| POST | `/api/tickets/validate` | Xác thực vé |
-| PUT | `/api/tickets/{id}/revoke` | Huỷ vé |
+| POST | `/api/tickets/issue` | Staff phát hành vé tại quầy |
 | POST | `/api/customer/buy-ticket` | Khách tự mua vé online |
+| GET | `/api/customer/tickets` | Danh sách vé của khách đang đăng nhập |
+| POST | `/api/customer/tickets/{id}/review` | Khách đánh giá vé đã sử dụng (1-5 ★) |
 
-### Customers (Admin)
-
+### Face ID
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| GET | `/api/customer/all` | Danh sách toàn bộ khách hàng |
-| PATCH | `/api/customer/{id}` | Cập nhật thông tin khách (SĐT, CCCD) |
-| DELETE | `/api/customer/{id}` | Xóa tài khoản khách |
-
-### Reviews & Presence
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | `/api/customer/tickets/{id}/review` | Khách hàng đánh giá vé đã sử dụng |
-| GET | `/api/reports/reviews` | Danh sách đánh giá (Dashboard) |
-| GET | `/api/reports/review-stats` | Thống kê sao trung bình |
-| WS | `/ws/presence?token=...` | Tracking trạng thái Online của Staff |
+| POST | `/api/face/enroll` | Đăng ký khuôn mặt (3–5 mẫu) cho vé |
 
 ### Check-in / Out
-
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | `/api/checkin` | Check-in/out (tất cả kênh) |
+| POST | `/api/checkin` | Check-in/out thống nhất (tất cả kênh) |
 
-Body mẫu:
 ```json
+// Body mẫu kênh QR + Face
 {
-  "channel": "qr",
+  "channel": "qr_face",
   "direction": "IN",
   "gate_id": "gate_01",
   "qr_payload": "eyJ...",
-  "face_image_b64": null
+  "face_image_b64": "data:image/jpeg;base64,..."
 }
 ```
 
-### Reports
+### Quản lý (Admin/Manager)
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| GET | `/api/customer/all` | Danh sách toàn bộ khách hàng |
+| PATCH | `/api/customer/{id}` | Cập nhật thông tin khách |
+| DELETE | `/api/customer/{id}` | Xoá tài khoản khách |
+| GET | `/api/gates` | Danh sách cổng |
 
+### Reports & Dashboard
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
 | GET | `/api/reports/revenue` | Doanh thu theo ngày / loại vé |
 | GET | `/api/reports/visitors` | Lượt vào/ra theo cổng / kênh |
-| GET | `/api/reports/export` | Xuất CSV |
+| GET | `/api/reports/reviews` | Danh sách đánh giá |
+| GET | `/api/reports/review-stats` | Thống kê sao trung bình |
+| GET | `/api/reports/export` | Xuất báo cáo CSV |
+| WS  | `/ws/presence?token=...` | Tracking trạng thái Online của Staff |
 
 ---
 
 ## Tài khoản demo
 
-### 🌐 Web Dashboard & App (Nhân viên)
-**Link truy cập:** [https://fc439656.tourism-dashboard.pages.dev/login](https://fc439656.tourism-dashboard.pages.dev/login)
+### 🌐 Web Dashboard
+**URL:** [https://fc439656.tourism-dashboard.pages.dev](https://fc439656.tourism-dashboard.pages.dev)
 
 | Quyền | Tài khoản | Mật khẩu |
 |-------|-----------|----------|
 | **Admin** | `admin` | `admin123` |
 | **Quản lý (Manager)** | `manager1` | `manager123` |
 | **Vận hành (Operator)** | `operator1` | `operator123` |
-| **Vận hành (Operator)** | `operator2` | `operator123` |
 | **Bán vé (Cashier)** | `cashier1` | `cashier123` |
 
-### 📱 App (Khách hàng tự mua vé)
-| Loại | Email | Mật khẩu |
-|------|-------|----------|
-| **Khách hàng** | `22050055@student.bdu.edu.vn` | `123456` |
-
----
-
-## Triển khai (Deployment)
-
-### ⚙️ Backend (Render)
-Dự án được cấu hình để deploy tự động lên **Render** thông qua Dockerfile.
-- Cần cấu hình biến môi trường: `MONGO_URI`, `AI_SERVICE_URL`, `CORS_ORIGINS`.
-
-### 🌐 Web Dashboard (Cloudflare Pages)
-- **Root Directory**: `web-dashboard`
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Environment Variables**: Thêm `VITE_API_URL` trỏ về Backend Render.
+### 📱 App Khách hàng
+| Email | Mật khẩu |
+|-------|----------|
+| `22050055@student.bdu.edu.vn` | `123456` |
 
 ---
 
 ## Ghi chú pháp lý
 
-> ⚠️ Hệ thống tuân thủ các nguyên tắc bảo vệ dữ liệu cá nhân:
+> ⚠️ Hệ thống tuân thủ nguyên tắc tối thiểu dữ liệu và bảo vệ quyền riêng tư:
 
-- **CCCD / ID:** Chỉ lưu hash SHA-256, không lưu số CCCD gốc, không lưu ảnh CCCD.
-- **Khuôn mặt:** Chỉ lưu vector embedding, không lưu ảnh gốc. Triển khai theo cơ chế **opt-in** từ khách. **AI Pose Detection** tích hợp trên App đảm bảo ảnh chụp đủ 3 góc (Thẳng, Trái, Phải) để tăng độ chính xác mà vẫn bảo mật.
-- **Minh bạch & Trách nhiệm:** Mọi vé phát hành đều được gắn với định danh nhân viên `issued_by`. Hệ thống **Staff Presence** chỉ giám sát nhân viên đang trực, không theo dõi vị trí hay trạng thái của khách hàng để đảm bảo quyền riêng tư.
+- **CCCD / ID:** Chỉ lưu hash SHA-256, **không** lưu số CCCD gốc, **không** lưu ảnh CCCD.
+- **Khuôn mặt:** Chỉ lưu vector embedding 512-d, **không** lưu ảnh gốc. Triển khai theo cơ chế **opt-in** từ khách hàng. Face chỉ thực hiện xác thực **1:1 (Verification)**, không nhận diện đại trà **1:N**.
+- **Audit Trail:** Mọi request đều bị ghi log đầy đủ (user, IP, endpoint, status code, response time) phục vụ kiểm tra trách nhiệm.
+- **Mục đích:** Hệ thống phục vụ vận hành và báo cáo của khu du lịch, không sử dụng cho mục đích giám sát hay xâm phạm quyền riêng tư.
 
 ---
 
@@ -478,13 +389,12 @@ Dự án được cấu hình để deploy tự động lên **Render** thông q
 
 | Họ tên | MSSV | Vai trò |
 |--------|------|---------|
-| Mạnh Khang | ... | Phát triển toàn hệ thống |
+| Trần Mạnh Khang | 22050055 | Phát triển toàn hệ thống |
 
-**Giảng viên hướng dẫn:** ...
+**Giảng viên hướng dẫn:** *(Thêm tên GV)*
 
-**Trường:** ...
+**Trường:** Đại học Bình Dương — Khoa Công nghệ Thông tin
 
 ---
 
-*Đồ án tốt nghiệp — Hệ thống kiểm soát ra/vào khu du lịch đa kênh*
- 
+*Đồ án Tốt nghiệp — Hệ thống kiểm soát ra/vào khu du lịch đa kênh*
