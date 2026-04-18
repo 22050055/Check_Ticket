@@ -22,10 +22,18 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function AgeGroupBarChart({ data = [] }) {
-  // Map channel data to age groups if possible
+  // Map dữ liệu thực tế từ API sang các nhóm hiển thị
   const chartData = AGE_DATA.map(ag => {
-    const match = data.find(d => d.channel?.toLowerCase().includes(ag.group.split(' ')[0].toLowerCase()))
-    return { ...ag, count: match?.count || Math.floor(Math.random() * 80 + 10) }
+    // Tìm kiếm trong mảng data trả về (với so sánh không phân biệt hoa thường)
+    const match = data.find(d => {
+      const g = (d.group || "").toLowerCase()
+      if (ag.group.toLowerCase().includes('adult') && g.includes('adult')) return true
+      if (ag.group.toLowerCase().includes('child') && g.includes('child')) return true
+      if (ag.group.toLowerCase().includes('student') && g.includes('student')) return true
+      if (ag.group.toLowerCase().includes('group') && g.includes('group')) return true
+      return false
+    })
+    return { ...ag, count: match?.count || 0 }
   })
 
   return (

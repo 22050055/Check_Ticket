@@ -38,7 +38,7 @@ export default function AgeGroupAnalysis() {
 
       <Panel style={{ marginBottom:20 }}>
         <Label>PHÂN TÍCH NHÓM TUỔI (THEO LOẠI VÉ)</Label>
-        <AgeGroupBarChart data={data?.by_channel || []} />
+        <AgeGroupBarChart data={data?.age_distribution || []} />
       </Panel>
 
       <Panel>

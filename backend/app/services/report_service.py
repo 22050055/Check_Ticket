@@ -165,14 +165,14 @@ class ReportService:
         by_hour_rows = await self._db["gate_events"].aggregate(by_hour_pipe).to_list(24)
         by_hour = [{"hour": r["_id"], "count": r["count"]} for r in by_hour_rows]
 
-        # Theo kênh xác thực
-        by_channel_pipe = [
+        # Theo loại vé (Nhóm tuổi)
+        by_type_pipe = [
             {"$match": match},
-            {"$group": {"_id": "$channel", "count": {"$sum": 1}}},
+            {"$group": {"_id": "$ticket_type", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}},
         ]
-        by_channel_rows = await self._db["gate_events"].aggregate(by_channel_pipe).to_list(10)
-        by_channel = [{"channel": r["_id"], "count": r["count"]} for r in by_channel_rows]
+        by_type_rows = await self._db["gate_events"].aggregate(by_type_pipe).to_list(10)
+        age_distribution = [{"group": r["_id"], "count": r["count"]} for r in by_type_rows]
 
         return {
             "total_checkins":  total_checkins,
@@ -181,6 +181,7 @@ class ReportService:
             "by_gate":         by_gate,
             "by_hour":         by_hour,
             "by_channel":      by_channel,
+            "age_distribution": age_distribution,
         }
 
     # ── Error rates ───────────────────────────────────────────
