@@ -59,7 +59,7 @@ class AiService:
         )
 
         self.model = genai.GenerativeModel(
-            model_name='gemini-flash-latest',
+            model_name='gemini-1.5-flash',
             tools=self.tools,
             system_instruction=instruction,
             generation_config=self.generation_config
@@ -166,11 +166,16 @@ class AiService:
         Xử lý tin nhắn từ người dùng, thực hiện function calling nếu cần.
         Tối ưu Token bằng cách giới hạn lịch sử hội thoại.
         """
-        # Tối ưu: Chỉ giữ lại 12 tin nhắn gần nhất (khoảng 6 cặp hội thoại)
-        if history and len(history) > 12:
-            history = history[-12:]
-            
-        chat = self.model.start_chat(history=history or [])
+        # Chuyển đổi lịch sử sang định dạng Gemini (user/model)
+        formatted_history = []
+        if history:
+            for msg in history:
+                role = "user" if msg.get("role") == "user" else "model"
+                content = msg.get("content") or ""
+                if content:
+                    formatted_history.append({"role": role, "parts": [content]})
+
+        chat = self.model.start_chat(history=formatted_history)
         
         try:
             # Gửi tin nhắn đầu tiên
