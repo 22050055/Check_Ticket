@@ -35,7 +35,7 @@ const AiChatWindow = ({ onClose }) => {
       }));
 
       const response = await aiApi.chat(userMsg, history);
-      setMessages(prev => [...prev, { role: 'assistant', content: response.data.reply }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: response.reply }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: '❌ Có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra API Key hoặc kết nối mạng.' }]);
     } finally {
