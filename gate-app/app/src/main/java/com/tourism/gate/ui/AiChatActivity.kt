@@ -23,10 +23,13 @@ class AiChatActivity : AppCompatActivity() {
 
     private val messages = mutableListOf<ChatMessage>()
     private lateinit var adapter: ChatAdapter
+    private lateinit var markwon: io.noties.markwon.Markwon
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ai_chat)
+
+        markwon = io.noties.markwon.Markwon.create(this)
 
         rvChat = findViewById(R.id.rv_chat)
         etMessage = findViewById(R.id.et_message)
@@ -110,7 +113,13 @@ class AiChatActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            (holder as ChatViewHolder).tvContent.text = list[position].content
+            val msg = list[position]
+            val tv = (holder as ChatViewHolder).tvContent
+            if (msg.role == "assistant") {
+                markwon.setMarkdown(tv, msg.content)
+            } else {
+                tv.text = msg.content
+            }
         }
 
         override fun getItemCount() = list.size
