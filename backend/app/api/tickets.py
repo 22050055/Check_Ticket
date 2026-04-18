@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -300,7 +300,8 @@ async def _auto_cleanup_expired_tickets(db: AsyncIOMotorDatabase):
     Tìm và tự động chuyển trạng thái vé hết hạn.
     Ghi log lý do (quên checkout vs chưa dùng).
     """
-    now = datetime.now(timezone.utc)
+    vn_tz = timezone(timedelta(hours=7))
+    now = datetime.now(vn_tz)
     
     # Tìm vé chưa hết hạn nhưng đã quá valid_until
     # Trạng thái cần check: active (chưa dùng), inside (đang ở trong), used (đã dùng nhưng có thể chưa check out hết các gate)

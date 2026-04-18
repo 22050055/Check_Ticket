@@ -1,6 +1,6 @@
 import uuid
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -180,22 +180,26 @@ async def buy_ticket(
     
     # Hiệu lực trong ngày
     from datetime import time
+    vn_tz = timezone(timedelta(hours=7)) # Múi giờ Việt Nam
+    
     if req.valid_date:
         try:
             target_date = datetime.strptime(req.valid_date, "%Y-%m-%d").date()
-            # Giờ mở cửa 07:00, đóng cửa 22:00
-            valid_from = datetime.combine(target_date, time(7, 0, 0)).replace(tzinfo=timezone.utc)
-            valid_until = datetime.combine(target_date, time(22, 0, 0)).replace(tzinfo=timezone.utc)
+            # Giờ mở cửa 07:00, đóng cửa 22:00 (Giờ VN)
+            valid_from = datetime.combine(target_date, time(7, 0, 0)).replace(tzinfo=vn_tz)
+            valid_until = datetime.combine(target_date, time(22, 0, 0)).replace(tzinfo=vn_tz)
             
             # Nếu là hôm nay và đã qua 7h, thì lấy giờ hiện tại làm valid_from
             if target_date == now.date() and now > valid_from:
                 valid_from = now
         except ValueError:
-            valid_from = datetime.combine(now.date(), time(7, 0, 0)).replace(tzinfo=timezone.utc)
-            valid_until = datetime.combine(now.date(), time(22, 0, 0)).replace(tzinfo=timezone.utc)
+            valid_from = datetime.combine(now.date(), time(7, 0, 0)).replace(tzinfo=vn_tz)
+            valid_until = datetime.combine(now.date(), time(22, 0, 0)).replace(tzinfo=vn_tz)
     else:
-        valid_from = now if now.hour >= 7 else datetime.combine(now.date(), time(7, 0, 0)).replace(tzinfo=timezone.utc)
-        valid_until = datetime.combine(now.date(), time(22, 0, 0)).replace(tzinfo=timezone.utc)
+        # Mặc định lấy ngày hôm nay
+        start_7h = datetime.combine(now.date(), time(7, 0, 0)).replace(tzinfo=vn_tz)
+        valid_from = now if now > start_7h else start_7h
+        valid_until = datetime.combine(now.date(), time(22, 0, 0)).replace(tzinfo=vn_tz)
     customer_id = str(customer["_id"])
     
     # 0. Nới lỏng: Cho phép khách mua online ngay cả khi chưa cập nhật SĐT/CCCD.
