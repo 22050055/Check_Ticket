@@ -40,38 +40,71 @@ class AiService:
         # System Instruction thay đổi tùy theo vai trò
         role_desc = f"Bạn đang hỗ trợ người dùng có Email: {user_email} và Vai trò: {user_role}."
         instruction = (
-            "Bạn là trợ lý ảo AI của Hệ thống Tourism Gate. "
+            "BẢN SẮC: Bạn là 'Sên', nhân viên ảo chính thức của hệ thống Tourism Gate. "
+            "BỐI CẢNH DỰ ÁN: Tourism Gate là hệ thống quản lý du lịch công nghệ cao, sử dụng QR Code và nhận diện khuôn mặt AI (FaceID) để kiểm soát vào ra. "
             f"{role_desc} "
-            "QUY TẮC BẢO MẬT: "
-            "1. Nếu người dùng là 'customer', bạn CHỈ được gọi hàm get_my_tickets, get_park_info và check_ticket_status (nếu là vé của họ). "
-            "KHÔNG ĐƯỢC trả lời về doanh thu, tổng số khách hoặc sức khỏe hệ thống cho khách hàng. "
-            "2. Nếu người dùng là nhân viên (admin/manager/operator), bạn có quyền truy cập đầy đủ. "
-            "3. Luôn trả lời bằng Tiếng Việt, thân thiện và chuyên nghiệp. Dùng bảng biểu khi cần."
+            "QUY TẮC PHỤC VỤ: "
+            "1. Luôn niềm nở, lịch sự với khách hàng như một chuyên viên ngành du lịch. "
+            "2. Khi khách hỏi về cách dùng, hãy nhấn mạnh ưu điểm của FaceID (không cần điện thoại, không cần chạm). "
+            "3. BẢO MẬT: Khách ('customer') CHỈ được xem vé của mình thông qua get_my_tickets. Tuyệt đối không tiết lộ doanh thu/số liệu hệ thống cho khách. "
+            "4. TRÌNH BÀY: Dùng Markdown chuyên nghiệp, biểu đồ bảng biểu khi báo cáo doanh thu cho quản lý. "
+            "5. NGÔN NGỮ: Tiếng Việt chuẩn mực."
+        )
+
+        # Cấu hình tham số sinh văn bản dể tối ưu Token
+        self.generation_config = genai.GenerationConfig(
+            temperature=0.7,
+            top_p=0.9,
+            max_output_tokens=800,  # Giới hạn độ dài phản hồi để tiết kiệm token
         )
 
         self.model = genai.GenerativeModel(
             model_name='gemini-1.5-flash',
             tools=self.tools,
-            system_instruction=instruction
+            system_instruction=instruction,
+            generation_config=self.generation_config
         )
 
     # ── Tools for Gemini ────────────────────────────────────────
 
     async def get_dashboard_summary(self) -> Dict[str, Any]:
         """Lấy thông số tổng quan của dashboard hôm nay (doanh thu, lượt khách, tỷ lệ lỗi)."""
-        return await self.report_service.get_realtime_stats()
+        stats = await self.report_service.get_realtime_stats()
+        # Tối ưu Token: Loại bỏ danh sách sự kiện chi tiết và trạng thái cổng chi tiết
+        # AI chỉ cần các con số tổng hợp để trả lời nhanh.
+        return {
+            "current_inside": stats.get("current_inside"),
+            "checkins_today": stats.get("checkins_today"),
+            "revenue_today": stats.get("revenue_today"),
+            "error_rate_today": stats.get("error_rate_today")
+        }
 
     async def get_revenue_report(self, days: int = 7) -> Dict[str, Any]:
         """Lấy báo cáo doanh thu trong số ngày gần đây (mặc định 7 ngày)."""
         now = datetime.now(timezone.utc)
         d_from = now - timedelta(days=days)
-        return await self.report_service.get_revenue(d_from, now)
+        data = await self.report_service.get_revenue(d_from, now)
+        # Tối ưu Token: Loại bỏ danh sách 'by_date' quá dài
+        return {
+            "total_revenue": data.get("total_revenue"),
+            "total_tickets": data.get("total_tickets"),
+            "by_type": data.get("by_type"),
+            "period_days": days
+        }
 
     async def get_visitor_stats(self, hours: int = 24) -> Dict[str, Any]:
         """Lấy thống kê lượt khách vào/ra trong số giờ gần đây (mặc định 24h)."""
         now = datetime.now(timezone.utc)
         d_from = now - timedelta(hours=hours)
-        return await self.report_service.get_visitors(d_from, now)
+        data = await self.report_service.get_visitors(d_from, now)
+        # Tối ưu Token: Chỉ giữ lại các chỉ số quan trọng nhất
+        return {
+            "total_checkins": data.get("total_checkins"),
+            "total_checkouts": data.get("total_checkouts"),
+            "current_inside": data.get("current_inside"),
+            "by_channel": data.get("by_channel"),
+            "period_hours": hours
+        }
 
     async def check_ticket_status(self, ticket_id: str) -> Dict[str, Any]:
         """Kiểm tra chi tiết trạng thái của một mã vé cụ thể (active, expired, used, revoked)."""
@@ -131,7 +164,12 @@ class AiService:
     async def chat(self, user_message: str, history: List[Dict[str, str]] = None) -> str:
         """
         Xử lý tin nhắn từ người dùng, thực hiện function calling nếu cần.
+        Tối ưu Token bằng cách giới hạn lịch sử hội thoại.
         """
+        # Tối ưu: Chỉ giữ lại 12 tin nhắn gần nhất (khoảng 6 cặp hội thoại)
+        if history and len(history) > 12:
+            history = history[-12:]
+            
         chat = self.model.start_chat(history=history or [])
         
         try:

@@ -63,7 +63,8 @@ class Settings(BaseSettings):
     NONCE_TTL_HOURS: int = 24
 
     # AI Gemini (RAG / Assistant)
-    GOOGLE_API_KEY: str = "YOUR_GEMINI_API_KEY_HERE"
+    # LƯU Ý: Trên Render, hãy thêm biến môi trường GOOGLE_API_KEY vào Dashboard
+    GOOGLE_API_KEY: str = "SET_THIS_IN_RENDER_ENV_OR_DOTENV"
 
     # Helpers
     @property
