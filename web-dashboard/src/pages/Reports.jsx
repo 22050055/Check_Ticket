@@ -33,7 +33,7 @@ export default function Reports() {
         date_from: range[0].toISOString(),
         date_to: range[1].toISOString(),
       })
-      const url = URL.createObjectURL(new Blob([r.data]))
+      const url = URL.createObjectURL(new Blob(['\uFEFF', r.data], { type: 'text/csv;charset=utf-8' }))
       const a = document.createElement('a')
       a.href = url
       a.download = `gate_events_${range[0].format('YYYYMMDD')}_${range[1].format('YYYYMMDD')}.csv`
