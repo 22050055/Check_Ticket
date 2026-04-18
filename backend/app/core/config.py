@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # AI Services
     AI_SERVICE_URL: str    = "http://localhost:8001"
-    AI_SERVICE_TIMEOUT: float = 10.0    # giây
+    AI_SERVICE_TIMEOUT: float = 25.0    # Tăng lên 25s cho Ngrok
 
     # QR RSA Keys
     QR_PRIVATE_KEY_PATH: str = "../ai_services/qr_generator/keys/private.pem"

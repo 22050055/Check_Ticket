@@ -300,15 +300,14 @@ class ChannelAdapter:
             resp.raise_for_status()
             data = resp.json()
         except httpx.HTTPError as e:
-            logger.error("AI Services /verify lỗi: %s → fallback QR-only", e)
-            # AI down → fallback QR-only, tiêu thụ nonce
-            await self._mark_nonce(qr_result._jti, ticket_id, direction)
+            logger.error("AI Services /verify lỗi: %s → Hard Fail (No fallback)", e)
+            # AI down/timeout → BÁO LỖI, không cho qua tự động, không tiêu thụ nonce
             return CheckinResult(
-                success=True,
+                success=False,
                 ticket_id=ticket_id,
                 ticket_type=qr_result.ticket_type,
                 customer_name=qr_result.customer_name,
-                message="QR hợp lệ (face service không khả dụng, bỏ qua).",
+                message="Lỗi kết nối dịch vụ khuôn mặt. Vui lòng thử lại sau.",
             )
 
         is_match   = data.get("is_same_person", False)
