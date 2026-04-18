@@ -12,6 +12,7 @@ import AgeGroupAnalysis from './pages/AgeGroupAnalysis'
 import UserManagement from './pages/UserManagement'
 import CustomerManagement from './pages/CustomerManagement'
 import Reviews        from './pages/Reviews'
+import AuditLogs      from './pages/AuditLogs'
 import AppLayout      from './components/AppLayout'
 import useAuthStore   from './store/authStore'
 
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="visitors"       element={<Visitors />} />
           <Route path="tickets"        element={<Tickets />} />
           <Route path="reports"        element={<Reports />} />
+          <Route path="audit-logs"     element={<AuditLogs />} />
           <Route path="age-groups"     element={<AgeGroupAnalysis />} />
           <Route path="users"          element={<UserManagement />} />
           <Route path="customers"      element={<CustomerManagement />} />

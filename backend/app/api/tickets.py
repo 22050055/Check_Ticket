@@ -222,10 +222,14 @@ async def issue_ticket(
     await db["transactions"].insert_one({
         "_id":            str(uuid.uuid4()),
         "ticket_id":      ticket_id,
+        "action":         "ISSUE",
         "ticket_type":    req.ticket_type,
         "amount":         req.price,
         "payment_method": req.payment_method,
-        "created_at":     now,
+        "actor_id":       str(current_user["_id"]),
+        "actor_role":     "staff",
+        "timestamp":      now,
+        "created_at":     now, # Tương thích ngược
     })
 
     # 5. QR
@@ -275,7 +279,8 @@ async def enroll_face(
             resp.raise_for_status()
             data = resp.json()
     except httpx.HTTPError as e:
-        raise HTTPException(503, f"AI Services không khả dụng: {e}")
+        logger.error(f"AI Services error during operator enroll: {e}")
+        raise HTTPException(503, "Hệ thống xác thực khuôn mặt đang gặp sự cố. Vui lòng thử lại sau.")
 
     await db["identities"].update_one(
         {"ticket_id": ticket_id},

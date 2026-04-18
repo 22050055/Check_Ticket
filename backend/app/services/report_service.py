@@ -32,31 +32,50 @@ class ReportService:
         """
         Doanh thu theo ngày và loại vé.
         Dùng cho RevenueLineChart và bảng tổng hợp.
-
-        Tối ưu: transactions đã lưu ticket_type sẵn (không cần $lookup).
         """
-        match = {"created_at": {"$gte": date_from, "$lte": date_to}}
+        vn_tz = timezone(timedelta(hours=7))
+        match = {"timestamp": {"$gte": date_from, "$lte": date_to}}
 
-        # Tổng doanh thu + số vé
+        # Tổng doanh thu (Sum amount) + Tổng số vé thực tế (Count ISSUE or legacy positive amount)
         total_pipe = [
-            {"$match": match},
+            {"$match": {
+                "$or": [
+                    {"timestamp": {"$gte": date_from, "$lte": date_to}},
+                    {"created_at": {"$gte": date_from, "$lte": date_to}}
+                ]
+            }},
             {"$group": {
                 "_id":   None,
                 "total": {"$sum": "$amount"},
-                "count": {"$sum": 1},
+                "count": {"$sum": {"$cond": [
+                    {"$or": [
+                        {"$eq": ["$action", "ISSUE"]},
+                        {"$and": [{"$not": ["$action"]}, {"$gt": ["$amount", 0]}]}
+                    ]}, 1, 0
+                ]}},
             }},
         ]
         total_rows    = await self._db["transactions"].aggregate(total_pipe).to_list(1)
         total_revenue = total_rows[0]["total"] if total_rows else 0.0
         total_tickets = total_rows[0]["count"] if total_rows else 0
 
-        # Doanh thu theo loại vé — dùng ticket_type đã copy vào transactions
+        # Doanh thu theo loại vé
         by_type_pipe = [
-            {"$match": match},
+            {"$match": {
+                "$or": [
+                    {"timestamp": {"$gte": date_from, "$lte": date_to}},
+                    {"created_at": {"$gte": date_from, "$lte": date_to}}
+                ]
+            }},
             {"$group": {
                 "_id":     "$ticket_type",
                 "revenue": {"$sum": "$amount"},
-                "count":   {"$sum": 1},
+                "count":   {"$sum": {"$cond": [
+                    {"$or": [
+                        {"$eq": ["$action", "ISSUE"]},
+                        {"$and": [{"$not": ["$action"]}, {"$gt": ["$amount", 0]}]}
+                    ]}, 1, 0
+                ]}},
             }},
             {"$sort": {"revenue": -1}},
         ]
@@ -68,11 +87,25 @@ class ReportService:
 
         # Doanh thu theo ngày
         by_date_pipe = [
-            {"$match": match},
+            {"$match": {
+                "$or": [
+                    {"timestamp": {"$gte": date_from, "$lte": date_to}},
+                    {"created_at": {"$gte": date_from, "$lte": date_to}}
+                ]
+            }},
             {"$group": {
-                "_id":     {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}},
+                "_id":     {"$dateToString": {
+                    "format": "%Y-%m-%d", 
+                    "date": {"$ifNull": ["$timestamp", "$created_at"]},
+                    "timezone": "+07:00"
+                }},
                 "revenue": {"$sum": "$amount"},
-                "count":   {"$sum": 1},
+                "count":   {"$sum": {"$cond": [
+                    {"$or": [
+                        {"$eq": ["$action", "ISSUE"]},
+                        {"$and": [{"$not": ["$action"]}, {"$gt": ["$amount", 0]}]}
+                    ]}, 1, 0
+                ]}},
             }},
             {"$sort": {"_id": 1}},
         ]
@@ -173,6 +206,15 @@ class ReportService:
         ]
         by_type_rows = await self._db["gate_events"].aggregate(by_type_pipe).to_list(10)
         age_distribution = [{"group": r["_id"], "count": r["count"]} for r in by_type_rows]
+
+        # Theo kênh (Channel distribution)
+        by_channel_pipe = [
+            {"$match": match},
+            {"$group": {"_id": "$channel", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+        ]
+        by_channel_rows = await self._db["gate_events"].aggregate(by_channel_pipe).to_list(10)
+        by_channel = {r["_id"]: r["count"] for r in by_channel_rows}
 
         return {
             "total_checkins":  total_checkins,

@@ -75,6 +75,7 @@ export const reportApi = {
   errors:     (params) => api.get('/reports/errors',               { params }),
   realtime:   ()       => api.get('/reports/realtime'),
   exportCsv:  (params) => api.get('/reports/export/gate-events',   { params, responseType: 'blob' }),
+  auditLogs:  (params) => api.get('/reports/audit-logs',           { params }),
 }
 
 export default api

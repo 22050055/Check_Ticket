@@ -14,6 +14,7 @@ const MENU = [
   { path: '/visitors', icon: '◉', label: 'Lượt khách',       roles: ['admin','manager','operator'] },
   { path: '/tickets',  icon: '◇', label: 'Quản lý vé',       roles: ['admin','manager'] },
   { path: '/reports',  icon: '◫', label: 'Báo cáo / Export', roles: ['admin','manager'] },
+  { path: '/audit-logs', icon: '📝', label: 'Nhật ký hệ thống',  roles: ['admin'] },
   { path: '/users',    icon: '◎', label: 'Nhân viên',        roles: ['admin','manager'] },
   { path: '/customers', icon: '👥', label: 'Khách hàng',      roles: ['admin','manager'] },
 ]

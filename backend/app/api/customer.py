@@ -143,7 +143,8 @@ async def enroll_my_face(
             resp.raise_for_status()
             data = resp.json()
     except httpx.HTTPError as e:
-        raise HTTPException(503, f"AI Services không khả dụng: {e}")
+        logger.error(f"AI Services error during customer enroll: {e}")
+        raise HTTPException(503, f"Hệ thống xác thực khuôn mặt đang gặp sự cố. Vui lòng thử lại sau.")
 
     await db["identities"].update_one(
         {"ticket_id": ticket_id},
@@ -291,8 +292,18 @@ async def cancel_my_ticket(
     if ticket.get("status") != "active":
         raise HTTPException(400, f"Vé đang ở trạng thái '{ticket.get('status')}' không thể hủy.")
     
-    now = datetime.now(timezone.utc)
-    valid_until = ticket.get("valid_until", now).replace(tzinfo=timezone.utc)
+    vn_tz = timezone(timedelta(hours=7))
+    now = datetime.now(vn_tz)
+    
+    # Đảm bảo valid_until có timezone để so sánh chính xác
+    valid_until = ticket.get("valid_until")
+    if not valid_until:
+        raise HTTPException(500, "Dữ liệu vé không hợp lệ (thiếu thời hạn).")
+        
+    # Motor returns aware datetime usually, but we ensure it's comparable
+    if valid_until.tzinfo is None:
+        valid_until = valid_until.replace(tzinfo=timezone.utc)
+        
     if valid_until < now:
         raise HTTPException(400, "Vé đã hết hạn, không thể hủy.")
         
