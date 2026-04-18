@@ -27,6 +27,9 @@
     <color name="role_operator_start">#10B981</color>
     <color name="role_operator_end">#34D399</color>
 
+    <!-- UI Backgrounds -->
+    <color name="bg_base">#F5F7FA</color>
+
     <!-- Launcher -->
     <color name="ic_launcher_background">#FFFFFF</color>
 </resources>
