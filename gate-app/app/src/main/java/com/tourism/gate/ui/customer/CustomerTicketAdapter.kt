@@ -73,7 +73,7 @@ class CustomerTicketAdapter(
             }
             "expired" -> {
                 val dateStr = formatDate(ticket.validUntil)
-                holder.tvStatus.text = "Hết hạn ngày $dateStr"
+                holder.tvStatus.text = "Hết hạn lúc $dateStr"
                 holder.tvStatus.setBackgroundResource(R.drawable.bg_badge_revoked)
             }
             else -> holder.tvStatus.text = ticket.status
@@ -132,9 +132,10 @@ class CustomerTicketAdapter(
             val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
             isoFormat.timeZone = TimeZone.getTimeZone("UTC")
             val date = isoFormat.parse(iso) ?: return iso.take(10)
-            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date)
+            // Hiển thị dạng "HH:mm dd/MM" (Ví dụ: 07:00 20/04)
+            SimpleDateFormat("HH:mm dd/MM", Locale.getDefault()).format(date)
         } catch (e: Exception) {
-            iso.take(10)  // fallback: lấy 10 ký tự đầu "yyyy-MM-dd"
+            iso.take(10)
         }
     }
 }

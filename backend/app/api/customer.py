@@ -182,17 +182,19 @@ async def buy_ticket(
     if req.valid_date:
         try:
             target_date = datetime.strptime(req.valid_date, "%Y-%m-%d").date()
-            if target_date == now.date():
+            # Giờ mở cửa 07:00, đóng cửa 22:00
+            valid_from = datetime.combine(target_date, time(7, 0, 0)).replace(tzinfo=timezone.utc)
+            valid_until = datetime.combine(target_date, time(22, 0, 0)).replace(tzinfo=timezone.utc)
+            
+            # Nếu là hôm nay và đã qua 7h, thì lấy giờ hiện tại làm valid_from
+            if target_date == now.date() and now > valid_from:
                 valid_from = now
-            else:
-                valid_from = datetime.combine(target_date, time(0, 0, 0)).replace(tzinfo=timezone.utc)
-            valid_until = datetime.combine(target_date, time(23, 59, 59)).replace(tzinfo=timezone.utc)
         except ValueError:
-            valid_from = now
-            valid_until = datetime.combine(now.date(), time(23, 59, 59)).replace(tzinfo=timezone.utc)
+            valid_from = datetime.combine(now.date(), time(7, 0, 0)).replace(tzinfo=timezone.utc)
+            valid_until = datetime.combine(now.date(), time(22, 0, 0)).replace(tzinfo=timezone.utc)
     else:
-        valid_from = now
-        valid_until = datetime.combine(now.date(), time(23, 59, 59)).replace(tzinfo=timezone.utc)
+        valid_from = now if now.hour >= 7 else datetime.combine(now.date(), time(7, 0, 0)).replace(tzinfo=timezone.utc)
+        valid_until = datetime.combine(now.date(), time(22, 0, 0)).replace(tzinfo=timezone.utc)
     customer_id = str(customer["_id"])
     
     # 0. Nới lỏng: Cho phép khách mua online ngay cả khi chưa cập nhật SĐT/CCCD.
