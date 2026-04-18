@@ -122,6 +122,7 @@ class ChannelAdapter:
             self._http = httpx.AsyncClient(
                 base_url=settings.AI_SERVICE_URL,
                 timeout=settings.AI_SERVICE_TIMEOUT,
+                headers={"ngrok-skip-browser-warning": "69420"},
             )
         return self._http
 

@@ -134,7 +134,8 @@ async def enroll_my_face(
     try:
         async with httpx.AsyncClient(
             base_url=settings.AI_SERVICE_URL,
-            timeout=settings.AI_SERVICE_TIMEOUT
+            timeout=settings.AI_SERVICE_TIMEOUT,
+            headers={"ngrok-skip-browser-warning": "69420"}
         ) as client:
             resp = await client.post("/enroll", json={"image_b64": req.face_image_b64})
             resp.raise_for_status()
