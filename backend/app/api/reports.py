@@ -160,7 +160,7 @@ async def export_gate_events(
     )
 
     return StreamingResponse(
-        iter([output.getvalue()]),
+        iter(["\ufeff", output.getvalue()]),
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

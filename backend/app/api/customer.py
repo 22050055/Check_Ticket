@@ -76,7 +76,7 @@ async def get_my_tickets(
 ):
     """Lấy danh sách các vé do customer này đã mua. Tự động kiểm tra hết hạn."""
     await _auto_cleanup_expired_tickets(db)
-    cursor = db["tickets"].find({"customer_id": str(customer["_id"])})
+    cursor = db["tickets"].find({"customer_id": str(customer["_id"])}).sort("created_at", -1)
     tickets = await cursor.to_list(length=100)
     
     results = []
