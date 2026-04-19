@@ -29,6 +29,46 @@ class DetectionResult:
     bbox:       tuple               # (x1, y1, x2, y2) trong ảnh gốc
     kps:        Optional[np.ndarray] = field(default=None)  # 5 keypoints
 
+    def check_frontal(self) -> tuple[bool, str]:
+        """
+        Kiểm tra khuôn mặt có chính diện hay không dựa trên 5 keypoints.
+        Trả về (is_frontal, reason).
+        """
+        if self.kps is None:
+            return True, "No KPS" # Fallback nếu không có keypoints
+
+        # kps: [left_eye, right_eye, nose, left_mouth, right_mouth]
+        le, re, ns, lm, rm = self.kps
+
+        # 1. Kiểm tra Độ nghiêng (Roll) - mắt bị lệch cao thấp
+        eye_y_diff = abs(le[1] - re[1])
+        eye_dist = np.linalg.norm(le - re)
+        if eye_y_diff / eye_dist > 0.15:
+            return False, "Đầu bị nghiêng (Roll) quá mức."
+
+        # 2. Kiểm tra Độ quay (Yaw) - mặt nhìn sang trái/phải
+        # Khoảng cách từ mũi đến 2 mắt
+        dist_le = np.linalg.norm(ns - le)
+        dist_re = np.linalg.norm(ns - re)
+        yaw_ratio = max(dist_le, dist_re) / (min(dist_le, dist_re) + 1e-6)
+        
+        # Khoảng cách từ mũi đến 2 khóe miệng
+        dist_lm = np.linalg.norm(ns - lm)
+        dist_rm = np.linalg.norm(ns - rm)
+        mouth_yaw_ratio = max(dist_lm, dist_rm) / (min(dist_lm, dist_rm) + 1e-6)
+
+        if yaw_ratio > 1.45 or mouth_yaw_ratio > 1.55:
+            return False, "Mặt bị quay sang bên (Yaw) quá mức. Hãy nhìn thẳng."
+
+        # 3. Kiểm tra Cúi/Ngửa (Pitch)
+        # Tọa độ Y của mũi so với trung tâm mắt và miệng
+        eye_center_y = (le[1] + re[1]) / 2
+        mouth_center_y = (lm[1] + rm[1]) / 2
+        if ns[1] < eye_center_y or ns[1] > mouth_center_y:
+            return False, "Mặt bị cúi hoặc ngửa (Pitch) quá mức."
+
+        return True, "Chính diện"
+
 
 class FaceDetector:
     """

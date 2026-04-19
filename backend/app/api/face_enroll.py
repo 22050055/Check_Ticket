@@ -27,25 +27,20 @@ router = APIRouter(prefix="/api/face", tags=["Face"])
 
 class FaceEnrollRequest(BaseModel):
     """
-    Nhận 1 hoặc nhiều ảnh khuôn mặt.
-    - images_b64: list ảnh (3–5 ảnh, theo góp ý GVHD) — ưu tiên
-    - face_image_b64: 1 ảnh (legacy / fallback)
+    Đăng ký khuôn mặt chính diện (1 ảnh duy nhất).
+    Yêu cầu: Ảnh rõ nét, nhìn thẳng, không đeo kính râm/khẩu trang.
     """
     ticket_id:      str
-    images_b64:     Optional[list[str]] = Field(
-        None, description="Nhiều ảnh base64 (3–5 ảnh ở các góc khác nhau)"
-    )
-    face_image_b64: Optional[str] = Field(
-        None, description="1 ảnh base64 (legacy — dùng khi không có images_b64)"
-    )
+    face_image_b64: str = Field(..., description="Ảnh chính diện base64.")
+    images_b64:     Optional[list[str]] = Field(None, description="Danh sách ảnh (hỗ trợ legacy, sẽ chỉ lấy ảnh đầu tiên).")
 
     @property
     def all_images(self) -> list[str]:
-        """Trả về danh sách ảnh dù dùng field nào."""
-        if self.images_b64:
-            return self.images_b64[:5]
+        """Trả về danh sách ảnh dù dùng field nào (ưu tiên face_image_b64)."""
         if self.face_image_b64:
             return [self.face_image_b64]
+        if self.images_b64 and len(self.images_b64) > 0:
+            return [self.images_b64[0]]
         return []
 
 

@@ -41,8 +41,8 @@ import java.util.concurrent.Executors
 class FaceEnrollActivity : AppCompatActivity() {
 
     companion object {
-        private const val TOTAL_SHOTS  = 3           // Số ảnh cần chụp
-        private const val SHOT_DELAY   = 800L        // Delay giữa các ảnh (ms)
+        private const val TOTAL_SHOTS  = 1           // Chuyển về 1 ảnh duy nhất theo yêu cầu
+        private const val SHOT_DELAY   = 500L        // Delay ngắn (ms)
     }
 
     private lateinit var previewView:   PreviewView
@@ -91,7 +91,7 @@ class FaceEnrollActivity : AppCompatActivity() {
 
         ticketId = intent.getStringExtra("ticket_id") ?: ""
 
-        btnCapture.text = "📷  Chụp 3 ảnh & Đăng ký"
+        btnCapture.text = "📷  Chụp ảnh & Đăng ký"
         btnSkip.text    = "Bỏ qua"
         updateStatusHint()
 
@@ -185,9 +185,7 @@ class FaceEnrollActivity : AppCompatActivity() {
         if (isCapturing) return
 
         val (met, hint) = when (requiredPose) {
-            "FRONT" -> (yaw in -12f..12f) to "Nhìn thẳng vào camera"
-            "LEFT"  -> (yaw > 25f)       to "Quay mặt sang trái ←"
-            "RIGHT" -> (yaw < -25f)      to "Quay mặt sang phải →"
+            "FRONT" -> (yaw in -5f..5f) to "Nhìn thẳng tuyệt đối vào camera"
             else -> false to ""
         }
         
@@ -233,12 +231,7 @@ class FaceEnrollActivity : AppCompatActivity() {
             else -> "FRONT"
         }
 
-        val hint = when(requiredPose) {
-            "FRONT" -> "Nhìn thẳng"
-            "LEFT"  -> "Quay trái"
-            "RIGHT" -> "Quay phải"
-            else    -> ""
-        }
+        val hint = "Nhìn thẳng"
         
         tvStatus.text = "📷 Đang chụp ảnh $shotNum/3 ($hint)..."
 
@@ -252,29 +245,13 @@ class FaceEnrollActivity : AppCompatActivity() {
                     capturedImages.add(bmp)
 
                     if (capturedImages.size < TOTAL_SHOTS) {
-                        // Cập nhật pose tiếp theo và chờ khách chuẩn bị
-                        val nextPose = when(capturedImages.size + 1) {
-                            2 -> "LEFT"
-                            3 -> "RIGHT"
-                            else -> "FRONT"
-                        }
-                        requiredPose = nextPose
-                        isPoseMet    = false
-                        
-                        val msg = when(nextPose) {
-                            "LEFT" -> "Tốt! Bây giờ hãy QUAY SANG TRÁI ←"
-                            "RIGHT" -> "Tốt! Bây giờ hãy QUAY SANG PHẢI →"
-                            else -> "Chuẩn bị..."
-                        }
-                        tvStatus.text = msg
-                        
-                        // Delay ngắn để khách di chuyển
+                        // Logic fallback nếu TOTAL_SHOTS > 1 (hiện tại đã là 1)
                         Handler(Looper.getMainLooper()).postDelayed({
                             captureNextShot()
-                        }, 1500)
+                        }, 1000)
                     } else {
-                        tvStatus.text = "✅ Đã chụp đủ $TOTAL_SHOTS ảnh. Đang đăng ký..."
-                        enrollFaceMulti(capturedImages.toList())
+                        tvStatus.text = "✅ Đã chụp ảnh chính diện. Đang đăng ký..."
+                        enrollFaceSingle(capturedImages[0])
                     }
                 }
                 override fun onError(e: ImageCaptureException) {
@@ -297,29 +274,27 @@ class FaceEnrollActivity : AppCompatActivity() {
 
     // ── Enroll nhiều ảnh ─────────────────────────────────────
 
-    private fun enrollFaceMulti(bitmaps: List<Bitmap>) {
-        val imagesB64 = bitmaps.map { bmp ->
-            // Tối ưu hóa: Resize ảnh xuống max 640px
-            val resizedBmp = getResizedBitmap(bmp, 640)
-            
-            val stream = ByteArrayOutputStream()
-            resizedBmp.compress(Bitmap.CompressFormat.JPEG, 70, stream)
-            "data:image/jpeg;base64," +
-                    Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
-        }
+    /**
+     * Đăng ký 1 ảnh chính diện duy nhất.
+     */
+    private fun enrollFaceSingle(bitmap: Bitmap) {
+        val resizedBmp = getResizedBitmap(bitmap, 640)
+        val stream = ByteArrayOutputStream()
+        resizedBmp.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        val imageB64 = "data:image/jpeg;base64," +
+                Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
 
         lifecycleScope.launch {
             try {
                 val api  = ApiClient.create(this@FaceEnrollActivity)
-                // Gửi nhiều ảnh — backend /api/face/enroll nhận images_b64
                 val resp = api.enrollFace(
                     mapOf(
-                        "ticket_id"   to ticketId,
-                        "images_b64"  to imagesB64      // list<String>
+                        "ticket_id"      to ticketId,
+                        "face_image_b64" to imageB64
                     )
                 )
 
-                tvStatus.text          = "✅ Đăng ký ${resp.embeddingDim > 0} mẫu thành công!"
+                tvStatus.text          = "✅ Đăng ký khuôn mặt thành công!"
                 progressBar.visibility = View.GONE
 
                 Handler(Looper.getMainLooper()).postDelayed({ finish() }, 1800)

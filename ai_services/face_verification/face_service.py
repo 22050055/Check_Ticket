@@ -66,7 +66,7 @@ class EnrollResponse(BaseModel):
 
 # ── Helpers ──────────────────────────────────────────────────
 
-def _extract_embedding(b64_str: str, label: str = "image") -> np.ndarray:
+def _extract_embedding(b64_str: str, label: str = "image", check_frontal: bool = False) -> np.ndarray:
     image_bgr = decode_base64_image(b64_str)
     if image_bgr is None:
         raise HTTPException(
@@ -79,6 +79,16 @@ def _extract_embedding(b64_str: str, label: str = "image") -> np.ndarray:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Không phát hiện khuôn mặt trong {label}.",
         )
+    
+    # Kiểm tra tư thế chính diện nếu được yêu cầu (thường dùng khi đăng ký)
+    if check_frontal:
+        is_frontal, reason = detection.check_frontal()
+        if not is_frontal:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Chất lượng ảnh {label} không đạt: {reason}",
+            )
+
     return _embedder.get_embedding(detection.face_crop)
 
 
@@ -86,58 +96,49 @@ def _extract_embedding(b64_str: str, label: str = "image") -> np.ndarray:
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "face_verification", "version": "2.0.0"}
+    return {"status": "ok", "service": "face_verification", "version": "2.1.0"}
 
 
 @app.post("/enroll", response_model=EnrollResponse)
 async def enroll_face(req: EnrollRequest):
     """
-    Đăng ký khuôn mặt — trích xuất embedding từ 1 hoặc nhiều ảnh.
-    Trả về LIST embeddings để lưu vào DB (không lưu ảnh gốc).
-
-    Theo góp ý GVHD: nên gửi 3–5 ảnh ở các góc hơi khác nhau.
-    Backend lưu tất cả embeddings → verify sẽ lấy max similarity.
+    Đăng ký khuôn mặt — trích xuất embedding từ duy nhất 1 ảnh chính diện.
+    Yêu cầu bắt buộc: khuôn mặt phải nhìn thẳng, không nghiêng lệch.
     """
     import base64, hashlib
 
-    # Thu thập danh sách ảnh
-    images_b64: list[str] = []
-    if req.images_b64:
-        images_b64 = req.images_b64[:5]          # Tối đa 5 ảnh
+    # Thu thập ảnh (ưu tiên 1 ảnh duy nhất)
+    image_b64: Optional[str] = None
+    if req.images_b64 and len(req.images_b64) > 0:
+        image_b64 = req.images_b64[0]           # Lấy ảnh đầu tiên
     elif req.image_b64:
-        images_b64 = [req.image_b64]             # Legacy: 1 ảnh
+        image_b64 = req.image_b64
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cần cung cấp image_b64 hoặc images_b64.",
+            detail="Cần cung cấp ảnh khuôn mặt (image_b64 hoặc images_b64).",
         )
 
-    if len(images_b64) == 0:
-        raise HTTPException(status_code=400, detail="Danh sách ảnh trống.")
+    # Hash ảnh để audit
+    raw = image_b64.split(",", 1)[1] if "," in image_b64 else image_b64
+    img_bytes = base64.b64decode(raw)
+    face_hash = hashlib.sha256(img_bytes).hexdigest()
 
-    # Trích xuất embedding cho từng ảnh
-    embeddings: list[list] = []
-    first_hash = ""
+    # Trích xuất embedding kèm kiểm tra tư thế nghiêm ngặt
+    emb = _extract_embedding(image_b64, label="đăng ký", check_frontal=True)
+    
+    payload = sanitize_face_payload(img_bytes, emb)
+    assert_no_raw_image(payload)
+    
+    embeddings = [payload["face_embedding"]] # Luôn trả về list 1 mẫu để tương thích
 
-    for i, b64 in enumerate(images_b64):
-        # Hash ảnh đầu tiên để audit
-        raw = b64.split(",", 1)[1] if "," in b64 else b64
-        img_bytes = base64.b64decode(raw)
-        if i == 0:
-            first_hash = hashlib.sha256(img_bytes).hexdigest()
-
-        emb = _extract_embedding(b64, label=f"ảnh {i+1}")
-        payload = sanitize_face_payload(img_bytes, emb)
-        assert_no_raw_image(payload)
-        embeddings.append(payload["face_embedding"])
-
-    logger.info("Enroll: trích xuất %d embedding thành công.", len(embeddings))
+    logger.info("Enroll: trích xuất 1 embedding chính diện thành công.")
 
     return EnrollResponse(
         embeddings=embeddings,
-        n_embeddings=len(embeddings),
-        face_image_hash=first_hash,
-        message=f"Đăng ký thành công {len(embeddings)} mẫu khuôn mặt. Ảnh gốc không được lưu.",
+        n_embeddings=1,
+        face_image_hash=face_hash,
+        message="Đăng ký thành công 1 mẫu khuôn mặt chính diện. Ảnh gốc không được lưu.",
     )
 
 
