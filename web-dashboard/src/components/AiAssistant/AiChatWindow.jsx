@@ -135,7 +135,13 @@ const AiChatWindow = ({ onClose }) => {
         </div>
         <div className="ai-chat-actions">
           {isAdmin && (
-            <Popover content={renderSettings} title="Cài đặt AI" trigger="click" placement="bottomRight">
+            <Popover 
+              content={renderSettings} 
+              title="Cài đặt AI" 
+              trigger="click" 
+              placement="bottomRight"
+              getPopupContainer={trigger => trigger.parentElement}
+            >
                <Button type="text" icon={<SettingOutlined />} size="small" style={{ marginRight: 4 }} />
             </Popover>
           )}
