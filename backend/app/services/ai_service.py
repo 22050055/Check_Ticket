@@ -50,11 +50,11 @@ class AiService:
             f"4. QUYỀN HẠN: {perm_desc}\n\n"
             "NGUYÊN TẮC 'THÔNG MINH' & HÀNH ĐỘNG:\n"
             "1. DUY TRÌ NGỮ CẢNH: Nhớ nội dung cuộc trò chuyện trước để trả lời câu hỏi ngắn.\n"
-            "2. CHỦ ĐỘNG TRA CỨU: Luôn ưu tiên gọi hàm tra cứu trước khi hỏi lại người dùng.\n"
+            "2. CHỦ ĐỘNG TRA CỨU & TÍNH TOÁN: Luôn ưu tiên gọi hàm tra cứu. Nếu người dùng hỏi về tiền bạc/số lượng, phải thực hiện các phép tính cộng trừ chính xác dựa trên dữ liệu trả về.\n"
             "3. TƯ VẤN FACEID (QUAN TRỌNG): Mỗi khi liệt kê danh sách vé, nếu thấy vé nào có 'has_face' là False, hãy nhắc người dùng bằng câu: 'Nhớ quét gương mặt nhé! ✨' để họ biết đường đăng ký FaceID cho vé đó.\n"
-            "4. MUA VÉ/HỦY VÉ: Hỗ trợ khách hàng thực hiện các thao tác này bằng các hàm tool tương ứng. Nếu mua vé hộ, hãy hỏi email người nhận (nếu chưa có).\n"
-            "5. XÁC NHẬN: Trước khi HỦY vé, phải hỏi xác nhận lại một lần nữa.\n"
-            "6. PHONG CÁCH: Thân thiện, chuyên nghiệp, dùng Tiếng Việt. Trình bày danh sách/báo cáo dưới dạng Bảng Markdown cho đẹp.\n"
+            "4. QUẢN GIA TÀI CHÍNH: Chủ động báo cáo tổng số tiền người dùng đã chi nếu họ hỏi về lịch sử vé. Gợi ý các cách tối ưu chi phí nếu có thể.\n"
+            "5. XÁC NHẬN: Trước khi HỦY hoặc CHUYỂN NHƯỢNG vé, phải hỏi xác nhận lại một lần nữa.\n"
+            "6. PHONG CÁCH: Thân thiện, chuyên nghiệp, thông thái. Trình bày danh sách/báo cáo dưới dạng Bảng Markdown cho đẹp.\n"
         )
 
         # 3. Danh sách Tools (ánh xạ tên hàm)
@@ -99,6 +99,20 @@ class AiService:
                         description="Lấy danh sách các vé mà khách hàng hiện tại đang sở hữu.",
                     ),
                     types.FunctionDeclaration(
+                        name="get_spending_analytics",
+                        description="Phân tích tổng số tiền đã chi tiêu và số lượng vé đã mua của khách hàng.",
+                    ),
+                    types.FunctionDeclaration(
+                        name="get_usage_timeline",
+                        description="Tra cứu lịch sử vào/ra cổng (check-in/out) của khách hàng.",
+                        parameters={
+                            "type": "OBJECT",
+                            "properties": {
+                                "ticket_id": {"type": "STRING", "description": "Mã vé cần tra (để trống nếu muốn xem tất cả)"}
+                            },
+                        },
+                    ),
+                    types.FunctionDeclaration(
                         name="cancel_ticket",
                         description="Hủy một vé chưa sử dụng của khách hàng.",
                         parameters={
@@ -107,6 +121,18 @@ class AiService:
                                 "ticket_id": {"type": "STRING", "description": "Mã định danh duy nhất của vé cần hủy"}
                             },
                             "required": ["ticket_id"],
+                        },
+                    ),
+                    types.FunctionDeclaration(
+                        name="transfer_ticket",
+                        description="Chuyển nhượng quyền sở hữu vé cho một người khác qua Email.",
+                        parameters={
+                            "type": "OBJECT",
+                            "properties": {
+                                "ticket_id": {"type": "STRING", "description": "Mã vé cần chuyển"},
+                                "new_owner_email": {"type": "STRING", "description": "Email của người nhận vé"}
+                            },
+                            "required": ["ticket_id", "new_owner_email"],
                         },
                     ),
                     types.FunctionDeclaration(
@@ -224,6 +250,98 @@ class AiService:
                 "has_face": identity.get("has_face", False) if identity else False
             })
         return results
+
+    async def get_spending_analytics(self) -> Dict[str, Any]:
+        """Phân tích tổng quan chi tiêu của khách hàng hiện tại."""
+        if not self.user_email:
+            return {"error": "Không xác định được danh tính người dùng."}
+
+        # Query tất cả ticket_id của user trước
+        cursor = self.db["tickets"].find({"customer_email": self.user_email})
+        user_ticket_ids = [str(t["_id"]) for t in await cursor.to_list(None)]
+        
+        if not user_ticket_ids:
+            return {"total_spent": 0, "total_tickets": 0, "message": "Bạn chưa có giao dịch nào."}
+
+        pipeline = [
+            {"$match": {"ticket_id": {"$in": user_ticket_ids}}},
+            {"$group": {
+                "_id": None,
+                "total_amount": {"$sum": "$amount"},
+                "count": {"$sum": 1}
+            }}
+        ]
+        results = await self.db["transactions"].aggregate(pipeline).to_list(1)
+        data = results[0] if results else {"total_amount": 0, "count": 0}
+        
+        return {
+            "total_spent": data["total_amount"],
+            "total_tickets": data["count"],
+            "currency": "VNĐ",
+            "average_per_ticket": round(data["total_amount"] / data["count"]) if data["count"] > 0 else 0
+        }
+
+    async def get_usage_timeline(self, ticket_id: str = None) -> List[Dict[str, Any]]:
+        """Tra cứu lịch sử vào/ra cổng."""
+        if not self.user_email:
+            return {"error": "Không xác định được danh tính người dùng."}
+
+        query = {}
+        if ticket_id:
+            query["ticket_id"] = ticket_id
+        else:
+            # Lấy tất cả ticket_id của user
+            cursor = self.db["tickets"].find({"customer_email": self.user_email})
+            user_ticket_ids = [str(t["_id"]) for t in await cursor.to_list(None)]
+            query["ticket_id"] = {"$in": user_ticket_ids}
+
+        events = await self.db["gate_events"].find(query).sort("created_at", -1).limit(20).to_list(20)
+        
+        timeline = []
+        for e in events:
+            timeline.append({
+                "time": e["created_at"].strftime("%H:%M:%S %d/%m/%Y"),
+                "gate": e.get("gate_id", "Unknown"),
+                "direction": "Vào (IN)" if e.get("direction") == "IN" else "Ra (OUT)",
+                "result": "Thành công" if e.get("result") == "SUCCESS" else "Thất bại"
+            })
+        return timeline
+
+    async def transfer_ticket(self, ticket_id: str, new_owner_email: str) -> Dict[str, Any]:
+        """Chuyển vé cho người khác."""
+        ticket = await self.db["tickets"].find_one({"_id": ticket_id})
+        if not ticket:
+            return {"error": "Không tìm thấy vé."}
+        
+        if ticket.get("customer_email") != self.user_email and self.user_role != "admin":
+            return {"error": "Bạn không có quyền chuyển nhượng vé này."}
+
+        # Tìm/Tạo customer mới
+        new_customer = await self.db["customers"].find_one({"email": new_owner_email})
+        new_customer_id = str(new_customer["_id"]) if new_customer else str(uuid.uuid4())
+        if not new_customer:
+            await self.db["customers"].insert_one({
+                "_id": new_customer_id,
+                "name": new_owner_email.split("@")[0],
+                "email": new_owner_email,
+                "created_at": datetime.now()
+            })
+
+        # Cập nhật vé
+        await self.db["tickets"].update_one(
+            {"_id": ticket_id},
+            {"$set": {
+                "customer_id": new_customer_id,
+                "customer_email": new_owner_email,
+                "updated_at": datetime.now()
+            }}
+        )
+
+        return {
+            "success": True,
+            "message": f"Vé {ticket_id} đã được chuyển quyền sở hữu sang {new_owner_email}.",
+            "new_owner": new_owner_email
+        }
 
     async def buy_ticket(self, ticket_type: str, customer_email: str = None, quantity: int = 1) -> Dict[str, Any]:
         """Thực hiện mua vé mới cho khách hàng."""
@@ -377,8 +495,11 @@ class AiService:
                         "check_ticket_status":   self.check_ticket_status,
                         "list_gates_health":     self.list_gates_health,
                         "get_my_tickets":        self.get_my_tickets,
+                        "get_spending_analytics": self.get_spending_analytics,
+                        "get_usage_timeline":    self.get_usage_timeline,
                         "buy_ticket":            self.buy_ticket,
                         "cancel_ticket":         self.cancel_ticket,
+                        "transfer_ticket":       self.transfer_ticket,
                         "get_park_info":         self.get_park_info
                     }
 
