@@ -64,6 +64,8 @@ class FaceEnrollActivity : AppCompatActivity() {
     // ML Kit Face Detector
     private lateinit var faceDetector:   FaceDetector
     private var currentYaw:             Float = 0f
+    private var currentPitch:           Float = 0f
+    private var currentRoll:            Float = 0f
     private var requiredPose:           String = "FRONT" // FRONT, LEFT, RIGHT
     private var isPoseMet:              Boolean = false
 
@@ -170,7 +172,9 @@ class FaceEnrollActivity : AppCompatActivity() {
                 if (faces.isNotEmpty()) {
                     val face = faces[0]
                     currentYaw = face.headEulerAngleY
-                    checkPose(currentYaw)
+                    currentPitch = face.headEulerAngleX
+                    currentRoll = face.headEulerAngleZ
+                    checkPose(currentYaw, currentPitch, currentRoll)
                 } else {
                     isPoseMet = false
                     if (!isCapturing) tvStatus.text = "Không tìm thấy khuôn mặt"
@@ -181,12 +185,24 @@ class FaceEnrollActivity : AppCompatActivity() {
             }
     }
 
-    private fun checkPose(yaw: Float) {
+    private fun checkPose(yaw: Float, pitch: Float, roll: Float) {
         if (isCapturing) return
 
-        val (met, hint) = when (requiredPose) {
-            "FRONT" -> (yaw in -5f..5f) to "Nhìn thẳng tuyệt đối vào camera"
-            else -> false to ""
+        var met = false
+        var hint = ""
+
+        if (requiredPose == "FRONT") {
+            // Kiểm tra Yaw, Pitch, Roll trong ngưỡng [-8, 8] để dễ thao tác hơn
+            if (yaw < -8f || yaw > 8f) {
+                hint = "Mặt hơi quay sang bên, hãy nhìn thẳng"
+            } else if (pitch < -8f || pitch > 8f) {
+                hint = "Mặt hơi cúi hoặc ngửa, hãy giữ thẳng đầu"
+            } else if (roll < -8f || roll > 8f) {
+                hint = "Đầu hơi nghiêng, hãy giữ thẳng đầu"
+            } else {
+                met = true
+                hint = "Tuyệt vời! Sẵn sàng chụp"
+            }
         }
         
         isPoseMet = met
