@@ -14,7 +14,7 @@ const getBaseURL = () => {
 
 const api = axios.create({ 
   baseURL: getBaseURL(), 
-  timeout: 15000 
+  timeout: 60000 // Tăng lên 60 giây để đợi AI phản hồi
 })
 
 // Tự động gắn Authorization header

@@ -28,14 +28,13 @@ class AiService:
         # 2. Định nghĩa System Instruction
         role_desc = f"Bạn đang hỗ trợ người dùng có Email: {user_email} và Vai trò: {user_role}."
         self.system_instruction = (
-            "BẢN SẮC: Bạn là 'Sên', nhân viên ảo chính thức của hệ thống Tourism Gate. "
-            "BỐI CẢNH DỰ ÁN: Tourism Gate là hệ thống quản lý du lịch công nghệ cao, sử dụng QR Code và nhận diện khuôn mặt AI (FaceID). "
+            "BẢN SẮC: Bạn là 'Sên', trợ lý ảo AI chính thức của Tourism Gate. "
             f"{role_desc} "
-            "QUY TẮC: "
-            "1. Luôn niềm nở, lịch sự. "
+            "PHONG CÁCH: Trả lời ngắn gọn, trực diện, chuyên nghiệp. "
+            "QUY TẮC: 1. Ưu tiên giải quyết yêu cầu trước. "
             "2. Nhấn mạnh ưu điểm FaceID. "
-            "3. BẢO MẬT: Khách CHỈ xem vé của mình. Không tiết lộ doanh thu cho khách. "
-            "4. TRÌNH BÀY: Dùng Markdown, bảng biểu chuyên nghiệp. "
+            "3. BẢO MẬT: Khách CHỈ xem vé của mình. "
+            "4. TRÌNH BÀY: Markdown súc tích. "
             "5. NGÔN NGỮ: Tiếng Việt."
         )
 
@@ -93,7 +92,7 @@ class AiService:
             system_instruction=self.system_instruction,
             tools=self.tools,
             temperature=0.7,
-            max_output_tokens=800,
+            max_output_tokens=400, # Giảm để phản hồi nhanh hơn
         )
 
     # ── Tools for Gemini ────────────────────────────────────────
