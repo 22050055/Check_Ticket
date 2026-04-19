@@ -25,10 +25,12 @@ class AiService:
         self.user_role = user_role
         self.user_name = user_name or "người dùng"
         
-        # Kiểm tra tính hợp lệ của model_name, nếu không bắt đầu bằng 'gemini-' thì quay về flash
+        # Kiểm tra tính hợp lệ của model_name, ưu tiên các dòng 2.5, 3.0, 3.1 và Gemma 3/4
         target_model = model_name or settings.AI_MODEL_NAME
-        if not target_model or not target_model.startswith(("gemini-", "gemma-")):
-            target_model = "gemini-1.5-flash"
+        # Fallback về gemini-2.5-flash nếu không hợp lệ
+        if not target_model or not any(x in target_model.lower() for x in ["gemini-", "gemma-"]):
+            target_model = "gemini-2.5-flash"
+        
         self.model_name = target_model
         
         # 1. Khởi tạo Client mới (chuẩn v1.0+)
