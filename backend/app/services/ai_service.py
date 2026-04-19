@@ -107,9 +107,10 @@ class AiService:
 
     async def get_dashboard_summary(self) -> Dict[str, Any]:
         """Lấy thông số tổng quan của dashboard hôm nay (doanh thu, lượt khách, tỷ lệ lỗi)."""
+        if self.user_role not in ["admin", "manager"]:
+            return {"error": "Tính năng tra cứu dashboard chỉ dành cho Admin và Manager."}
+            
         stats = await self.report_service.get_realtime_stats()
-        # Tối ưu Token: Loại bỏ danh sách sự kiện chi tiết và trạng thái cổng chi tiết
-        # AI chỉ cần các con số tổng hợp để trả lời nhanh.
         return {
             "current_inside": stats.get("current_inside"),
             "checkins_today": stats.get("checkins_today"),
@@ -119,10 +120,12 @@ class AiService:
 
     async def get_revenue_report(self, days: int = 7) -> Dict[str, Any]:
         """Lấy báo cáo doanh thu trong số ngày gần đây (mặc định 7 ngày)."""
+        if self.user_role not in ["admin", "manager"]:
+            return {"error": "Bạn không có quyền truy cập báo cáo doanh thu."}
+            
         now = datetime.now(timezone.utc)
         d_from = now - timedelta(days=days)
         data = await self.report_service.get_revenue(d_from, now)
-        # Tối ưu Token: Loại bỏ danh sách 'by_date' quá dài
         return {
             "total_revenue": data.get("total_revenue"),
             "total_tickets": data.get("total_tickets"),
@@ -132,10 +135,12 @@ class AiService:
 
     async def get_visitor_stats(self, hours: int = 24) -> Dict[str, Any]:
         """Lấy thống kê lượt khách vào/ra trong số giờ gần đây (mặc định 24h)."""
+        if self.user_role not in ["admin", "manager"]:
+            return {"error": "Bạn không có quyền truy cập thống kê lượt khách."}
+            
         now = datetime.now(timezone.utc)
         d_from = now - timedelta(hours=hours)
         data = await self.report_service.get_visitors(d_from, now)
-        # Tối ưu Token: Chỉ giữ lại các chỉ số quan trọng nhất
         return {
             "total_checkins": data.get("total_checkins"),
             "total_checkouts": data.get("total_checkouts"),
