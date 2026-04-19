@@ -1,77 +1,67 @@
 """
-embedding.py — Trích xuất vector embedding 512-d dùng ArcFace w600k_r50.onnx (buffalo_l)
-Input: ảnh 112×112 RGB → Output: vector 512-d đã L2-normalize
+embedding.py — Trích xuất vector embedding 128-d dùng SFace.onnx (OpenCV Zoo)
+Model tối ưu cho khuôn mặt Châu Á.
 """
 import logging
 from pathlib import Path
 from typing import Optional
 
+import cv2
 import numpy as np
 
-from .config import ARCFACE_MODEL_PATH, ARCFACE_INPUT_SIZE, EMBEDDING_DIMENSION
+from .config import SFACE_MODEL_PATH, EMBEDDING_DIMENSION
 
 logger = logging.getLogger(__name__)
 
 
 class FaceEmbedder:
     """
-    Wrapper cho ArcFace w600k_r50.onnx.
-    Dùng ONNX Runtime để inference, không cần cài insightface.
+    Wrapper cho OpenCV SFace (face_recognition_sface_2021dec.onnx).
+    Dùng cv2.FaceRecognizerSF tích hợp sẵn trong OpenCV.
     """
 
     def __init__(self):
-        self._session   = None
-        self._input_name: Optional[str] = None
+        self._model = None
         self._load_model()
 
     def _load_model(self):
-        if not Path(ARCFACE_MODEL_PATH).exists():
+        if not Path(SFACE_MODEL_PATH).exists():
             logger.warning(
-                "⚠️  ArcFace model không tìm thấy: %s. "
-                "Dùng random embedding (chỉ cho dev).",
-                ARCFACE_MODEL_PATH,
+                "⚠️  SFace model không tìm thấy tại: %s. "
+                "Dùng random embedding (chỉ dành cho môi trường dev).",
+                SFACE_MODEL_PATH,
             )
             return
         try:
-            import onnxruntime as ort
-            self._session = ort.InferenceSession(
-                ARCFACE_MODEL_PATH,
-                providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
+            # SFace trong OpenCV không yêu cầu config file, chỉ cần .onnx
+            self._model = cv2.FaceRecognizerSF.create(
+                model=SFACE_MODEL_PATH,
+                config="",
+                backend_id=cv2.dnn.DNN_BACKEND_DEFAULT,
+                target_id=cv2.dnn.DNN_TARGET_CPU,
             )
-            self._input_name = self._session.get_inputs()[0].name
-            # Log input shape để xác nhận model đúng
-            input_shape = self._session.get_inputs()[0].shape
-            logger.info(
-                "✅ ArcFace w600k_r50.onnx loaded. Input shape: %s", input_shape
-            )
+            logger.info("✅ SFace model loaded (OpenCV FaceRecognizerSF). Dim: 128")
         except Exception as e:
-            logger.error("❌ Load ArcFace thất bại: %s", e)
-            self._session = None
+            logger.error("❌ Load SFace thất bại: %s", e)
+            self._model = None
 
     def get_embedding(self, face_rgb_112: np.ndarray) -> np.ndarray:
         """
-        Nhận ảnh 112×112 RGB → vector embedding 512-d (L2-normalized).
-
-        Args:
-            face_rgb_112: numpy array shape (112, 112, 3) uint8 hoặc float32.
-
-        Returns:
-            numpy array shape (512,) float32, đã L2-normalize.
+        Nhận ảnh 112×112 RGB → vector embedding 128-d (L2-normalized).
         """
-        if self._session is None:
-            logger.warning("Dùng random embedding (model chưa load).")
+        if self._model is None:
+            logger.warning("Dùng random embedding (model SFace chưa load).")
             vec = np.random.randn(EMBEDDING_DIMENSION).astype(np.float32)
             return _l2_normalize(vec)
 
-        # Tiền xử lý ArcFace: chuẩn hóa về [-1, 1]
-        img = face_rgb_112.astype(np.float32)
-        img = (img - 127.5) / 127.5               # scale [-1, 1]
-        img = img.transpose(2, 0, 1)              # HWC → CHW (3, 112, 112)
-        img = np.expand_dims(img, axis=0)         # (1, 3, 112, 112)
-
-        output = self._session.run(None, {self._input_name: img})
-        embedding = output[0][0]                  # (512,)
-        return _l2_normalize(embedding)
+        # Note: FaceRecognizerSF.feature() xử lý tốt nhất khi nhận ảnh aligned BGR
+        face_bgr = cv2.cvtColor(face_rgb_112, cv2.COLOR_RGB2BGR)
+        
+        # SF.feature() trả về (1, 128) float32
+        embedding = self._model.feature(face_bgr)
+        
+        # OpenCV SFace đã L2-normalize nhưng ta làm lại cho chắc chắn
+        return _l2_normalize(embedding[0])
 
 
 # ── GenderAge (buffalo_l bonus) ───────────────────────────────

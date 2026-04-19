@@ -22,17 +22,17 @@ _detector = FaceDetector()
 _embedder = FaceEmbedder()
 
 app = FastAPI(
-    title="Face Verification Service",
-    description="API nội bộ xác thực khuôn mặt 1:1 cho hệ thống check-in du lịch",
-    version="2.0.0",
+    title="Face Verification Service (SFace)",
+    description="API nội bộ xác thực khuôn mặt 1:1 dùng model SFace tối ưu cho Châu Á.",
+    version="2.2.0",
 )
 
 
 # ── Schemas ──────────────────────────────────────────────────
 
 class VerifyRequest(BaseModel):
-    """So sánh ảnh probe với embedding đã lưu (hỗ trợ nhiều mẫu)."""
-    stored_embedding:  Optional[list]       = Field(None, description="1 embedding (legacy).")
+    """So sánh ảnh probe với embedding đã lưu (128-d)."""
+    stored_embedding:  Optional[list]       = Field(None, description="1 embedding (128-d).")
     stored_embeddings: Optional[list[list]] = Field(None, description="Nhiều embedding mẫu (ưu tiên).")
     stored_image_b64:  Optional[str]        = Field(None, description="Ảnh đã đăng ký (base64). Fallback.")
     probe_image_b64:   str                  = Field(..., description="Ảnh chụp tại cổng (base64).")
@@ -50,15 +50,14 @@ class VerifyResponse(BaseModel):
 
 class EnrollRequest(BaseModel):
     """
-    Đăng ký khuôn mặt — nhận 1 hoặc nhiều ảnh.
-    Theo góp ý GVHD: nên chụp 3–5 ảnh góc hơi khác nhau.
+    Đăng ký khuôn mặt — trích xuất vector 128-d bằng SFace.
     """
-    image_b64:        Optional[str]       = Field(None, description="1 ảnh base64 (legacy).")
-    images_b64:       Optional[list[str]] = Field(None, description="Nhiều ảnh base64 (ưu tiên, 3–5 ảnh).")
+    image_b64:        Optional[str]       = Field(None, description="1 ảnh base64.")
+    images_b64:       Optional[list[str]] = Field(None, description="Nhiều ảnh base64.")
 
 
 class EnrollResponse(BaseModel):
-    embeddings:      list[list]   # list of 512-d vectors
+    embeddings:      list[list]   # list of 128-d vectors
     n_embeddings:    int
     face_image_hash: str
     message:         str
@@ -96,27 +95,27 @@ def _extract_embedding(b64_str: str, label: str = "image", check_frontal: bool =
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "face_verification", "version": "2.1.0"}
+    return {"status": "ok", "service": "face_verification", "version": "2.2.0", "model": "SFace-128d"}
 
 
 @app.post("/enroll", response_model=EnrollResponse)
 async def enroll_face(req: EnrollRequest):
     """
-    Đăng ký khuôn mặt — trích xuất embedding từ duy nhất 1 ảnh chính diện.
-    Yêu cầu bắt buộc: khuôn mặt phải nhìn thẳng, không nghiêng lệch.
+    Đăng ký khuôn mặt — trích xuất embedding 128-d từ duy nhất 1 ảnh chính diện.
+    Model: SFace (OpenCV).
     """
     import base64, hashlib
 
     # Thu thập ảnh (ưu tiên 1 ảnh duy nhất)
     image_b64: Optional[str] = None
     if req.images_b64 and len(req.images_b64) > 0:
-        image_b64 = req.images_b64[0]           # Lấy ảnh đầu tiên
+        image_b64 = req.images_b64[0]
     elif req.image_b64:
         image_b64 = req.image_b64
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cần cung cấp ảnh khuôn mặt (image_b64 hoặc images_b64).",
+            detail="Cần cung cấp ảnh khuôn mặt.",
         )
 
     # Hash ảnh để audit
@@ -130,15 +129,15 @@ async def enroll_face(req: EnrollRequest):
     payload = sanitize_face_payload(img_bytes, emb)
     assert_no_raw_image(payload)
     
-    embeddings = [payload["face_embedding"]] # Luôn trả về list 1 mẫu để tương thích
+    embeddings = [payload["face_embedding"]] 
 
-    logger.info("Enroll: trích xuất 1 embedding chính diện thành công.")
+    logger.info("Enroll: trích xuất 1 embedding SFace (128-d) thành công.")
 
     return EnrollResponse(
         embeddings=embeddings,
         n_embeddings=1,
         face_image_hash=face_hash,
-        message="Đăng ký thành công 1 mẫu khuôn mặt chính diện. Ảnh gốc không được lưu.",
+        message="Đăng ký thành công bằng model SFace. Dữ liệu 128-d đã sẵn sàng.",
     )
 
 

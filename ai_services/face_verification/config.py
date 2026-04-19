@@ -39,13 +39,18 @@ YUNET_MODEL_PATH: str = os.getenv(
     str(MODELS_DIR / "yunet_face_detect.onnx"),
 )
 
+# SFace — model trích xuất đặc trưng (128-d) tối ưu cho Châu Á
+SFACE_MODEL_PATH: str = os.getenv(
+    "SFACE_MODEL_PATH",
+    str(MODELS_DIR / "sface.onnx"),
+)
+
 # ── Ngưỡng xác thực (cosine similarity) ──────────────────────
-# ArcFace buffalo_l đã L2-norm sẵn → similarity cao hơn FaceNet
-# Khuyến nghị: 0.3–0.4 (khác FaceNet là 0.6)
-SIMILARITY_THRESHOLD: float = float(os.getenv("FACE_THRESHOLD", "0.28"))
+# SFace khuyên dùng ngưỡng ~0.36-0.37 cho Cosine Similarity.
+SIMILARITY_THRESHOLD: float = float(os.getenv("FACE_THRESHOLD", "0.37"))
 
 # ── Kích thước ảnh đầu vào ────────────────────────────────────
-ARCFACE_INPUT_SIZE: tuple  = (112, 112)   # ArcFace chuẩn: 112x112
+ARCFACE_INPUT_SIZE: tuple  = (112, 112)   # SFace & ArcFace dùng chung 112x112
 DETECTOR_INPUT_SIZE: tuple = (640, 640)   # det_10g RetinaFace
 
 # ── Detector settings ─────────────────────────────────────────
@@ -54,5 +59,5 @@ DET_NMS_THRESHOLD: float   = 0.4
 
 # ── Privacy ───────────────────────────────────────────────────
 STORE_ORIGINAL_IMAGE: bool = False
-EMBEDDING_DIMENSION: int   = 512
+EMBEDDING_DIMENSION: int   = 128          # SFace trả về 128-d vector
  
