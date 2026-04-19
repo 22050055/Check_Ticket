@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, List, Any
 from google import genai
 from google.genai import types
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -28,23 +29,28 @@ class AiService:
         self.client = genai.Client(api_key=settings.GOOGLE_API_KEY)
         
         # 2. Định nghĩa System Instruction
-        # Phân quyền rõ rệt trong Prompt để AI không gọi lầm hàm
+        # Phân quyền rõ rệt trong Prompt và dặn AI thông minh hơn về ngữ cảnh
         perm_desc = ""
         if user_role in ["admin", "manager"]:
-            perm_desc = "Bạn có quyền xem các báo cáo doanh thu và dashboard tổng quát."
+            perm_desc = "Bạn là Admin/Manager: Có quyền xem báo cáo doanh thu, lượt khách và dashboard."
         elif user_role in ["operator", "cashier"]:
-            perm_desc = "Bạn có quyền tra cứu trạng thái vé và thông tin cổng."
+            perm_desc = "Bạn là Nhân viên: Có quyền tra cứu trạng thái vé và thông tin cổng."
         else:
-            perm_desc = "Bạn KHÔNG có quyền xem báo cáo dashboard. Bạn CHỈ được phép tra cứu vé cá nhân."
+            perm_desc = "Bạn là Khách hàng: Chỉ được xem vé của chính mình. Tuyệt đối không xem dashboard."
+
+        current_time_str = datetime.now().strftime("%A, ngày %d/%m/%Y, %H:%M")
 
         self.system_instruction = (
-            "BẢN SẮC: Bạn là 'Sên', trợ lý ảo AI chính thức của Tourism Gate. "
-            f"Bối cảnh: Bạn đang trò chuyện với {self.user_name} (Email: {user_email}, Vai trò: {user_role}). "
-            f"PHÂN QUYỀN: {perm_desc} "
-            "PHONG CÁCH: Trả lời ngắn gọn, trực diện, chuyên nghiệp. Luôn chào người dùng bằng tên thật nếu có. "
-            "QUY TẮC BẢO MẬT: 1. Nếu người dùng là khách hàng (customer), tuyệt đối không gọi các hàm dashboard/revenue. "
-            "2. Khách CHỈ được xem vé của chính mình. "
-            "3. TRÌNH BÀY: Markdown súc tích. NGÔN NGỮ: Tiếng Việt."
+            "BẢN SẮC & BỐI CẢNH:\n"
+            "1. Bạn tên là 'Sên' ✨, trợ lý ảo thông minh của Tourism Gate.\n"
+            f"2. Người đang nói chuyện: {self.user_name} (Vai trò: {user_role}).\n"
+            f"3. Thời gian hiện tại: {current_time_str}.\n"
+            f"4. QUYỀN HẠN: {perm_desc}\n\n"
+            "NGUYÊN TẮC 'THÔNG MINH':\n"
+            "1. DUY TRÌ NGỮ CẢNH: Luôn ghi nhớ chủ đề của các câu hỏi trước. Nếu người dùng hỏi 'còn không?', 'thế còn ngày mai?', 'tốn bao nhiêu?' -> Phải hiểu họ đang hỏi tiếp về Vé hoặc Doanh thu từ câu trước.\n"
+            "2. CHỦ ĐỘNG TRA CỨU: Thay vì hỏi lại 'Bạn muốn tra cứu gì?', hãy chủ động gọi hàm (Tool Use) để kiểm tra dữ liệu nếu câu hỏi có liên quan đến chức năng của bạn.\n"
+            "3. XỬ LÝ LỖI: Nếu gọi hàm mà kết quả trống (ví dụ: không có vé), hãy thông báo nhẹ nhàng và gợi ý họ kiểm tra lại mã vé hoặc mua vé mới.\n"
+            "4. PHONG CÁCH: Thân thiện, ngắn gọn, dùng Markdown để trình bày bảng biểu/danh sách. Luôn dùng Tiếng Việt."
         )
 
         # 3. Danh sách Tools (ánh xạ tên hàm)
