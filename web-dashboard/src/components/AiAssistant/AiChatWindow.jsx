@@ -6,11 +6,30 @@ import { aiApi, settingsApi } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AI_MODELS = [
-  { label: 'Gemini 2.5 Flash (Ổn định)', value: 'gemini-2.5-flash' },
-  { label: 'Gemini 3 Flash (Thông minh)', value: 'gemini-3-flash' },
-  { label: 'Gemini 3.1 Flash Lite (Tiết kiệm)', value: 'gemini-3.1-flash-lite' },
-  { label: 'Gemini 2.5 Flash Lite', value: 'gemini-2.5-flash-lite' },
-  { label: 'Gemma 4 31B', value: 'gemma-4-31b' },
+  {
+    label: 'Dòng Gemini Flash (Khuyên dùng)',
+    options: [
+      { label: 'Gemini 3 Flash (Thông minh nhất)', value: 'gemini-3-flash' },
+      { label: 'Gemini 2.5 Flash (Cân bằng)', value: 'gemini-2.5-flash' },
+    ],
+  },
+  {
+    label: 'Dòng Gemini Lite (Tiết kiệm Token)',
+    options: [
+      { label: 'Gemini 3.1 Flash Lite', value: 'gemini-3.1-flash-lite' },
+      { label: 'Gemini 2.5 Flash Lite', value: 'gemini-2.5-flash-lite' },
+    ],
+  },
+  {
+    label: 'Dòng Gemma (Thử nghiệm - Không tối ưu Tool)',
+    options: [
+      { label: 'Gemma 4 31B', value: 'gemma-4-31b' },
+      { label: 'Gemma 4 26B', value: 'gemma-4-26b' },
+      { label: 'Gemma 3 27B', value: 'gemma-3-27b' },
+      { label: 'Gemma 3 12B', value: 'gemma-3-12b' },
+      { label: 'Gemma 3 4B', value: 'gemma-3-4b' },
+    ],
+  },
 ];
 
 const AiChatWindow = ({ onClose }) => {
