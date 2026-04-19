@@ -211,48 +211,68 @@ class AiService:
                 config=self.config
             )
 
-            # Vòng lặp xử lý Function Calling thủ công (vì chúng ta cần await async DB calls)
-            while response.candidates[0].content.parts[0].function_call:
-                fc = response.candidates[0].content.parts[0].function_call
-                fn_name = fc.name
-                fn_args = fc.args
+            # Vòng lặp xử lý Function Calling
+            while True:
+                # Trích xuất part đầu tiên
+                first_part = response.candidates[0].content.parts[0]
                 
-                logger.info(f"Sên call function: {fn_name} | Args: {fn_args}")
-
-                fn_map = {
-                    "get_dashboard_summary": self.get_dashboard_summary,
-                    "get_revenue_report":    self.get_revenue_report,
-                    "get_visitor_stats":     self.get_visitor_stats,
-                    "check_ticket_status":   self.check_ticket_status,
-                    "list_gates_health":     self.list_gates_health,
-                    "get_my_tickets":        self.get_my_tickets,
-                    "get_park_info":         self.get_park_info
-                }
-
-                if fn_name in fn_map:
-                    result = await fn_map[fn_name](**fn_args)
-                    # Cập nhật context để Gemini tiếp tục
-                    contents.append(response.candidates[0].content) # Thêm call vừa rồi vào history
-                    contents.append(types.Content(
-                        role="model",
-                        parts=[types.Part(
-                            function_response=types.FunctionResponse(
-                                name=fn_name,
-                                response={"result": result}
-                            )
-                        )]
-                    ))
+                # Nếu là Function Call -> Gọi hàm
+                if first_part.function_call:
+                    fc = first_part.function_call
+                    fn_name = fc.name
+                    fn_args = fc.args
                     
-                    # Gọi lại Gemini với kết quả hàm
-                    response = self.client.models.generate_content(
-                        model='gemini-flash-latest',
-                        contents=contents,
-                        config=self.config
-                    )
+                    logger.info(f"Sên call function: {fn_name} | Args: {fn_args}")
+
+                    fn_map = {
+                        "get_dashboard_summary": self.get_dashboard_summary,
+                        "get_revenue_report":    self.get_revenue_report,
+                        "get_visitor_stats":     self.get_visitor_stats,
+                        "check_ticket_status":   self.check_ticket_status,
+                        "list_gates_health":     self.list_gates_health,
+                        "get_my_tickets":        self.get_my_tickets,
+                        "get_park_info":         self.get_park_info
+                    }
+
+                    if fn_name in fn_map:
+                        result = await fn_map[fn_name](**fn_args)
+                        
+                        # Thêm chính cái Call vừa rồi vào lịch sử
+                        contents.append(response.candidates[0].content)
+                        
+                        # Gửi kết quả hàm (SDK mới dùng role='user' hoặc 'tool' tùy cấu hình, 
+                        # nhưng quan trọng là cấu trúc FunctionResponse)
+                        contents.append(types.Content(
+                            role="user", # Trong SDK python-genai, kết quả tool gửi lại bằng role user hoặc tool
+                            parts=[types.Part(
+                                function_response=types.FunctionResponse(
+                                    name=fn_name,
+                                    response={"result": result}
+                                )
+                            )]
+                        ))
+                        
+                        # Gọi lại Gemini để lấy câu trả lời cuối cùng dựa trên kết quả hàm
+                        response = self.client.models.generate_content(
+                            model='gemini-flash-latest',
+                            contents=contents,
+                            config=self.config
+                        )
+                    else:
+                        break
                 else:
+                    # Nếu không còn function call -> Kết thúc vòng lặp
                     break
 
-            return response.text
+            # TRÍCH XUẤT VĂN BẢN CUỐI CÙNG: 
+            # Đảm bảo lấy được text ngay cả khi có nhiều parts
+            final_text = ""
+            for part in response.candidates[0].content.parts:
+                if part.text:
+                    final_text += part.text
+            
+            return final_text or "Sên đã hoàn thành yêu cầu nhưng không tìm thấy văn bản trả lời."
+
         except Exception as e:
             logger.error(f"AiService Error: {str(e)}")
             return f"Sên rất tiếc, đã có lỗi xảy ra: {str(e)}"
