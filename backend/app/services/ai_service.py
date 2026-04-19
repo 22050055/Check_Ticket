@@ -24,7 +24,12 @@ class AiService:
         self.user_email = user_email
         self.user_role = user_role
         self.user_name = user_name or "người dùng"
-        self.model_name = model_name or settings.AI_MODEL_NAME
+        
+        # Kiểm tra tính hợp lệ của model_name, nếu không bắt đầu bằng 'gemini-' thì quay về flash
+        target_model = model_name or settings.AI_MODEL_NAME
+        if not target_model or not target_model.startswith(("gemini-", "gemma-")):
+            target_model = "gemini-1.5-flash"
+        self.model_name = target_model
         
         # 1. Khởi tạo Client mới (chuẩn v1.0+)
         self.client = genai.Client(api_key=settings.GOOGLE_API_KEY)
