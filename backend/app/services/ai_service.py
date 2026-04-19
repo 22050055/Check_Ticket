@@ -38,7 +38,8 @@ class AiService:
         else:
             perm_desc = "Bạn là Khách hàng: Chỉ được xem vé của chính mình. Tuyệt đối không xem dashboard."
 
-        current_time_str = datetime.now().strftime("%A, ngày %d/%m/%Y, %H:%M")
+        ict_timezone = timezone(timedelta(hours=7))
+        current_time_str = datetime.now(ict_timezone).strftime("%A, ngày %d/%m/%Y, %H:%M")
 
         self.system_instruction = (
             "BẢN SẮC & BỐI CẢNH:\n"
