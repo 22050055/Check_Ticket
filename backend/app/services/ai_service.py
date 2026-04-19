@@ -235,14 +235,23 @@ class AiService:
                 # Đảm bảo có ứng viên (candidate)
                 if not response.candidates:
                     break
-                    
-                first_part = response.candidates[0].content.parts[0]
                 
-                # Nếu là Function Call -> Gọi hàm
-                if first_part.function_call:
-                    fc = first_part.function_call
+                # Kiểm tra xem có part nào là function_call không (quét toàn bộ parts)
+                current_parts = response.candidates[0].content.parts
+                function_calls = [p.function_call for p in current_parts if p.function_call]
+                
+                # Nếu không có lệnh gọi hàm nào -> Kết thúc vòng lặp để trả về text
+                if not function_calls:
+                    break
+                
+                # Lưu lại content của model (bao gồm cả text và call) vào history để duy trì ngữ cảnh
+                contents.append(response.candidates[0].content)
+                
+                # Xử lý tất cả các function calls được yêu cầu
+                response_parts = []
+                for fc in function_calls:
                     fn_name = fc.name
-                    fn_args = fc.args
+                    fn_args = fc.args or {}
                     
                     logger.info(f"==> AI REQUESTED TOOL: {fn_name} | Args: {fn_args}")
 
@@ -258,32 +267,33 @@ class AiService:
 
                     if fn_name in fn_map:
                         result = await fn_map[fn_name](**fn_args)
+                        logger.info(f"==> TOOL RESULT: {str(result)[:200]}...")
                         
-                        logger.info(f"==> TOOL RESULT: {str(result)[:200]}...") # Log 200 ký tự đầu của kết quả
-                        
-                        # Thêm Call và Response vào context
-                        contents.append(response.candidates[0].content)
-                        contents.append(types.Content(
-                            role="user",
-                            parts=[types.Part(
-                                function_response=types.FunctionResponse(
-                                    name=fn_name,
-                                    response={"result": result}
-                                )
-                            )]
+                        # Tạo phần phản hồi cho hàm này
+                        response_parts.append(types.Part(
+                            function_response=types.FunctionResponse(
+                                name=fn_name,
+                                response={"result": result}
+                            )
                         ))
-                        
-                        # Gọi lại Gemini
-                        response = self.client.models.generate_content(
-                            model=self.model_name,
-                            contents=contents,
-                            config=self.config
-                        )
                     else:
                         logger.warning(f"Tool {fn_name} is not implemented.")
-                        break
-                else:
-                    break
+                        response_parts.append(types.Part(
+                            function_response=types.FunctionResponse(
+                                name=fn_name,
+                                response={"result": {"error": "Hàm này chưa được cài đặt."}}
+                            )
+                        ))
+
+                # Thêm tất cả kết quả hàm vào history
+                contents.append(types.Content(role="user", parts=response_parts))
+                
+                # Gọi lại Gemini với kết quả mới để nó tổng hợp câu trả lời cuối cùng
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=contents,
+                    config=self.config
+                )
 
             # 2. LOG FULL RESPONSE (Dữ liệu thô từ Google)
             try:
