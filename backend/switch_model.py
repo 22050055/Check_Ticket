@@ -1,12 +1,13 @@
 import os
 import sys
 
-# Danh sách các mô hình phổ biến và an toàn cho dự án
+# Danh sách các mô hình phổ biến và an toàn cho dự án (Cập nhật 2026)
 MODELS = [
-    ("Gemini 1.5 Flash (Cân bằng, khuyên dùng)", "gemini-1.5-flash"),
-    ("Gemini 1.5 Flash-8B (Siêu nhẹ, tiết kiệm nhất)", "gemini-1.5-flash-8b"),
-    ("Gemini 2.0 Flash (Thử nghiệm, cực nhanh)", "gemini-2.0-flash-exp"),
-    ("Gemini Flash Latest (Bản bạn vừa hết lượt)", "gemini-flash-latest"),
+    ("Gemini 2.5 Flash (Ổn định, khuyên dùng)", "gemini-2.5-flash"),
+    ("Gemini 3 Flash (Phiên bản mới nhất, thông minh)", "gemini-3-flash"),
+    ("Gemini 3.1 Flash Lite (Bản nhẹ, tiết kiệm)", "gemini-3.1-flash-lite"),
+    ("Gemini 2.5 Flash Lite (Bản nhẹ ổn định)", "gemini-2.5-flash-lite"),
+    ("Gemma 4 31B (Mô hình mở mạnh mẽ)", "gemma-4-31b"),
 ]
 
 ENV_FILE = ".env"
