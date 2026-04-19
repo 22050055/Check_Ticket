@@ -264,14 +264,40 @@ class AiService:
                     # Nếu không còn function call -> Kết thúc vòng lặp
                     break
 
+            # LOG CHI TIẾT ĐỂ GỠ RỐI (CHỈ DÙNG TRONG ĐỒ ÁN)
+            try:
+                logger.info(f"--- FULL AI RESPONSE ---")
+                logger.info(response.model_dump_json())
+            except:
+                logger.info(f"AI response received but could not dump to JSON: {response}")
+
             # TRÍCH XUẤT VĂN BẢN CUỐI CÙNG: 
-            # Đảm bảo lấy được text ngay cả khi có nhiều parts
             final_text = ""
-            for part in response.candidates[0].content.parts:
-                if part.text:
-                    final_text += part.text
             
-            return final_text or "Sên đã hoàn thành yêu cầu nhưng không tìm thấy văn bản trả lời."
+            # SDK mới đôi khi trả về text trực tiếp ở cấp độ response
+            try:
+                if response.text:
+                    final_text = response.text
+            except:
+                pass
+
+            # Nếu không có, quét từng part trong candidate đầu tiên
+            if not final_text:
+                for candidate in response.candidates:
+                    if candidate.content and candidate.content.parts:
+                        for part in candidate.content.parts:
+                            if part.text:
+                                final_text += part.text
+            
+            # Làm sạch khoảng trắng
+            final_text = final_text.strip()
+            
+            logger.info(f"Sên FINAL TEXT extracted: '{final_text}'")
+            
+            if not final_text:
+                return "Sên đã nghe thấy bạn, nhưng hệ thống AI chưa trả về phản hồi văn bản rõ ràng. Bạn hãy thử hỏi lại nhé!"
+                
+            return final_text
 
         except Exception as e:
             logger.error(f"AiService Error: {str(e)}")
