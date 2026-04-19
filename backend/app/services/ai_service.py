@@ -7,7 +7,8 @@ from datetime import datetime, timezone, timedelta
 
 from ..core.config import settings
 from .report_service import ReportService
-from ..api.tickets import _auto_cleanup_expired_tickets
+from ..api.tickets import _auto_cleanup_expired_tickets, _make_qr_token
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -32,26 +33,28 @@ class AiService:
         # Phân quyền rõ rệt trong Prompt và dặn AI thông minh hơn về ngữ cảnh
         perm_desc = ""
         if user_role in ["admin", "manager"]:
-            perm_desc = "Bạn là Admin/Manager: Có quyền xem báo cáo doanh thu, lượt khách và dashboard."
+            perm_desc = "Bạn là Admin/Manager: Có quyền xem báo cáo doanh thu, lượt khách, dashboard và QUẢN LÝ vé."
         elif user_role in ["operator", "cashier"]:
-            perm_desc = "Bạn là Nhân viên: Có quyền tra cứu trạng thái vé và thông tin cổng."
+            perm_desc = "Bạn là Nhân viên: Có quyền tra cứu trạng thái vé, thông tin cổng và BÁN vé."
         else:
-            perm_desc = "Bạn là Khách hàng: Chỉ được xem vé của chính mình. Tuyệt đối không xem dashboard."
+            perm_desc = "Bạn là Khách hàng: Bạn có quyền xem vé của mình, MUA vé mới và HỦY vé chưa dùng."
 
         ict_timezone = timezone(timedelta(hours=7))
         current_time_str = datetime.now(ict_timezone).strftime("%A, ngày %d/%m/%Y, %H:%M")
 
         self.system_instruction = (
             "BẢN SẮC & BỐI CẢNH:\n"
-            "1. Bạn tên là 'Sên' ✨, trợ lý ảo thông minh của Tourism Gate.\n"
-            f"2. Người đang nói chuyện: {self.user_name} (Vai trò: {user_role}).\n"
+            "1. Bạn tên là 'Sên' ✨, trợ lý ảo thông minh, thân thiện của hệ thống du lịch Tourism Gate.\n"
+            f"2. Người đang nói chuyện: {self.user_name} (Email: {user_email}, Vai trò: {user_role}).\n"
             f"3. Thời gian hiện tại: {current_time_str}.\n"
             f"4. QUYỀN HẠN: {perm_desc}\n\n"
-            "NGUYÊN TẮC 'THÔNG MINH':\n"
-            "1. DUY TRÌ NGỮ CẢNH: Luôn ghi nhớ chủ đề của các câu hỏi trước. Nếu người dùng hỏi 'còn không?', 'thế còn ngày mai?', 'tốn bao nhiêu?' -> Phải hiểu họ đang hỏi tiếp về Vé hoặc Doanh thu từ câu trước.\n"
-            "2. CHỦ ĐỘNG TRA CỨU: Thay vì hỏi lại 'Bạn muốn tra cứu gì?', hãy chủ động gọi hàm (Tool Use) để kiểm tra dữ liệu nếu câu hỏi có liên quan đến chức năng của bạn.\n"
-            "3. XỬ LÝ LỖI: Nếu gọi hàm mà kết quả trống (ví dụ: không có vé), hãy thông báo nhẹ nhàng và gợi ý họ kiểm tra lại mã vé hoặc mua vé mới.\n"
-            "4. PHONG CÁCH: Thân thiện, ngắn gọn, dùng Markdown để trình bày bảng biểu/danh sách. Luôn dùng Tiếng Việt."
+            "NGUYÊN TẮC 'THÔNG MINH' & HÀNH ĐỘNG:\n"
+            "1. DUY TRÌ NGỮ CẢNH: Nhớ nội dung cuộc trò chuyện trước để trả lời câu hỏi ngắn.\n"
+            "2. CHỦ ĐỘNG TRA CỨU: Luôn ưu tiên gọi hàm tra cứu trước khi hỏi lại người dùng.\n"
+            "3. TƯ VẤN FACEID (QUAN TRỌNG): Mỗi khi liệt kê danh sách vé, nếu thấy vé nào có 'has_face' là False, hãy nhắc người dùng bằng câu: 'Nhớ quét gương mặt nhé! ✨' để họ biết đường đăng ký FaceID cho vé đó.\n"
+            "4. MUA VÉ/HỦY VÉ: Hỗ trợ khách hàng thực hiện các thao tác này bằng các hàm tool tương ứng. Nếu mua vé hộ, hãy hỏi email người nhận (nếu chưa có).\n"
+            "5. XÁC NHẬN: Trước khi HỦY vé, phải hỏi xác nhận lại một lần nữa.\n"
+            "6. PHONG CÁCH: Thân thiện, chuyên nghiệp, dùng Tiếng Việt. Trình bày danh sách/báo cáo dưới dạng Bảng Markdown cho đẹp.\n"
         )
 
         # 3. Danh sách Tools (ánh xạ tên hàm)
@@ -96,6 +99,30 @@ class AiService:
                         description="Lấy danh sách các vé mà khách hàng hiện tại đang sở hữu.",
                     ),
                     types.FunctionDeclaration(
+                        name="cancel_ticket",
+                        description="Hủy một vé chưa sử dụng của khách hàng.",
+                        parameters={
+                            "type": "OBJECT",
+                            "properties": {
+                                "ticket_id": {"type": "STRING", "description": "Mã định danh duy nhất của vé cần hủy"}
+                            },
+                            "required": ["ticket_id"],
+                        },
+                    ),
+                    types.FunctionDeclaration(
+                        name="buy_ticket",
+                        description="Thực hiện mua vé mới. Hỗ trợ mua hộ cho người khác qua Email.",
+                        parameters={
+                            "type": "OBJECT",
+                            "properties": {
+                                "ticket_type": {"type": "STRING", "description": "Loại vé: 'adult' (Người lớn) hoặc 'child' (Trẻ em)"},
+                                "customer_email": {"type": "STRING", "description": "Email người sở hữu vé (để trống nếu mua cho chính mình)"},
+                                "quantity": {"type": "INTEGER", "description": "Số lượng vé (mặc định 1)"}
+                            },
+                            "required": ["ticket_type"],
+                        },
+                    ),
+                    types.FunctionDeclaration(
                         name="get_park_info",
                         description="Lấy thông tin chung về khu du lịch và hướng dẫn sử dụng app.",
                     ),
@@ -108,7 +135,7 @@ class AiService:
             system_instruction=self.system_instruction,
             tools=self.tools,
             temperature=0.7,
-            max_output_tokens=400, # Giảm để phản hồi nhanh hơn
+            max_output_tokens=1000, 
         )
 
     # ── Tools for Gemini ────────────────────────────────────────
@@ -186,15 +213,96 @@ class AiService:
         cursor = self.db["tickets"].find({"customer_email": self.user_email}).sort("created_at", -1)
         tickets = await cursor.to_list(length=50)
         
-        return [
-            {
+        results = []
+        for t in tickets:
+            identity = await self.db["identities"].find_one({"ticket_id": str(t["_id"])})
+            results.append({
                 "ticket_id": str(t["_id"]),
                 "type": t.get("ticket_type"),
                 "status": t.get("status"),
                 "valid_until": t.get("valid_until").isoformat() if t.get("valid_until") else None,
-                "has_face": t.get("has_face", False)
-            } for t in tickets
-        ]
+                "has_face": identity.get("has_face", False) if identity else False
+            })
+        return results
+
+    async def buy_ticket(self, ticket_type: str, customer_email: str = None, quantity: int = 1) -> Dict[str, Any]:
+        """Thực hiện mua vé mới cho khách hàng."""
+        # Email mặc định là email người đang chat
+        email = customer_email or self.user_email
+        if not email:
+            return {"error": "Cần cung cấp Email để mua vé."}
+
+        # Bảng giá demo
+        PRICES = {"adult": 200000, "child": 120000}
+        price = PRICES.get(ticket_type.lower(), 200000)
+        
+        vn_tz = timezone(timedelta(hours=7))
+        now = datetime.now(vn_tz)
+        valid_until = now + timedelta(days=1) # Hiệu lực 24h
+
+        # Lấy/Tạo customer
+        customer = await self.db["customers"].find_one({"email": email})
+        customer_id = str(customer["_id"]) if customer else str(uuid.uuid4())
+        if not customer:
+            await self.db["customers"].insert_one({
+                "_id": customer_id,
+                "name": email.split("@")[0],
+                "email": email,
+                "created_at": now
+            })
+
+        issued_tickets = []
+        for _ in range(quantity):
+            tid = str(uuid.uuid4())
+            # Lưu Ticket
+            await self.db["tickets"].insert_one({
+                "_id": tid,
+                "customer_id": customer_id,
+                "customer_email": email, # Thêm Email để dễ query
+                "ticket_type": ticket_type,
+                "price": price,
+                "status": "active",
+                "valid_until": valid_until,
+                "venue_id": "default_gate",
+                "issued_by_name": "Sên AI ✨",
+                "created_at": now
+            })
+            # Lưu Identity (has_face default = False)
+            await self.db["identities"].insert_one({
+                "_id": str(uuid.uuid4()),
+                "ticket_id": tid,
+                "has_face": False,
+                "created_at": now
+            })
+            issued_tickets.append(tid)
+
+        return {
+            "success": True,
+            "message": f"Đã mua thành công {quantity} vé {ticket_type} cho {email}.",
+            "ticket_ids": issued_tickets,
+            "total_price": price * quantity,
+            "instructions": "Vui lòng kiểm tra mục 'Vé của tôi' và ĐỪNG QUÊN quét gương mặt để hưởng ưu đãi FaceID nhé! ✨"
+        }
+
+    async def cancel_ticket(self, ticket_id: str) -> Dict[str, Any]:
+        """Hủy vé chưa sử dụng."""
+        ticket = await self.db["tickets"].find_one({"_id": ticket_id})
+        if not ticket:
+            return {"error": "Không tìm thấy mã vé này."}
+        
+        if ticket.get("status") != "active":
+            return {"error": f"Không thể hủy vé đang ở trạng thái {ticket.get('status')}."}
+
+        # Cập nhật status
+        await self.db["tickets"].update_one(
+            {"_id": ticket_id},
+            {"$set": {"status": "revoked", "updated_at": datetime.now()}}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Vé {ticket_id} đã được hủy thành công. Chúc bạn một ngày tốt lành!"
+        }
 
     async def get_park_info(self) -> Dict[str, Any]:
         """Lấy thông tin chung về khu du lịch: giờ mở cửa, các khu vực, và hướng dẫn sử dụng app."""
@@ -269,6 +377,8 @@ class AiService:
                         "check_ticket_status":   self.check_ticket_status,
                         "list_gates_health":     self.list_gates_health,
                         "get_my_tickets":        self.get_my_tickets,
+                        "buy_ticket":            self.buy_ticket,
+                        "cancel_ticket":         self.cancel_ticket,
                         "get_park_info":         self.get_park_info
                     }
 
