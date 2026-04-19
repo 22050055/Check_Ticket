@@ -9,7 +9,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.tourism.gate.R
-import com.tourism.gate.ui.AiChatActivity
+import com.tourism.gate.ui.AiChatBottomSheet
+import kotlin.math.abs
 
 /**
  * CustomerDashboardActivity — Màn hình chính cho Khách hàng.
@@ -83,9 +84,10 @@ class CustomerDashboardActivity : AppCompatActivity() {
                 }
                 MotionEvent.ACTION_UP -> {
                     // Nếu quãng đường di chuyển rất nhỏ, coi là Click
-                    val diffX = Math.abs(event.rawX - startX)
-                    val diffY = Math.abs(event.rawY - startY)
+                    val diffX = abs(event.rawX - startX)
+                    val diffY = abs(event.rawY - startY)
                     if (diffX < 10 && diffY < 10) {
+                        view.performClick()
                         AiChatBottomSheet().show(supportFragmentManager, "AiChat")
                     } else {
                         // Tự động hít vào cạnh trái hoặc phải
@@ -122,6 +124,7 @@ class CustomerDashboardActivity : AppCompatActivity() {
      * Xử lý nút Back của hệ thống:
      * Nếu không ở trang Home, quay về trang Home trước khi thoát app.
      */
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onBackPressed() {
         if (bottomNav.selectedItemId != R.id.nav_home) {
             bottomNav.selectedItemId = R.id.nav_home
