@@ -53,7 +53,7 @@ class AiService:
             "2. CHỦ ĐỘNG TRA CỨU & TÍNH TOÁN: Luôn ưu tiên gọi hàm tra cứu. Nếu người dùng hỏi về tiền bạc/số lượng, phải thực hiện các phép tính cộng trừ chính xác dựa trên dữ liệu trả về.\n"
             "3. TƯ VẤN FACEID (QUAN TRỌNG): Mỗi khi liệt kê danh sách vé, nếu thấy vé nào có 'has_face' là False, hãy nhắc người dùng bằng câu: 'Nhớ quét gương mặt nhé! ✨' để họ biết đường đăng ký FaceID cho vé đó.\n"
             "4. QUẢN GIA TÀI CHÍNH: Chủ động báo cáo tổng số tiền người dùng đã chi nếu họ hỏi về lịch sử vé. Gợi ý các cách tối ưu chi phí nếu có thể.\n"
-            "5. XÁC NHẬN: Trước khi HỦY hoặc CHUYỂN NHƯỢNG vé, phải hỏi xác nhận lại một lần nữa.\n"
+            "5. XÁC NHẬN: Trước khi HỦY vé, phải hỏi xác nhận lại một lần nữa.\n"
             "6. PHONG CÁCH: Thân thiện, chuyên nghiệp, thông thái. Trình bày danh sách/báo cáo dưới dạng Bảng Markdown cho đẹp.\n"
         )
 
@@ -121,18 +121,6 @@ class AiService:
                                 "ticket_id": {"type": "STRING", "description": "Mã định danh duy nhất của vé cần hủy"}
                             },
                             "required": ["ticket_id"],
-                        },
-                    ),
-                    types.FunctionDeclaration(
-                        name="transfer_ticket",
-                        description="Chuyển nhượng quyền sở hữu vé cho một người khác qua Email.",
-                        parameters={
-                            "type": "OBJECT",
-                            "properties": {
-                                "ticket_id": {"type": "STRING", "description": "Mã vé cần chuyển"},
-                                "new_owner_email": {"type": "STRING", "description": "Email của người nhận vé"}
-                            },
-                            "required": ["ticket_id", "new_owner_email"],
                         },
                     ),
                     types.FunctionDeclaration(
@@ -307,42 +295,6 @@ class AiService:
             })
         return timeline
 
-    async def transfer_ticket(self, ticket_id: str, new_owner_email: str) -> Dict[str, Any]:
-        """Chuyển vé cho người khác."""
-        ticket = await self.db["tickets"].find_one({"_id": ticket_id})
-        if not ticket:
-            return {"error": "Không tìm thấy vé."}
-        
-        if ticket.get("customer_email") != self.user_email and self.user_role != "admin":
-            return {"error": "Bạn không có quyền chuyển nhượng vé này."}
-
-        # Tìm/Tạo customer mới
-        new_customer = await self.db["customers"].find_one({"email": new_owner_email})
-        new_customer_id = str(new_customer["_id"]) if new_customer else str(uuid.uuid4())
-        if not new_customer:
-            await self.db["customers"].insert_one({
-                "_id": new_customer_id,
-                "name": new_owner_email.split("@")[0],
-                "email": new_owner_email,
-                "created_at": datetime.now()
-            })
-
-        # Cập nhật vé
-        await self.db["tickets"].update_one(
-            {"_id": ticket_id},
-            {"$set": {
-                "customer_id": new_customer_id,
-                "customer_email": new_owner_email,
-                "updated_at": datetime.now()
-            }}
-        )
-
-        return {
-            "success": True,
-            "message": f"Vé {ticket_id} đã được chuyển quyền sở hữu sang {new_owner_email}.",
-            "new_owner": new_owner_email
-        }
-
     async def buy_ticket(self, ticket_type: str, customer_email: str = None, quantity: int = 1) -> Dict[str, Any]:
         """Thực hiện mua vé mới cho khách hàng."""
         # Email mặc định là email người đang chat
@@ -499,7 +451,6 @@ class AiService:
                         "get_usage_timeline":    self.get_usage_timeline,
                         "buy_ticket":            self.buy_ticket,
                         "cancel_ticket":         self.cancel_ticket,
-                        "transfer_ticket":       self.transfer_ticket,
                         "get_park_info":         self.get_park_info
                     }
 
