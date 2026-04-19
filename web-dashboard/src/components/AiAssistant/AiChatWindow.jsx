@@ -107,17 +107,27 @@ const AiChatWindow = ({ onClose }) => {
   };
 
   const renderSettings = () => (
-    <div style={{ padding: '4px' }}>
-      <p style={{ fontWeight: '600', marginBottom: '8px', fontSize: '12px' }}>Cấu hình Mô hình (Admin)</p>
-      <Select
-        style={{ width: 220 }}
-        size="small"
-        value={currentModel}
-        onChange={handleUpdateModel}
-        loading={isUpdatingModel}
-        options={AI_MODELS}
-      />
-      <p style={{ fontSize: '11px', color: '#8c8c8c', marginTop: '8px' }}> Thay đổi sẽ áp dụng cho cả Mobile App ngay lập tức.</p>
+    <div style={{ padding: '8px', minWidth: '240px' }}>
+      <p style={{ fontWeight: '600', marginBottom: '12px', fontSize: '14px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>
+        Cấu hình Mô hình (Admin)
+      </p>
+      <div style={{ marginBottom: '12px' }}>
+        <p style={{ fontSize: '12px', color: '#595959', marginBottom: '4px' }}>Chọn bộ não cho Sên:</p>
+        <Select
+          style={{ width: '100%' }}
+          placeholder="Chọn mô hình..."
+          value={currentModel}
+          onChange={handleUpdateModel}
+          loading={isUpdatingModel}
+          options={AI_MODELS}
+          getPopupContainer={trigger => trigger.parentElement}
+          dropdownMatchSelectWidth={false}
+          dropdownStyle={{ minWidth: 250 }}
+        />
+      </div>
+      <p style={{ fontSize: '11px', color: '#8c8c8c', fontStyle: 'italic', backgroundColor: '#f5f5f5', padding: '8px', borderRadius: '4px' }}>
+        💡 Thay đổi này sẽ được áp dụng cho cả App Mobile ngay lập tức.
+      </p>
     </div>
   );
 
