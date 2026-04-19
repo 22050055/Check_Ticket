@@ -86,7 +86,7 @@ class CustomerDashboardActivity : AppCompatActivity() {
                     val diffX = Math.abs(event.rawX - startX)
                     val diffY = Math.abs(event.rawY - startY)
                     if (diffX < 10 && diffY < 10) {
-                        startActivity(Intent(this, AiChatActivity::class.java))
+                        AiChatBottomSheet().show(supportFragmentManager, "AiChat")
                     } else {
                         // Tự động hít vào cạnh trái hoặc phải
                         val screenWidth = resources.displayMetrics.widthPixels

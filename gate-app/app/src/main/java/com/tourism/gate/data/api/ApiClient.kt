@@ -35,6 +35,7 @@ object ApiClient {
             .readTimeout(60, TimeUnit.SECONDS)     // Đợi xử lý mặt lâu hơn
             .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(AuthInterceptor(token))
+            .addInterceptor(UnauthInterceptor(context)) // Bắt lỗi 401
             .addInterceptor(buildLoggingInterceptor())
             .build()
 
@@ -57,6 +58,32 @@ object ApiClient {
                 .header("Authorization", "Bearer $token")
                 .build()
             return chain.proceed(authed)
+        }
+    }
+
+    // ── Unauth interceptor — Tự động logout khi token hết hạn ─
+    private class UnauthInterceptor(private val context: Context) : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
+            val request = chain.request()
+            val response = chain.proceed(request)
+
+            if (response.code == 401) {
+                // Nếu request có gửi token mà vẫn bị 401 -> Token hết hạn hoặc hỏng
+                val authHeader = request.header("Authorization")
+                if (!authHeader.isNullOrEmpty()) {
+                    // Xóa thông tin đăng nhập cũ
+                    context.getSharedPreferences("gate_prefs", Context.MODE_PRIVATE).edit()
+                        .remove("token")
+                        .remove("role")
+                        .apply()
+
+                    // Quay về màn hình Login
+                    val intent = android.content.Intent(context, com.tourism.gate.ui.LoginActivity::class.java)
+                    intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    context.startActivity(intent)
+                }
+            }
+            return response
         }
     }
 
