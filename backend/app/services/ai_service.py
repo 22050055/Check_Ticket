@@ -224,7 +224,7 @@ class AiService:
 
             # Gửi yêu cầu lên Gemini
             response = self.client.models.generate_content(
-                model='gemini-flash-latest',
+                model=settings.AI_MODEL_NAME,
                 contents=contents,
                 config=self.config
             )
@@ -274,7 +274,7 @@ class AiService:
                         
                         # Gọi lại Gemini
                         response = self.client.models.generate_content(
-                            model='gemini-flash-latest',
+                            model=settings.AI_MODEL_NAME,
                             contents=contents,
                             config=self.config
                         )
