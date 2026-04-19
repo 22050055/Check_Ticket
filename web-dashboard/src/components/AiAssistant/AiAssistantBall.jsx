@@ -40,9 +40,9 @@ const AiAssistantBall = () => {
         </div>
       </motion.div>
 
-      {isOpen && (
+      <div style={{ display: isOpen ? 'block' : 'none' }}>
         <AiChatWindow onClose={() => setIsOpen(false)} />
-      )}
+      </div>
     </>
   );
 };

@@ -15,6 +15,7 @@ export default function useAuth() {
 
   const doLogout = useCallback(() => {
     logout()
+    localStorage.removeItem('sen_chat_history')
     navigate('/login')
   }, [logout, navigate])
 

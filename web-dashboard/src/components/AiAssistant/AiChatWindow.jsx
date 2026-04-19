@@ -6,14 +6,19 @@ import { aiApi } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AiChatWindow = ({ onClose }) => {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Xin chào! Tôi là trợ lý Tourism Gate AI. Tôi có thể giúp gì cho bạn hôm nay? (Tôi có quyền truy vấn doanh thu, lượt khách và tình trạng vé của hệ thống).' }
-  ]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('sen_chat_history');
+    return saved ? JSON.parse(saved) : [
+      { role: 'assistant', content: 'Xin chào! Tôi là trợ lý Tourism Gate AI. Tôi có thể giúp gì cho bạn hôm nay? (Tôi có quyền truy vấn doanh thu, lượt khách và tình trạng vé của hệ thống).' }
+    ];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
 
+  // Lưu vào localStorage mỗi khi có tin nhắn mới
   useEffect(() => {
+    localStorage.setItem('sen_chat_history', JSON.stringify(messages));
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -28,8 +33,8 @@ const AiChatWindow = ({ onClose }) => {
     setLoading(true);
 
     try {
-      // Chuẩn bị history (Gemini format: user -> model)
-      const history = messages.map(m => ({
+      // TIẾT KIỆM TOKEN: Chỉ lấy 5 tin nhắn gần nhất để làm ngữ cảnh
+      const history = messages.slice(-5).map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }]
       }));
@@ -44,7 +49,9 @@ const AiChatWindow = ({ onClose }) => {
   };
 
   const clearChat = () => {
-    setMessages([{ role: 'assistant', content: 'Đã xóa lịch sử chat. Tôi có thể giúp gì mới cho bạn?' }]);
+    const defaultMsg = [{ role: 'assistant', content: 'Đã xóa lịch sữ chat. Tôi có thể giúp gì mới cho bạn?' }];
+    setMessages(defaultMsg);
+    localStorage.setItem('sen_chat_history', JSON.stringify(defaultMsg));
   };
 
   return (
