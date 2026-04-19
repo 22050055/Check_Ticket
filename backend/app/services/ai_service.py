@@ -203,6 +203,12 @@ class AiService:
         contents.append(types.Content(role="user", parts=[types.Part(text=user_message)]))
 
         try:
+            # 1. LOG INPUT (Gửi gì cho AI)
+            logger.info(f"--- AI INPUT (User: {self.user_email}) ---")
+            logger.info(f"Message: {user_message}")
+            if history:
+                logger.info(f"History context: {len(history)} messages")
+
             # Gửi yêu cầu lên Gemini
             response = self.client.models.generate_content(
                 model='gemini-flash-latest',
@@ -212,7 +218,10 @@ class AiService:
 
             # Vòng lặp xử lý Function Calling
             while True:
-                # Trích xuất part đầu tiên
+                # Đảm bảo có ứng viên (candidate)
+                if not response.candidates:
+                    break
+                    
                 first_part = response.candidates[0].content.parts[0]
                 
                 # Nếu là Function Call -> Gọi hàm
@@ -221,7 +230,7 @@ class AiService:
                     fn_name = fc.name
                     fn_args = fc.args
                     
-                    logger.info(f"Sên call function: {fn_name} | Args: {fn_args}")
+                    logger.info(f"==> AI REQUESTED TOOL: {fn_name} | Args: {fn_args}")
 
                     fn_map = {
                         "get_dashboard_summary": self.get_dashboard_summary,
@@ -236,13 +245,12 @@ class AiService:
                     if fn_name in fn_map:
                         result = await fn_map[fn_name](**fn_args)
                         
-                        # Thêm chính cái Call vừa rồi vào lịch sử
-                        contents.append(response.candidates[0].content)
+                        logger.info(f"==> TOOL RESULT: {str(result)[:200]}...") # Log 200 ký tự đầu của kết quả
                         
-                        # Gửi kết quả hàm (SDK mới dùng role='user' hoặc 'tool' tùy cấu hình, 
-                        # nhưng quan trọng là cấu trúc FunctionResponse)
+                        # Thêm Call và Response vào context
+                        contents.append(response.candidates[0].content)
                         contents.append(types.Content(
-                            role="user", # Trong SDK python-genai, kết quả tool gửi lại bằng role user hoặc tool
+                            role="user",
                             parts=[types.Part(
                                 function_response=types.FunctionResponse(
                                     name=fn_name,
@@ -251,50 +259,45 @@ class AiService:
                             )]
                         ))
                         
-                        # Gọi lại Gemini để lấy câu trả lời cuối cùng dựa trên kết quả hàm
+                        # Gọi lại Gemini
                         response = self.client.models.generate_content(
                             model='gemini-flash-latest',
                             contents=contents,
                             config=self.config
                         )
                     else:
+                        logger.warning(f"Tool {fn_name} is not implemented.")
                         break
                 else:
-                    # Nếu không còn function call -> Kết thúc vòng lặp
                     break
 
-            # LOG CHI TIẾT ĐỂ GỠ RỐI (CHỈ DÙNG TRONG ĐỒ ÁN)
+            # 2. LOG FULL RESPONSE (Dữ liệu thô từ Google)
             try:
                 logger.info(f"--- FULL AI RESPONSE ---")
                 logger.info(response.model_dump_json())
             except:
-                logger.info(f"AI response received but could not dump to JSON: {response}")
+                logger.debug("Could not JSON dump response")
 
-            # TRÍCH XUẤT VĂN BẢN CUỐI CÙNG: 
+            # 3. TRÍCH XUẤT VĂN BẢN
             final_text = ""
-            
-            # SDK mới đôi khi trả về text trực tiếp ở cấp độ response
             try:
                 if response.text:
                     final_text = response.text
             except:
                 pass
 
-            # Nếu không có, quét từng part trong candidate đầu tiên
             if not final_text:
                 for candidate in response.candidates:
-                    if candidate.content and candidate.content.parts:
-                        for part in candidate.content.parts:
-                            if part.text:
-                                final_text += part.text
+                    for part in candidate.content.parts:
+                        if part.text:
+                            final_text += part.text
             
-            # Làm sạch khoảng trắng
             final_text = final_text.strip()
-            
-            logger.info(f"Sên FINAL TEXT extracted: '{final_text}'")
+            logger.info(f"--- FINAL TEXT TO USER ---")
+            logger.info(f"Length: {len(final_text)} chars")
             
             if not final_text:
-                return "Sên đã nghe thấy bạn, nhưng hệ thống AI chưa trả về phản hồi văn bản rõ ràng. Bạn hãy thử hỏi lại nhé!"
+                return "Sên đã nhận được yêu cầu nhưng không thể trích xuất văn bản trả lời. Hãy thử hỏi câu khác nhé!"
                 
             return final_text
 
