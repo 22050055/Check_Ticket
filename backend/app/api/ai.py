@@ -23,10 +23,11 @@ async def ai_chat(
     Endpoint chat với trợ lý ảo AI. 
     Hỗ trợ cả Nhân viên (Dashboard) và Khách hàng (Mobile App).
     """
-    # Lấy định danh tốt nhất: Nhân viên dùng username, Khách dùng email
-    user_id = current_user.get("username") or current_user.get("email") or current_user.get("_id")
+    # Lấy định danh và tên thật
+    user_id   = current_user.get("username") or current_user.get("email") or current_user.get("_id")
+    user_name = current_user.get("full_name") or current_user.get("name")
     
-    service = AiService(db, user_email=user_id, user_role=current_user.get("role"))
+    service = AiService(db, user_email=user_id, user_role=current_user.get("role"), user_name=user_name)
     response_text = await service.chat(req.message, req.history)
     
     return {

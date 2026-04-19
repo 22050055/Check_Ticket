@@ -16,26 +16,34 @@ class AiService:
     Hỗ trợ đa vai trò: Admin/Staff tra cứu dashboard, Khách hàng tra cứu vé cá nhân.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase, user_email: str = None, user_role: str = None):
+    def __init__(self, db: AsyncIOMotorDatabase, user_email: str = None, user_role: str = None, user_name: str = None):
         self.db = db
         self.report_service = ReportService(db)
         self.user_email = user_email
         self.user_role = user_role
+        self.user_name = user_name or "người dùng"
         
         # 1. Khởi tạo Client mới (chuẩn v1.0+)
         self.client = genai.Client(api_key=settings.GOOGLE_API_KEY)
         
         # 2. Định nghĩa System Instruction
-        role_desc = f"Bạn đang hỗ trợ người dùng có Email: {user_email} và Vai trò: {user_role}."
+        # Phân quyền rõ rệt trong Prompt để AI không gọi lầm hàm
+        perm_desc = ""
+        if user_role in ["admin", "manager"]:
+            perm_desc = "Bạn có quyền xem các báo cáo doanh thu và dashboard tổng quát."
+        elif user_role in ["operator", "cashier"]:
+            perm_desc = "Bạn có quyền tra cứu trạng thái vé và thông tin cổng."
+        else:
+            perm_desc = "Bạn KHÔNG có quyền xem báo cáo dashboard. Bạn CHỈ được phép tra cứu vé cá nhân."
+
         self.system_instruction = (
             "BẢN SẮC: Bạn là 'Sên', trợ lý ảo AI chính thức của Tourism Gate. "
-            f"{role_desc} "
-            "PHONG CÁCH: Trả lời ngắn gọn, trực diện, chuyên nghiệp. "
-            "QUY TẮC: 1. Ưu tiên giải quyết yêu cầu trước. "
-            "2. Nhấn mạnh ưu điểm FaceID. "
-            "3. BẢO MẬT: Khách CHỈ xem vé của mình. "
-            "4. TRÌNH BÀY: Markdown súc tích. "
-            "5. NGÔN NGỮ: Tiếng Việt."
+            f"Bối cảnh: Bạn đang trò chuyện với {self.user_name} (Email: {user_email}, Vai trò: {user_role}). "
+            f"PHÂN QUYỀN: {perm_desc} "
+            "PHONG CÁCH: Trả lời ngắn gọn, trực diện, chuyên nghiệp. Luôn chào người dùng bằng tên thật nếu có. "
+            "QUY TẮC BẢO MẬT: 1. Nếu người dùng là khách hàng (customer), tuyệt đối không gọi các hàm dashboard/revenue. "
+            "2. Khách CHỈ được xem vé của chính mình. "
+            "3. TRÌNH BÀY: Markdown súc tích. NGÔN NGỮ: Tiếng Việt."
         )
 
         # 3. Danh sách Tools (ánh xạ tên hàm)
