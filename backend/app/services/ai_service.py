@@ -44,17 +44,17 @@ class AiService:
 
         self.system_instruction = (
             "BẢN SẮC & BỐI CẢNH:\n"
-            "1. Bạn tên là 'Sên' ✨, trợ lý ảo thông minh, thân thiện của hệ thống du lịch Tourism Gate.\n"
-            f"2. Người đang nói chuyện: {self.user_name} (Email: {user_email}, Vai trò: {user_role}).\n"
+            "1. Bạn là 'Sên' ✨ - Nhân viên tư vấn nhiệt huyết và chuyên nghiệp của Khu du lịch Tourism Gate.\n"
+            f"2. Đối tượng đang hỗ trợ: {self.user_name} (Email: {user_email}, Vai trò: {user_role}).\n"
             f"3. Thời gian hiện tại: {current_time_str}.\n"
             f"4. QUYỀN HẠN: {perm_desc}\n\n"
-            "NGUYÊN TẮC 'THÔNG MINH' & HÀNH ĐỘNG:\n"
-            "1. DUY TRÌ NGỮ CẢNH: Nhớ nội dung cuộc trò chuyện trước để trả lời câu hỏi ngắn.\n"
-            "2. CHỦ ĐỘNG TRA CỨU & TÍNH TOÁN: Luôn ưu tiên gọi hàm tra cứu. Nếu người dùng hỏi về tiền bạc/số lượng, phải thực hiện các phép tính cộng trừ chính xác dựa trên dữ liệu trả về.\n"
-            "3. TƯ VẤN FACEID (QUAN TRỌNG): Mỗi khi liệt kê danh sách vé, nếu thấy vé nào có 'has_face' là False, hãy nhắc người dùng bằng câu: 'Nhớ quét gương mặt nhé! ✨' để họ biết đường đăng ký FaceID cho vé đó.\n"
-            "4. QUẢN GIA TÀI CHÍNH: Chủ động báo cáo tổng số tiền người dùng đã chi nếu họ hỏi về lịch sử vé. Gợi ý các cách tối ưu chi phí nếu có thể.\n"
-            "5. XÁC NHẬN: Trước khi HỦY vé, phải hỏi xác nhận lại một lần nữa.\n"
-            "6. PHONG CÁCH: Thân thiện, chuyên nghiệp, thông thái. Trình bày danh sách/báo cáo dưới dạng Bảng Markdown cho đẹp.\n"
+            "PHONG CÁCH & QUY TẮC ỨNG XỬ (NHÂN VIÊN ƯU TÚ):\n"
+            "1. THÁI ĐỘ: Luôn niềm nở, lịch sự và hiếu khách. Sử dụng các từ ngữ mang tính mời gọi và tích cực.\n"
+            "2. TƯ VẤN NHIỆT TÌNH: Khi khách hỏi về khu du lịch, hãy giới thiệu những điểm mạnh nhất như: Hệ thống FaceID không chạm cực hiện đại, không gian xanh, trò chơi đa dạng.\n"
+            "3. LUÔN NHẮC FACEID: Đây là niềm tự hào của dự án. Hãy dặn khách: 'Nhớ quét gương mặt nhé! ✨' để họ có trải nghiệm VIP tại cổng soát vé.\n"
+            "4. CHÍNH XÁC: Cung cấp đúng giá vé và giờ mở cửa từ dữ liệu hệ thống.\n"
+            "5. DUY TRÌ NGỮ CẢNH: Nhớ nội dung cuộc trò chuyện trước để trả lời câu hỏi ngắn.\n"
+            "6. TRÌNH BÀY: Dùng Markdown, tạo bảng biểu khi liệt kê giá vé cho chuyên nghiệp.\n"
         )
 
         # 3. Danh sách Tools (ánh xạ tên hàm)
@@ -375,17 +375,24 @@ class AiService:
         }
 
     async def get_park_info(self) -> Dict[str, Any]:
-        """Lấy thông tin chung về khu du lịch: giờ mở cửa, các khu vực, và hướng dẫn sử dụng app."""
+        """Lấy thông tin chi tiết về khu du lịch để tư vấn cho khách."""
         return {
-            "name": "Khu du lịch Tourism Gate",
-            "opening_hours": "07:30 - 17:30 hàng ngày",
-            "zones": ["Khu vui chơi cảm giác mạnh", "Vườn thú Safari", "Công viên nước", "Khu ẩm thực"],
-            "features": "Hệ thống sử dụng vé điện tử (QR Code) và xác thực khuôn mặt (FaceID) tại cổng soát vé.",
-            "instructions": [
-                "1. Bạn có thể mua vé trực tiếp trên ứng dụng.",
-                "2. Sau khi mua, hãy vào 'Vé của tôi' để lấy mã QR.",
-                "3. Bạn nên đăng ký khuôn mặt để qua cổng nhanh hơn mà không cần đưa điện thoại."
-            ]
+            "name": "Khu du lịch Quốc tế Tourism Gate",
+            "slogan": "Trải nghiệm không chạm - Đậm chất công nghệ 🚀",
+            "opening_hours": "07:30 - 17:30 hàng ngày (kể cả lễ Tết)",
+            "ticket_prices": [
+                {"type": "Người lớn (Adult)", "price": "200.000 VNĐ", "notes": "Dành cho khách trên 1.4m"},
+                {"type": "Trẻ em (Child)", "price": "120.000 VNĐ", "notes": "Dành cho khách từ 1m - 1.4m"},
+                {"type": "Em bé", "price": "Miễn phí", "notes": "Dưới 1m được miễn phí hoàn toàn"}
+            ],
+            "zones": [
+                {"name": "Safari Hoang Dã", "description": "Ngắm thú quý hiếm ở khoảng cách gần."},
+                {"name": "Thế giới nước", "description": "Hệ thống ống trượt cảm giác mạnh hàng đầu."},
+                {"name": "Khu phố ẩm thực", "description": "Hội tụ tinh hoa ẩm thực 3 miền Bắc - Trung - Nam."}
+            ],
+            "special_tech": "Hệ thống soát vé FaceID nhận diện khuôn mặt trong 0.5 giây, không cần xếp hàng đợi lâu.",
+            "is_it_fun": "Cực kỳ vui và đáng tiền! Đây là khu du lịch đầu tiên tại Việt Nam áp dụng công nghệ kiểm soát vé thông minh hoàn toàn.",
+            "safety": "Đội ngũ cứu hộ và an ninh trực 24/7, đảm bảo an toàn tuyệt đối cho gia đình bạn."
         }
 
     # ── Logic xử lý Chat ────────────────────────────────────────
