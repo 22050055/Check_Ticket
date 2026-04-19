@@ -7,34 +7,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const AI_MODELS = [
   {
-    label: 'Dòng Gemini 3 (Thế hệ mới nhất)',
+    label: 'Dòng Gemini 3.1 (Mới Nhất - Preview)',
     options: [
-      { label: 'Gemini 3 Flash (Khuyên dùng - RPM 5)', value: 'gemini-3-flash' },
-      { label: 'Gemini 3.1 Flash Lite (Tiết kiệm - RPM 15)', value: 'gemini-3.1-flash-lite' },
+      { label: 'Gemini 3.1 Pro (High)', value: 'gemini-3.1-pro-preview' },
+      { label: 'Gemini 3.1 Flash Lite (Tiết kiệm)', value: 'gemini-3.1-flash-lite-preview' },
     ],
   },
   {
-    label: 'Dòng Gemini 2.5 (Cân bằng)',
+    label: 'Dòng Gemini 3.0 (Thế hệ mới - Preview)',
     options: [
-      { label: 'Gemini 2.5 Flash (RPM 5)', value: 'gemini-2.5-flash' },
-      { label: 'Gemini 2.5 Flash Lite (RPM 10)', value: 'gemini-2.5-flash-lite' },
+      { label: 'Gemini 3 Flash (Khuyên dùng)', value: 'gemini-3-flash-preview' },
     ],
   },
   {
-    label: 'Dòng Gemma 4 (Siêu thông minh)',
+    label: 'Dòng Gemini 2.5 (Ổn định)',
+    options: [
+      { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
+      { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
+      { label: 'Gemini 2.5 Flash Lite', value: 'gemini-2.5-flash-lite' },
+    ],
+  },
+  {
+    label: 'Dòng Gemma (Open Source)',
     options: [
       { label: 'Gemma 4 31B (Nhanh - RPM 15)', value: 'gemma-4-31b' },
       { label: 'Gemma 4 26B (Nhanh - RPM 15)', value: 'gemma-4-26b' },
-    ],
-  },
-  {
-    label: 'Dòng Gemma 3 (Đa dạng quy mô)',
-    options: [
       { label: 'Gemma 3 27B (RPM 30)', value: 'gemma-3-27b' },
       { label: 'Gemma 3 12B (RPM 30)', value: 'gemma-3-12b' },
-      { label: 'Gemma 3 4B (RPM 30)', value: 'gemma-3-4b' },
-      { label: 'Gemma 3 2B (RPM 30)', value: 'gemma-3-2b' },
-      { label: 'Gemma 3 1B (RPM 30)', value: 'gemma-3-1b' },
     ],
   },
 ];

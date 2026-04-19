@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     # AI Gemini (RAG / Assistant)
     # LƯU Ý: Trên Render, hãy thêm biến môi trường GOOGLE_API_KEY vào Dashboard
     GOOGLE_API_KEY: str = "SET_THIS_IN_RENDER_ENV_OR_DOTENV"
-    AI_MODEL_NAME: str  = "gemini-2.5-flash"
+    AI_MODEL_NAME: str  = "gemini-3.1-pro-preview"
 
     # Helpers
     @property

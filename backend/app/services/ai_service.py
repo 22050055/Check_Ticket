@@ -25,11 +25,11 @@ class AiService:
         self.user_role = user_role
         self.user_name = user_name or "người dùng"
         
-        # Kiểm tra tính hợp lệ của model_name, ưu tiên các dòng 2.5, 3.0, 3.1 và Gemma 3/4
+        # Kiểm tra tính hợp lệ của model_name, ưu tiên các dòng 2.5, 3.0, 3.1 và Gemma
         target_model = model_name or settings.AI_MODEL_NAME
-        # Fallback về gemini-2.5-flash nếu không hợp lệ
+        # Fallback về mặc định (3.1 Pro) nếu ID không chứa gemini hoặc gemma
         if not target_model or not any(x in target_model.lower() for x in ["gemini-", "gemma-"]):
-            target_model = "gemini-2.5-flash"
+            target_model = "gemini-3.1-pro-preview"
         
         self.model_name = target_model
         
