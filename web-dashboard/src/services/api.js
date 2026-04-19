@@ -83,5 +83,11 @@ export const aiApi = {
   chat: (message, history) => api.post('/ai/chat', { message, history }),
 }
 
+// ── System Settings ──────────────────────────────────────────
+export const settingsApi = {
+  getAiModel: () => api.get('/settings/ai-model'),
+  updateAiModel: (modelName) => api.post('/settings/ai-model', { model_name: modelName }),
+}
+
 export default api
  

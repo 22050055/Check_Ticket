@@ -27,7 +27,11 @@ async def ai_chat(
     user_id   = current_user.get("username") or current_user.get("email") or current_user.get("_id")
     user_name = current_user.get("full_name") or current_user.get("name")
     
-    service = AiService(db, user_email=user_id, user_role=current_user.get("role"), user_name=user_name)
+    # Lấy model đang hoạt động từ DB (Cài đặt bởi Admin trên Web)
+    config = await db["system_configs"].find_one({"key": "active_ai_model"})
+    active_model = config["value"] if config else None
+    
+    service = AiService(db, user_email=user_id, user_role=current_user.get("role"), user_name=user_name, model_name=active_model)
     response_text = await service.chat(req.message, req.history)
     
     return {

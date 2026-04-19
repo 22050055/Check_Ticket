@@ -16,12 +16,13 @@ class AiService:
     Hỗ trợ đa vai trò: Admin/Staff tra cứu dashboard, Khách hàng tra cứu vé cá nhân.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase, user_email: str = None, user_role: str = None, user_name: str = None):
+    def __init__(self, db: AsyncIOMotorDatabase, user_email: str = None, user_role: str = None, user_name: str = None, model_name: str = None):
         self.db = db
         self.report_service = ReportService(db)
         self.user_email = user_email
         self.user_role = user_role
         self.user_name = user_name or "người dùng"
+        self.model_name = model_name or settings.AI_MODEL_NAME
         
         # 1. Khởi tạo Client mới (chuẩn v1.0+)
         self.client = genai.Client(api_key=settings.GOOGLE_API_KEY)
@@ -224,7 +225,7 @@ class AiService:
 
             # Gửi yêu cầu lên Gemini
             response = self.client.models.generate_content(
-                model=settings.AI_MODEL_NAME,
+                model=self.model_name,
                 contents=contents,
                 config=self.config
             )
@@ -274,7 +275,7 @@ class AiService:
                         
                         # Gọi lại Gemini
                         response = self.client.models.generate_content(
-                            model=settings.AI_MODEL_NAME,
+                            model=self.model_name,
                             contents=contents,
                             config=self.config
                         )
