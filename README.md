@@ -2,7 +2,7 @@
 
 > **Phát triển hệ thống kiểm soát ra/vào khu du lịch đa kênh dựa trên QR và xác thực định danh, tích hợp Dashboard phân tích vận hành**
 >
-> Đồ án Tốt nghiệp — Ngô Mạnh Khang
+> Đồ án Ngành — Ngô Mạnh Khang - 22050055
 
 ---
 
@@ -256,7 +256,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```bash
 cd ai_services
 pip install -r requirements.txt
-
+uvicorn ai_services.face_verification.face_service:app --port 8001
 # Đảm bảo đã có models trong face_verification/models/buffalo_l/
 python -m face_verification.face_service
 # → http://0.0.0.0:8001
@@ -393,4 +393,4 @@ docker-compose up --build
 
 ---
 
-*Đồ án Tốt nghiệp — Hệ thống kiểm soát ra/vào khu du lịch đa kênh*
+*Đồ án Ngành — Hệ thống kiểm soát ra/vào khu du lịch đa kênh*

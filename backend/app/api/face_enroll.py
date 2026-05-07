@@ -110,9 +110,18 @@ async def enroll_face(
             resp.raise_for_status()
             data = resp.json()
     except httpx.HTTPStatusError as e:
+        # Thử lấy chi tiết lỗi từ AI Service (nhiều khả năng là 422 - không tìm thấy mặt)
+        error_detail = f"Lỗi {e.response.status_code}"
+        try:
+            error_json = e.response.json()
+            if "detail" in error_json:
+                error_detail = error_json["detail"]
+        except:
+            pass
+            
         raise HTTPException(
-            status_code=502,
-            detail=f"AI Services trả về lỗi: {e.response.status_code}",
+            status_code=e.response.status_code,
+            detail=f"AI Service: {error_detail}",
         )
     except httpx.HTTPError as e:
         raise HTTPException(

@@ -239,17 +239,12 @@ class FaceEnrollActivity : AppCompatActivity() {
     }
 
     private fun captureNextShot() {
-        val shotNum = capturedImages.size + 1
-        requiredPose = when(shotNum) {
-            1 -> "FRONT"
-            2 -> "LEFT"
-            3 -> "RIGHT"
-            else -> "FRONT"
-        }
+        // Chỉ lưu 1 ảnh chính diện duy nhất
+        requiredPose = "FRONT"
 
         val hint = "Nhìn thẳng"
         
-        tvStatus.text = "📷 Đang chụp ảnh $shotNum/3 ($hint)..."
+        tvStatus.text = "📷 Đang xử lý khuôn mặt..."
 
         val capture = imageCapture ?: run { onCaptureError("Camera chưa sẵn sàng"); return }
         capture.takePicture(
