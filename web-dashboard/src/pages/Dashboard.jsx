@@ -9,7 +9,7 @@ import ChannelPieChart from '../components/charts/ChannelPieChart'
 import PeakHourChart   from '../components/charts/PeakHourChart'
 import { reportApi, gateApi } from '../services/api'
 
-const fmtVnd = v => new Intl.NumberFormat('vi-VN', { notation: 'compact', compactDisplay: 'short' }).format(v) + 'đ'
+const fmtVnd = v => new Intl.NumberFormat('vi-VN').format(v) + 'đ'
 const fmtNum = v => new Intl.NumberFormat('vi-VN').format(v)
 
 const StatCard = ({ label, value, formatter, accent='var(--cyan)', suffix='' }) => (
