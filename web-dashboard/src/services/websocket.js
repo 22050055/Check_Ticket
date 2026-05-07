@@ -6,7 +6,8 @@
  *   { type: "gate_event", ... }  — ngay sau mỗi check-in/out
  */
 
-const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/realtime`
+const API_URL = import.meta.env.VITE_API_URL || 'https://check-ticket-1hyd.onrender.com'
+const WS_URL = API_URL.replace('http', 'ws') + '/ws/realtime'
 const RECONNECT_DELAY_MS = 3000
 
 let _ws       = null

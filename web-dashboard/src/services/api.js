@@ -5,7 +5,7 @@
 import axios from 'axios'
 
 const getBaseURL = () => {
-  const url = import.meta.env.VITE_API_URL || ''
+  const url = import.meta.env.VITE_API_URL || 'https://check-ticket-1hyd.onrender.com'
   if (url && !url.endsWith('/api')) {
     return `${url}/api`
   }
