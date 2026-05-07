@@ -9,6 +9,7 @@ import useGateStore   from '../store/gateStore'
  */
 export default function useWebSocket() {
   const setRealtimeStats = useReportStore(s => s.setRealtimeStats)
+  const setRecentEvents  = useGateStore(s => s.setRecentEvents)
   const addEvent         = useGateStore(s => s.addEvent)
 
   useEffect(() => {
@@ -16,6 +17,10 @@ export default function useWebSocket() {
 
     const offStats = onStats(msg => {
       setRealtimeStats(msg)
+      // Khởi tạo bảng sự kiện nếu nó đang trống
+      if (msg.recent_events) {
+        setRecentEvents(msg.recent_events)
+      }
     })
 
     const offEvent = onGateEvent(event => {

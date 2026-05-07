@@ -151,10 +151,11 @@ class ReportService:
         total_checkins  = dir_map.get("IN",  0)
         total_checkouts = dir_map.get("OUT", 0)
 
-        # Khách hiện tại trong khu = IN - OUT của hôm nay
-        today_start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        # Fix Timezone Việt Nam (UTC+7)
+        vn_tz = timezone(timedelta(hours=7))
+        today_start_vn = datetime.now(vn_tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = today_start_vn.astimezone(timezone.utc)
+
         today_match = {**match, "created_at": {"$gte": today_start}}
         today_pipe  = [
             {"$match": today_match},
@@ -288,9 +289,11 @@ class ReportService:
 
         Tối ưu: gates_status dùng aggregation thay vì N+1 query.
         """
-        today_start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        # Fix Timezone Việt Nam (UTC+7)
+        vn_tz = timezone(timedelta(hours=7))
+        today_start_vn = datetime.now(vn_tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = today_start_vn.astimezone(timezone.utc)
+
         match_today         = {"created_at":  {"$gte": today_start}}
         match_success_today = {**match_today, "result": "SUCCESS"}
 
@@ -306,8 +309,14 @@ class ReportService:
         current_inside  = max(0, checkins_today - checkouts_today)
 
         # Doanh thu hôm nay
+        # Dùng trường 'timestamp' hoặc 'created_at' tùy version
         rev_pipe  = [
-            {"$match": match_today},
+            {"$match": {
+                "$or": [
+                    {"timestamp": {"$gte": today_start}},
+                    {"created_at": {"$gte": today_start}}
+                ]
+            }},
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
         ]
         rev_rows      = await self._db["transactions"].aggregate(rev_pipe).to_list(1)
